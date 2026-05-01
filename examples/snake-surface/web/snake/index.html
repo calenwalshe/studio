@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snake — Cairn Gate Labs</title>
+<style>
+  :root {
+    --bg: #000;
+    --fg: #00ff66;
+    --dim: #003318;
+    --grid: #0a1a10;
+    --accent: #ffcc00;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 16px;
+  }
+  header {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--fg);
+  }
+  @keyframes rainbow-shift {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+  .snk-rainbow {
+    background: linear-gradient(90deg, #ff0000, #ff8800, #ffff00, #00ff66, #00ccff, #8844ff, #ff00cc, #ff0000);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-shift 2s linear infinite;
+  }
+  .version {
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    vertical-align: middle;
+    margin-left: 8px;
+    opacity: 0.7;
+  }
+  .stats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .stats span b {
+    color: var(--accent);
+    font-weight: 600;
+    margin-left: 6px;
+  }
+  #board {
+    display: block;
+    background: var(--bg);
+    border: 3px solid #fff;
+    image-rendering: pixelated;
+    width: 100%;
+    max-width: 560px;
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+  footer {
+    width: 100%;
+    max-width: 560px;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  footer .keys b { color: var(--fg); font-weight: 600; }
+  .overlay {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+  }
+  .msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    pointer-events: none;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 13px;
+    color: var(--fg);
+    text-shadow: 0 0 8px rgba(0, 255, 102, 0.5);
+  }
+  .msg .big { font-size: 22px; color: var(--accent); }
+  .msg .sub { font-size: 11px; color: var(--fg); opacity: 0.8; }
+  .msg.paused .big { color: var(--dim); text-shadow: none; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <header>
+    <h1><span class="snk-rainbow">SNK</span> · Snake<span class="version">v1</span></h1>
+    <div class="stats">
+      <span>Score<b id="score">0</b></span>
+      <span>Best<b id="best">0</b></span>
+    </div>
+  </header>
+
+  <div class="overlay">
+    <canvas id="board" width="560" height="560" aria-label="Snake game board"></canvas>
+    <div id="msg" class="msg">
+      <div class="big">SNAKE</div>
+      <div>Press any key to start</div>
+      <div class="sub">Arrows or WASD · P pauses · R restarts</div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="keys"><b>↑ ↓ ← →</b> / <b>WASD</b> move · <b>P</b> pause · <b>R</b> restart</div>
+    <div><a href="https://cairnlabs.org" style="color:inherit;text-decoration:none;" target="_blank" rel="noopener">cairnlabs.org</a></div>
+  </footer>
+
+<script>
+(() => {
+  const COLS = 28;
+  const ROWS = 28;
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const msgEl = document.getElementById('msg');
+
+  // Tunables
+  const TICK_MS_START = 110;
+  const TICK_MS_MIN = 55;
+  const SPEEDUP_PER_FOOD = 2;
+
+  // Colors
+  const C_BG = '#000';
+  const C_GRID = '#0a1a10';
+  const C_SNAKE = '#00ff66';
+  const C_HEAD = '#7dffae';
+  const C_FOOD = '#ffcc00';
+
+  let cell, grid, snake, dir, queuedDir, food, score, best, tickMs, lastTick;
+  let state; // 'idle' | 'running' | 'paused' | 'dead'
+  let rafId = null;
+
+  function loadBest() {
+    try {
+      const v = parseInt(localStorage.getItem('snk:best') || '0', 10);
+      return Number.isFinite(v) ? v : 0;
+    } catch { return 0; }
+  }
+  function saveBest(v) {
+    try { localStorage.setItem('snk:best', String(v)); } catch {}
+  }
+
+  function resize() {
+    const cssSize = canvas.clientWidth;
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const px = Math.floor(cssSize * dpr);
+    canvas.width = px;
+    canvas.height = px;
+    cell = px / COLS;
+    draw();
+  }
+
+  function reset() {
+    const cx = Math.floor(COLS / 2);
+    const cy = Math.floor(ROWS / 2);
+    snake = [
+      { x: cx - 1, y: cy },
+      { x: cx,     y: cy },
+      { x: cx + 1, y: cy },
+    ];
+    dir = { x: 1, y: 0 };
+    queuedDir = dir;
+    score = 0;
+    tickMs = TICK_MS_START;
+    placeFood();
+    updateHUD();
+  }
+
+  function placeFood() {
+    const occupied = new Set(snake.map(s => s.x + ',' + s.y));
+    const free = [];
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if (!occupied.has(x + ',' + y)) free.push({ x, y });
+      }
+    }
+    if (free.length === 0) { food = null; return; }
+    food = free[Math.floor(Math.random() * free.length)];
+  }
+
+  function updateHUD() {
+    scoreEl.textContent = String(score);
+    bestEl.textContent = String(best);
+  }
+
+  function showMsg(big, sub) {
+    msgEl.innerHTML = '';
+    if (big) {
+      const b = document.createElement('div');
+      b.className = 'big';
+      b.textContent = big;
+      msgEl.appendChild(b);
+    }
+    if (sub) {
+      const s = document.createElement('div');
+      s.textContent = sub;
+      msgEl.appendChild(s);
+    }
+    const hint = document.createElement('div');
+    hint.className = 'sub';
+    hint.textContent = 'Arrows / WASD · P pause · R restart';
+    msgEl.appendChild(hint);
+    msgEl.classList.remove('hidden');
+  }
+  function hideMsg() { msgEl.classList.add('hidden'); }
+
+  function start() {
+    reset();
+    state = 'running';
+    hideMsg();
+    lastTick = performance.now();
+    if (rafId) cancelAnimationFrame(rafId);
+    loop(lastTick);
+  }
+
+  function gameOver() {
+    state = 'dead';
+    if (score > best) {
+      best = score;
+      saveBest(best);
+      updateHUD();
+    }
+    showMsg('GAME OVER', `Score ${score} · Best ${best}`);
+  }
+
+  function tick() {
+    // Apply queued direction (prevents 180° reversal mid-tick)
+    if (queuedDir && (queuedDir.x !== -dir.x || queuedDir.y !== -dir.y)) {
+      dir = queuedDir;
+    }
+    const head = snake[snake.length - 1];
+    const next = { x: head.x + dir.x, y: head.y + dir.y };
+
+    // Wall collision
+    if (next.x < 0 || next.x >= COLS || next.y < 0 || next.y >= ROWS) {
+      gameOver();
+      return;
+    }
+
+    // Will we eat?
+    const ate = food && next.x === food.x && next.y === food.y;
+
+    // Self collision: check against body excluding the tail we'll drop (unless eating)
+    const checkBody = ate ? snake : snake.slice(1);
+    for (const s of checkBody) {
+      if (s.x === next.x && s.y === next.y) {
+        gameOver();
+        return;
+      }
+    }
+
+    snake.push(next);
+    if (ate) {
+      score += 10;
+      tickMs = Math.max(TICK_MS_MIN, tickMs - SPEEDUP_PER_FOOD);
+      placeFood();
+      updateHUD();
+    } else {
+      snake.shift();
+    }
+  }
+
+  function loop(now) {
+    rafId = requestAnimationFrame(loop);
+    if (state !== 'running') { draw(); return; }
+    if (now - lastTick >= tickMs) {
+      lastTick = now;
+      tick();
+    }
+    draw();
+  }
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    ctx.fillStyle = C_BG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Faint grid
+    ctx.strokeStyle = C_GRID;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 1; i < COLS; i++) {
+      const x = Math.floor(i * cell) + 0.5;
+      ctx.moveTo(x, 0); ctx.lineTo(x, H);
+    }
+    for (let j = 1; j < ROWS; j++) {
+      const y = Math.floor(j * cell) + 0.5;
+      ctx.moveTo(0, y); ctx.lineTo(W, y);
+    }
+    ctx.stroke();
+
+    // Food
+    if (food) {
+      ctx.fillStyle = C_FOOD;
+      const pad = Math.max(1, cell * 0.15);
+      ctx.fillRect(food.x * cell + pad, food.y * cell + pad, cell - pad * 2, cell - pad * 2);
+    }
+
+    // Snake body
+    if (snake) {
+      const pad = Math.max(1, cell * 0.08);
+      for (let i = 0; i < snake.length; i++) {
+        const s = snake[i];
+        ctx.fillStyle = i === snake.length - 1 ? C_HEAD : C_SNAKE;
+        ctx.fillRect(s.x * cell + pad, s.y * cell + pad, cell - pad * 2, cell - pad * 2);
+      }
+    }
+  }
+
+  function setDir(dx, dy) {
+    // Don't allow 180° reversal relative to current direction
+    if (dx === -dir.x && dy === -dir.y) return;
+    queuedDir = { x: dx, y: dy };
+  }
+
+  function onKey(e) {
+    const k = e.key;
+    const lower = typeof k === 'string' ? k.toLowerCase() : '';
+
+    // Restart at any time
+    if (lower === 'r') { e.preventDefault(); start(); return; }
+
+    // First key starts the game
+    if (state === 'idle' || state === 'dead') {
+      // Allow direction key to also start
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d',' '].includes(k) ||
+          ['w','a','s','d'].includes(lower)) {
+        start();
+        // fallthrough to apply direction below
+      } else {
+        return;
+      }
+    }
+
+    if (state === 'running' && lower === 'p') {
+      state = 'paused';
+      showMsg('PAUSED', 'Press P to resume');
+      msgEl.classList.add('paused');
+      return;
+    }
+    if (state === 'paused') {
+      if (lower === 'p') { state = 'running'; hideMsg(); msgEl.classList.remove('paused'); lastTick = performance.now(); return; }
+      return;
+    }
+
+    switch (k) {
+      case 'ArrowUp': setDir(0, -1); e.preventDefault(); break;
+      case 'ArrowDown': setDir(0, 1); e.preventDefault(); break;
+      case 'ArrowLeft': setDir(-1, 0); e.preventDefault(); break;
+      case 'ArrowRight': setDir(1, 0); e.preventDefault(); break;
+      default:
+        switch (lower) {
+          case 'w': setDir(0, -1); break;
+          case 's': setDir(0, 1); break;
+          case 'a': setDir(-1, 0); break;
+          case 'd': setDir(1, 0); break;
+        }
+    }
+  }
+
+  // Init
+  best = loadBest();
+  state = 'idle';
+  reset();
+  // Re-place initial food deterministically near the snake for a friendly first meal
+  food = { x: Math.floor(COLS * 0.75), y: Math.floor(ROWS / 2) };
+  updateHUD();
+  resize();
+  window.addEventListener('resize', resize);
+  window.addEventListener('keydown', onKey, { passive: false });
+  // Kick off render loop so the idle screen draws
+  if (rafId) cancelAnimationFrame(rafId);
+  lastTick = performance.now();
+  rafId = requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
