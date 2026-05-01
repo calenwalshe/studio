@@ -1,6 +1,6 @@
 # Concepts
 
-Studio's vocabulary. Read this once and the rest of the harness makes sense.
+Studio's vocabulary. Read this once and the rest of the lab OS framing makes sense.
 
 ---
 
@@ -191,6 +191,27 @@ The director's workflow:
 3. Direct the supervisor (via the supervisor pane or `cgl-tell`).
 4. Supervisor spawns claws as needed; reports back.
 5. Director merges, decides, moves on.
+
+---
+
+## Target-direction concepts (planned)
+
+These are **directional concepts** for Studio as a director-oriented lab OS.
+They guide framing and future design, but are not claims about current
+implementation.
+
+- **Orientation** — the current director posture for a lab (what matters now,
+  what decisions are pending, and what outcomes are being driven).
+- **Evidence** — concrete observations that justify a recommendation or
+  decision (commits, logs, outputs, messages, measurements).
+- **Artifact Bundle** — a grouped handoff package for review/promotion,
+  combining key outputs, rationale, and pointers to evidence.
+- **Promotion Gate** — an explicit checkpoint where work is reviewed before
+  being merged, escalated, published, or otherwise advanced.
+- **Source Pack** — the source set used to produce a recommendation or output,
+  so conclusions can be audited and replayed.
+
+For the framing narrative, see [`docs/lab-os.md`](lab-os.md).
 
 ---
 
