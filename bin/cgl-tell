@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# cgl-tell — inject a message into a lab's supervisor pane.
+#
+# Usage:
+#   cgl-tell <slug> "<message>"
+#
+# Finds the supervisor pane by pane_title==<slug> across the cgl tmux
+# session (visible in lab window or parked in _supervisors). Sends the
+# message followed by Enter so the running Claude session receives it.
+
+set -euo pipefail
+
+SLUG="${1:?slug required (e.g. surface/snake or 'director')}"
+MSG="${2:?message required}"
+
+# Special slug: 'director' routes to the director pane in panes.json.
+if [[ "$SLUG" == "director" ]]; then
+  PANE=$(jq -r '.panes.director // empty' "$HOME/.local/state/cgl/panes.json" 2>/dev/null)
+  if [[ -z "$PANE" ]]; then
+    echo "error: no director pane registered in panes.json" >&2
+    exit 1
+  fi
+else
+  # Try title match first
+  PANE=$(tmux -L cgl list-panes -s -t cgl -F '#{pane_id}|#{pane_title}' 2>/dev/null \
+    | awk -F'|' -v slug="$SLUG" '$2 == slug {print $1; exit}')
+
+  # Fallback: if the slug matches the currently-visible supervisor in panes.json,
+  # use that pane id (Claude Code may have overwritten our title).
+  if [[ -z "$PANE" ]] && [[ -f "$HOME/.local/state/cgl/panes.json" ]]; then
+    CURRENT_SLUG=$(jq -r '.supervisor_slug // empty' "$HOME/.local/state/cgl/panes.json" 2>/dev/null)
+    if [[ "$CURRENT_SLUG" == "$SLUG" ]]; then
+      PANE=$(jq -r '.panes.supervisor // empty' "$HOME/.local/state/cgl/panes.json")
+    fi
+  fi
+fi
+
+if [[ -z "$PANE" ]]; then
+  echo "error: no supervisor pane for $SLUG" >&2
+  echo "available supervisor panes:" >&2
+  tmux -L cgl list-panes -s -t cgl -F '  #{pane_title} (#{pane_id})' 2>/dev/null \
+    | grep -v '^  agent-stack-dev\|^  _placeholder\|^  Claude Code' >&2
+  exit 1
+fi
+
+# Send the message
+tmux -L cgl send-keys -t "$PANE" "$MSG"
+sleep 0.1
+tmux -L cgl send-keys -t "$PANE" Enter
+echo "→ $SLUG ($PANE)"

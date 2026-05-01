@@ -1,0 +1,416 @@
+#!/usr/bin/env python3
+"""cgl-themes — pipeline-based director-grade theme stream for a lab.
+
+Pipeline stages, run on `cgl-themes <slug> --reflect`:
+
+  1. EXTRACT  — pull raw events (supervisor jsonl, claws meta, git log)
+                idempotently. The impressions-index tracks what's already
+                been processed so re-runs only handle new material.
+
+  2. CHUNK    — group new events into candidate themes via heuristic
+                gates (commit, claw-spawn, claw-merged, claw-failed,
+                director-injected ask, supervisor reply long enough to
+                contain a status shift).
+
+  3. SCORE    — Haiku judge (yes/no + reason) at threshold 0.7. Below
+                threshold → discarded. At/above → promoted to vault.
+
+  4. RENDER   — produce executive briefing text (and JSON) from the
+                vault.
+
+Storage:
+  lab/.intel/themes/<slug>.jsonl                     ← vault (graduated themes)
+  lab/.intel/themes/<slug>.impressions.json          ← idempotence index
+  ~/.local/state/cgl/themes-cache/<sha>.json         ← Haiku score cache
+
+Usage:
+  cgl-themes <slug>            Render vault (newest first)
+  cgl-themes <slug> --reflect  Run the pipeline; append new vault entries
+  cgl-themes <slug> --json     JSON of vault
+  cgl-themes <slug> --rebuild  Wipe vault + impressions, rebuild from raw
+  cgl-themes <slug> --raw      Print the candidate themes BEFORE scoring
+                               (debug — see what the chunker produced)
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+# ── Paths ────────────────────────────────────────────────────────────
+
+LAB_ROOT = Path(os.environ.get(
+    "CGL_LAB_ROOT",
+    "/home/agent/projects/cairn-gate-labs/lab",
+))
+THEMES_DIR = LAB_ROOT / ".intel" / "themes"
+THEMES_DIR.mkdir(parents=True, exist_ok=True)
+
+CACHE_DIR = Path.home() / ".local" / "state" / "cgl" / "themes-cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+SCORE_THRESHOLD = 0.7
+
+KIND_ICON = {
+    "status-shift": "↻",
+    "decision": "◆",
+    "outcome": "✓",
+    "outcome-fail": "✗",
+    "risk": "⚠",
+    "ask": "?",
+    "discovery": "!",
+    "commit": "·",
+    "claw": "⟳",
+}
+
+
+# ── File helpers ─────────────────────────────────────────────────────
+
+def slug_encode(slug: str) -> str:
+    return slug.replace("/", "-")
+
+
+def vault_path(slug: str) -> Path:
+    return THEMES_DIR / f"{slug_encode(slug)}.jsonl"
+
+
+def impressions_path(slug: str) -> Path:
+    return THEMES_DIR / f"{slug_encode(slug)}.impressions.json"
+
+
+def load_vault(slug: str) -> list[dict]:
+    p = vault_path(slug)
+    if not p.exists():
+        return []
+    out = []
+    for line in p.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def append_to_vault(slug: str, theme: dict) -> None:
+    with vault_path(slug).open("a") as f:
+        f.write(json.dumps(theme) + "\n")
+
+
+def load_impressions(slug: str) -> dict:
+    p = impressions_path(slug)
+    if not p.exists():
+        return {"seen_event_ids": []}
+    try:
+        return json.loads(p.read_text())
+    except Exception:
+        return {"seen_event_ids": []}
+
+
+def save_impressions(slug: str, idx: dict) -> None:
+    impressions_path(slug).write_text(json.dumps(idx, indent=2))
+
+
+def event_id(e: dict) -> str:
+    base = f"{e.get('ts','')}|{e.get('kind','')}|{e.get('text','')[:48]}"
+    return hashlib.sha256(base.encode()).hexdigest()[:12]
+
+
+# ── Stage 1: EXTRACT ─────────────────────────────────────────────────
+
+def extract_raw_events(slug: str) -> list[dict]:
+    """Pull all raw events for the lab via cgl-focus --events."""
+    try:
+        r = subprocess.run(
+            ["cgl-focus", slug, "--events", "--json"],
+            capture_output=True, text=True, timeout=15,
+        )
+        return json.loads(r.stdout) if r.stdout else []
+    except Exception:
+        return []
+
+
+# ── Stage 2: CHUNK (heuristic gates) ─────────────────────────────────
+
+def chunk_candidates(new_events: list[dict]) -> list[dict]:
+    """Convert raw events into candidate themes (no Haiku yet).
+
+    Heuristics: which events earn a candidate? Most asks/replies/commits.
+    We let the SCORE stage filter.
+    """
+    candidates = []
+    for e in new_events:
+        kind = e.get("kind", "")
+        text = (e.get("text") or "").replace("\n", " ").strip()
+        ts = e.get("ts")
+
+        # Filter system-prompt re-injections (boilerplate)
+        if kind == "ask" and text.lower().startswith("you are the supervisor"):
+            continue
+        if "<task-notification>" in text or "<task-id>" in text:
+            continue
+        # Filter slash-command artifacts (loop, schedule, etc.) — these are
+        # the prompt-template body Claude Code injects, not director intent
+        if "<command-message>" in text or "<command-name>" in text:
+            continue
+        if text.startswith("# /loop") or text.startswith("# /schedule"):
+            continue
+
+        if kind == "commit":
+            candidates.append({
+                "ts": ts, "kind": "commit",
+                "theme": text[:200],
+                "evidence": [event_id(e)],
+                "source": "heuristic",
+            })
+        elif kind.startswith("claw-"):
+            sub = kind.replace("claw-", "")
+            candidates.append({
+                "ts": ts, "kind": "claw",
+                "theme": f"claw {sub}: {text[:160]}",
+                "evidence": [event_id(e)],
+                "source": "heuristic",
+            })
+        elif kind == "ask":
+            candidates.append({
+                "ts": ts, "kind": "ask",
+                "theme": text[:240],
+                "evidence": [event_id(e)],
+                "source": "heuristic",
+            })
+        elif kind == "reply":
+            # Only consider replies long enough to potentially carry signal
+            if len(text) < 40:
+                continue
+            candidates.append({
+                "ts": ts, "kind": "reply-candidate",
+                "theme": text[:240],
+                "evidence": [event_id(e)],
+                "source": "heuristic",
+            })
+    return candidates
+
+
+# ── Stage 3: SCORE (Haiku judge, threshold 0.7) ──────────────────────
+
+def score_cache_key(candidate: dict) -> str:
+    payload = f"{candidate.get('kind','')}|{candidate.get('theme','')}"
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def haiku_score(candidate: dict) -> dict:
+    """Returns {score: float 0..1, kind: str, theme: str, reason: str}.
+
+    Cached by candidate content hash. Below threshold → caller drops.
+    """
+    key = score_cache_key(candidate)
+    cached = CACHE_DIR / f"{key}.json"
+    if cached.exists():
+        try:
+            return json.loads(cached.read_text())
+        except Exception:
+            pass
+
+    # Pre-classified kinds (commit/claw/ask) skip Haiku entirely — they're
+    # always director-grade by definition. Score them at 1.0.
+    if candidate["kind"] in ("commit", "claw", "ask"):
+        scored = {
+            "score": 1.0,
+            "kind": candidate["kind"],
+            "theme": candidate["theme"],
+            "reason": "deterministic kind",
+        }
+        cached.write_text(json.dumps(scored))
+        return scored
+
+    # Reply-candidates need Haiku to decide if they carry director-grade signal
+    prompt = f"""You are a quality gate for a director's executive log. Below is one
+supervisor reply. Decide: does this contain director-grade material info,
+or is it just routine execution detail?
+
+Director-grade includes: status shifts, decisions, outcomes, risks, asks,
+discoveries. Routine includes: narrating actions, confirmations, file reads,
+intermediate progress that has no implication for direction.
+
+Respond with JSON only:
+{{"score": <0.0 to 1.0 confidence this is director-grade>,
+ "kind": "<status-shift|decision|outcome|outcome-fail|risk|discovery|null>",
+ "theme": "<one short line ≤120 chars summarizing — terse fragment, no
+   preamble, no markdown>",
+ "reason": "<≤20 word justification>"}}
+
+If score < 0.5, set kind to null.
+
+REPLY:
+{candidate['theme']}
+
+OUTPUT (JSON only):"""
+
+    try:
+        r = subprocess.run(
+            ["claude", "-p",
+             "--model", "claude-haiku-4-5",
+             "--output-format", "text",
+             "--dangerously-skip-permissions",
+             prompt],
+            capture_output=True, text=True, timeout=30,
+        )
+        out_text = (r.stdout or "").strip()
+    except Exception:
+        out_text = ""
+
+    out_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", out_text, flags=re.MULTILINE).strip()
+    try:
+        parsed = json.loads(out_text)
+        scored = {
+            "score": float(parsed.get("score", 0.0)),
+            "kind": parsed.get("kind") or "discovery",
+            "theme": (parsed.get("theme") or candidate["theme"])[:200],
+            "reason": (parsed.get("reason") or "")[:160],
+        }
+    except Exception:
+        scored = {
+            "score": 0.0, "kind": "discovery",
+            "theme": candidate["theme"][:200],
+            "reason": f"parse error: {out_text[:60]}",
+        }
+
+    cached.write_text(json.dumps(scored))
+    return scored
+
+
+def score_candidates(candidates: list[dict]) -> list[dict]:
+    """Score every candidate; return only those above threshold."""
+    promoted = []
+    for c in candidates:
+        scored = haiku_score(c)
+        if scored["score"] >= SCORE_THRESHOLD:
+            promoted.append({
+                "ts": c["ts"],
+                "kind": scored["kind"],
+                "theme": scored["theme"],
+                "evidence": c["evidence"],
+                "source": c["source"],
+                "score": scored["score"],
+                "reason": scored["reason"],
+            })
+    return promoted
+
+
+# ── Stage 4: RENDER ──────────────────────────────────────────────────
+
+def render_human(slug: str, themes: list[dict]) -> str:
+    if not themes:
+        return f"# {slug}\n(no vault entries yet — run --reflect)"
+    out = [f"# {slug}", ""]
+    for t in reversed(themes):  # newest first
+        ts = (t.get("ts") or "")[:16].replace("T", " ")
+        kind = t.get("kind", "?")
+        icon = KIND_ICON.get(kind, "·")
+        theme = t.get("theme", "")
+        score = t.get("score", 1.0)
+        score_marker = "" if score >= 0.95 else f" [{score:.2f}]"
+        out.append(f"{ts}  {icon} {kind:<14}  {theme}{score_marker}")
+    return "\n".join(out)
+
+
+# ── Pipeline driver ──────────────────────────────────────────────────
+
+def reflect(slug: str) -> dict:
+    """Run the full pipeline. Returns {extracted, chunked, scored,
+    promoted} counts."""
+    impressions = load_impressions(slug)
+    seen = set(impressions.get("seen_event_ids", []))
+
+    # 1. EXTRACT
+    raw = extract_raw_events(slug)
+
+    # Filter to events not yet seen
+    new_raw = []
+    for e in raw:
+        eid = event_id(e)
+        if eid not in seen:
+            new_raw.append(e)
+
+    if not new_raw:
+        return {"extracted": 0, "chunked": 0, "scored": 0, "promoted": 0}
+
+    # 2. CHUNK
+    candidates = chunk_candidates(new_raw)
+
+    # 3. SCORE
+    promoted = score_candidates(candidates)
+
+    # 4. APPEND to vault (newest at bottom — render_human reverses for display)
+    promoted.sort(key=lambda t: t.get("ts") or "")
+    for t in promoted:
+        append_to_vault(slug, t)
+
+    # Mark all extracted events as seen (whether they made it through scoring or not)
+    new_seen = list(seen | {event_id(e) for e in new_raw})
+    impressions["seen_event_ids"] = new_seen[-2000:]  # cap memory growth
+    impressions["last_reflect_ts"] = datetime.now(timezone.utc).isoformat()
+    save_impressions(slug, impressions)
+
+    return {
+        "extracted": len(new_raw),
+        "chunked": len(candidates),
+        "scored": len(candidates),
+        "promoted": len(promoted),
+    }
+
+
+# ── CLI ──────────────────────────────────────────────────────────────
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Director-grade theme stream for a lab")
+    p.add_argument("slug")
+    p.add_argument("--reflect", action="store_true",
+                   help="Run the pipeline; append new vault entries")
+    p.add_argument("--json", action="store_true", help="Emit vault as JSON")
+    p.add_argument("--rebuild", action="store_true",
+                   help="Wipe vault + impressions, rebuild from raw")
+    p.add_argument("--raw", action="store_true",
+                   help="Print candidate themes BEFORE scoring (debug)")
+    args = p.parse_args()
+
+    if args.rebuild:
+        for path in (vault_path(args.slug), impressions_path(args.slug)):
+            if path.exists():
+                path.unlink()
+        args.reflect = True
+
+    if args.raw:
+        # Show what the chunker produces, no scoring, no vault writes
+        raw = extract_raw_events(args.slug)
+        candidates = chunk_candidates(raw)
+        for c in candidates:
+            ts = (c.get("ts") or "")[:16].replace("T", " ")
+            kind = c.get("kind", "?")
+            print(f"{ts}  [{kind:<18}]  {c.get('theme','')[:120]}")
+        print(f"\n# {len(candidates)} candidates from {len(raw)} raw events")
+        return
+
+    if args.reflect:
+        stats = reflect(args.slug)
+        if not args.json:
+            print(f"# pipeline: extracted={stats['extracted']} chunked={stats['chunked']} promoted={stats['promoted']}")
+
+    themes = load_vault(args.slug)
+    if args.json:
+        print(json.dumps(themes, indent=2, default=str))
+    else:
+        print(render_human(args.slug, themes))
+
+
+if __name__ == "__main__":
+    main()

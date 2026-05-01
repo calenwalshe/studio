@@ -1,0 +1,267 @@
+#!/usr/bin/env python3
+"""cgl-labs — manage labs (new / archive / restore / list).
+
+Subcommands:
+  cgl-labs new <kind> <slug> [--title TITLE] [--desc DESC]
+      Create a new lab. Kind: surface | investigation | systems.
+      Writes lab/<kind-dir>/<slug>/README.md.
+
+  cgl-labs archive <full-slug>
+      Move the lab dir to lab/.archive/<kind>/<slug>/ via git mv,
+      then commit. Refuses if a live supervisor exists for that slug.
+
+  cgl-labs restore <full-slug>
+      Reverse archive: git mv from .archive back to its kind dir.
+
+  cgl-labs list
+      Print all labs (active + archived).
+
+The "full-slug" is the kind-prefixed slug e.g. surface/snake.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+LAB_ROOT = Path(os.environ.get(
+    "CGL_LAB_ROOT",
+    "/home/agent/projects/cairn-gate-labs/lab",
+))
+
+KIND_DIR = {
+    "surface": "surfaces",
+    "investigation": "research/investigations",
+    "systems": "systems",
+}
+
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def kind_dir(kind: str) -> Path:
+    if kind not in KIND_DIR:
+        sys.exit(f"error: unknown kind '{kind}'. choose: {', '.join(KIND_DIR)}")
+    return LAB_ROOT / KIND_DIR[kind]
+
+
+def parse_full_slug(full: str) -> tuple[str, str]:
+    """`surface/snake` → ('surface', 'snake')."""
+    if "/" not in full:
+        sys.exit(f"error: slug must include kind prefix (e.g. 'surface/snake'); got '{full}'")
+    kind, name = full.split("/", 1)
+    if kind not in KIND_DIR:
+        sys.exit(f"error: unknown kind '{kind}'")
+    return kind, name
+
+
+def lab_dir(full_slug: str) -> Path:
+    kind, name = parse_full_slug(full_slug)
+    if kind == "investigation":
+        return LAB_ROOT / "research" / "investigations" / name
+    return LAB_ROOT / KIND_DIR[kind] / name
+
+
+def archive_dir(full_slug: str) -> Path:
+    kind, name = parse_full_slug(full_slug)
+    return LAB_ROOT / ".archive" / kind / name
+
+
+def supervisor_alive(full_slug: str) -> bool:
+    """Check the panes.json holding map and live processes to see if a
+    supervisor pane exists for this lab."""
+    panes_file = Path.home() / ".local" / "state" / "cgl" / "panes.json"
+    if not panes_file.exists():
+        return False
+    try:
+        data = json.loads(panes_file.read_text())
+    except Exception:
+        return False
+    visible = data.get("supervisor_slug")
+    holding = data.get("holding") or {}
+    if visible == full_slug:
+        return True
+    if full_slug in holding:
+        return True
+    return False
+
+
+def cmd_new(args):
+    kind = args.kind
+    slug = args.slug
+    if not SLUG_RE.match(slug):
+        sys.exit(f"error: slug must be lowercase alphanumeric+hyphens (got '{slug}')")
+    full = f"{kind}/{slug}"
+    target = lab_dir(full)
+    if target.exists():
+        sys.exit(f"error: {target} already exists")
+    target.mkdir(parents=True, exist_ok=False)
+
+    title = args.title or slug.replace("-", " ").title()
+    desc = args.desc or ""
+
+    # Frontmatter format matches what state_reader expects
+    fm_field = "system" if kind == "systems" else kind
+    code = "".join(c.upper() for c in slug if c.isalpha())[:3] or "LAB"
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    if kind == "investigation":
+        # Investigation README + minimal CONTRACT.yaml
+        readme = f"""---
+investigation: {slug}
+code: {code}
+status: active
+last_reviewed: {today}
+---
+
+# {title} ({code})
+
+{desc}
+
+## Mission
+
+{desc}
+
+## Quality bar
+
+(define before first cycle)
+
+## Out of scope
+
+(define before first cycle)
+"""
+        contract = f"""version: 1
+question: |
+  {desc or 'TODO: what is the falsifiable question?'}
+quality_bar: TODO
+cycle_cap: 3
+budget_dollars: 5.0
+"""
+        (target / "README.md").write_text(readme)
+        (target / "CONTRACT.v1.yaml").write_text(contract)
+    else:
+        readme = f"""---
+{fm_field}: {slug}
+code: {code}
+status: active
+last_reviewed: {today}
+---
+
+# {title} ({code})
+
+{desc}
+
+## Mission
+
+{desc}
+
+## Quality bar
+
+(define here)
+"""
+        (target / "README.md").write_text(readme)
+
+    # Stage + commit so subsequent archive (git mv) works.
+    rel = target.relative_to(LAB_ROOT)
+    subprocess.run(["git", "-C", str(LAB_ROOT), "add", str(rel)], check=True)
+    subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "commit", "-m", f"new({full}): scaffold"],
+        check=True, capture_output=True,
+    )
+    print(f"created: {target}")
+    print(f"slug:    {full}")
+
+
+def cmd_archive(args):
+    full = args.full_slug
+    src = lab_dir(full)
+    if not src.exists():
+        sys.exit(f"error: {src} does not exist")
+
+    if supervisor_alive(full):
+        sys.exit(f"error: supervisor for {full} is alive — deactivate it before archiving")
+
+    dst = archive_dir(full)
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        sys.exit(f"error: archive target already exists: {dst}")
+
+    # git mv handles the rename + stages the change
+    rel_src = src.relative_to(LAB_ROOT)
+    rel_dst = dst.relative_to(LAB_ROOT)
+    subprocess.run(["git", "-C", str(LAB_ROOT), "mv", str(rel_src), str(rel_dst)], check=True)
+    msg = f"archive({full}): moved to .archive/"
+    subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "commit", "-m", msg],
+        check=True,
+    )
+    print(f"archived: {src} → {dst}")
+
+
+def cmd_restore(args):
+    full = args.full_slug
+    src = archive_dir(full)
+    if not src.exists():
+        sys.exit(f"error: {src} does not exist (not in archive)")
+    dst = lab_dir(full)
+    if dst.exists():
+        sys.exit(f"error: live target already exists: {dst}")
+
+    rel_src = src.relative_to(LAB_ROOT)
+    rel_dst = dst.relative_to(LAB_ROOT)
+    subprocess.run(["git", "-C", str(LAB_ROOT), "mv", str(rel_src), str(rel_dst)], check=True)
+    msg = f"restore({full}): brought back from .archive/"
+    subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "commit", "-m", msg],
+        check=True,
+    )
+    print(f"restored: {src} → {dst}")
+
+
+def cmd_list(_args):
+    sys.path.insert(0, str(LAB_ROOT / "studio"))
+    from lib import state_reader as sr
+    print("active:")
+    for lab in sr.list_labs():
+        print(f"  {lab.slug:<50} {lab.kind:<14} {lab.status}")
+    archive = LAB_ROOT / ".archive"
+    if archive.exists():
+        print("\narchived:")
+        for kind_dir in sorted(archive.iterdir()):
+            for lab_d in sorted(kind_dir.iterdir() if kind_dir.is_dir() else []):
+                print(f"  {kind_dir.name}/{lab_d.name}")
+
+
+def main():
+    p = argparse.ArgumentParser(description="Manage labs")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    n = sub.add_parser("new", help="Create a new lab")
+    n.add_argument("kind", choices=list(KIND_DIR.keys()))
+    n.add_argument("slug")
+    n.add_argument("--title")
+    n.add_argument("--desc")
+    n.set_defaults(func=cmd_new)
+
+    a = sub.add_parser("archive", help="Archive a lab via git mv")
+    a.add_argument("full_slug")
+    a.set_defaults(func=cmd_archive)
+
+    r = sub.add_parser("restore", help="Restore an archived lab")
+    r.add_argument("full_slug")
+    r.set_defaults(func=cmd_restore)
+
+    l = sub.add_parser("list", help="List active + archived labs")
+    l.set_defaults(func=cmd_list)
+
+    args = p.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

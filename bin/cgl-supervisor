@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+"""cgl-supervisor — manage long-lived Claude supervisor sessions per lab.
+
+One Claude session per lab slug, keyed by deterministic UUID. The session
+runs in the lab's worktree (cwd = lab.path) and survives detach because
+Claude Code persists sessions to ~/.claude/projects/<cwd-slug>/<uuid>.jsonl.
+
+Subcommands:
+    cgl-supervisor activate <slug> [--inject <text>]
+        Start or resume the supervisor for <slug>. Replaces the current
+        process via exec, so the caller (typically a tmux pane) is
+        replaced by the claude session.
+
+    cgl-supervisor session-id <slug>
+        Print the UUID for <slug> (creates one if missing). Useful for
+        scripts that want to poke the session log directly.
+
+    cgl-supervisor list
+        List all known supervisors with slug → uuid → path.
+
+State:
+    ~/.local/state/cgl/supervisors.json
+    {"schema": 1, "supervisors": {<slug>: {"uuid": "...", "path": "..."}}}
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import uuid
+from pathlib import Path
+
+LAB_ROOT = Path(os.environ.get(
+    "CGL_LAB_ROOT",
+    "/home/agent/projects/cairn-gate-labs/lab",
+))
+STATE_DIR = Path.home() / ".local" / "state" / "cgl"
+STATE_FILE = STATE_DIR / "supervisors.json"
+
+
+def load_state() -> dict:
+    if not STATE_FILE.exists():
+        return {"schema": 1, "supervisors": {}}
+    return json.loads(STATE_FILE.read_text())
+
+
+def save_state(state: dict) -> None:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
+
+
+def get_lab_path(slug: str) -> Path:
+    """Resolve a lab slug to its on-disk path via state_reader."""
+    sys.path.insert(0, str(LAB_ROOT / "studio"))
+    from lib import state_reader as sr
+    lab = sr.get_lab(slug)
+    if lab is None:
+        sys.exit(f"error: unknown lab '{slug}'")
+    if not lab.path or not lab.path.exists():
+        sys.exit(f"error: lab '{slug}' has no on-disk path")
+    return lab.path
+
+
+def get_or_create_session(slug: str) -> tuple[str, Path]:
+    """Returns (uuid, lab_path). Idempotent."""
+    state = load_state()
+    sups = state.setdefault("supervisors", {})
+    lab_path = get_lab_path(slug)
+    if slug in sups:
+        return sups[slug]["uuid"], lab_path
+    sid = str(uuid.uuid4())
+    sups[slug] = {"uuid": sid, "path": str(lab_path)}
+    save_state(state)
+    return sid, lab_path
+
+
+def session_log_exists(sid: str, lab_path: Path) -> bool:
+    """Claude stores per-cwd session logs at
+    ~/.claude/projects/<slugified-cwd>/<uuid>.jsonl
+    Slug = absolute path with / and . replaced by -."""
+    cwd_slug = str(lab_path).replace("/", "-").replace(".", "-")
+    log = Path.home() / ".claude" / "projects" / cwd_slug / f"{sid}.jsonl"
+    return log.exists()
+
+
+def cmd_activate(args) -> None:
+    sid, lab_path = get_or_create_session(args.slug)
+    # Resume if a session log exists; otherwise create with this UUID.
+    if session_log_exists(sid, lab_path):
+        cmd = ["claude", "-r", sid]
+    else:
+        cmd = ["claude", "--session-id", sid]
+    if args.inject:
+        cmd.append(args.inject)
+    os.chdir(lab_path)
+    os.execvp("claude", cmd)
+
+
+def cmd_session_id(args) -> None:
+    sid, _ = get_or_create_session(args.slug)
+    print(sid)
+
+
+def cmd_list(_args) -> None:
+    state = load_state()
+    sups = state.get("supervisors", {})
+    if not sups:
+        print("(no supervisors registered)")
+        return
+    for slug, info in sorted(sups.items()):
+        print(f"{slug:30s}  {info['uuid']}  {info.get('path', '')}")
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Manage per-lab Claude supervisors")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    a = sub.add_parser("activate", help="Start or resume supervisor for a lab")
+    a.add_argument("slug")
+    a.add_argument("--inject", help="Initial user message to inject")
+    a.set_defaults(func=cmd_activate)
+
+    s = sub.add_parser("session-id", help="Print UUID for a lab")
+    s.add_argument("slug")
+    s.set_defaults(func=cmd_session_id)
+
+    l = sub.add_parser("list", help="List known supervisors")
+    l.set_defaults(func=cmd_list)
+
+    args = p.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

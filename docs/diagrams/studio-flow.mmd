@@ -1,0 +1,116 @@
+flowchart TB
+    subgraph PERSISTENT["PERSISTENT STATE (survives detach)"]
+        direction TB
+        Spine[("`**Spine**
+        claws/, plays/,
+        capabilities/, voice/,
+        evals/, templates/`")]
+        Labs[("`**Labs**
+        per-lab brain
+        namespace + KPIs
+        + last-words`")]
+        Ledger[("`**Ledger**
+        append-only
+        every claw spawn
+        + cost + artifact ptr`")]
+        Queue[("`**Bellclaw queue**
+        inbound items
+        from passive
+        listener`")]
+        Snapshots[("`**Cockpit
+        snapshots**
+        pre-rendered
+        by cron`")]
+    end
+
+    subgraph BELLCLAW["BELLCLAW (only persistent process)"]
+        direction LR
+        BC[/"listen.py
+        polls inbound"/]
+        Sources["gmail / gcal /
+        file watch /
+        drive / cron"]
+        Sources -->|poll| BC
+        BC -->|append| Queue
+    end
+
+    subgraph CRON["CRON (no agents, only renders)"]
+        Render[/"cockpit
+        render.py"/]
+        Render -->|reads| Spine
+        Render -->|reads| Labs
+        Render -->|reads| Ledger
+        Render -->|reads| Queue
+        Render -->|writes| Snapshots
+    end
+
+    subgraph SESSION["ATTENDED SESSION (instrument is being played)"]
+        direction TB
+        Director(["`**Director**
+        single human`"])
+        Bridge["`**Bridge**
+        Claude session
+        in tmux command
+        center`"]
+        Cockpit[/"`Cockpit
+        ASCII call sheet
+        rendered from
+        snapshots`"/]
+        Triage[/"Triage:
+        scan queue,
+        scan rot/hot signals"/]
+        Cast{{"`**Cast**:
+        claw or play?`"}}
+        Claws["`**Claws**
+        researcher,
+        extractor, critic,
+        author, retirer`"]
+        Plays["`**Plays**
+        research-investigation,
+        ...`"]
+        Director -->|attaches| Bridge
+        Bridge -->|reads| Cockpit
+        Cockpit -.->|loads from| Snapshots
+        Bridge --> Triage
+        Triage -->|dequeue| Queue
+        Triage --> Cast
+        Cast -->|single task| Claws
+        Cast -->|choreography| Plays
+        Plays -->|spawn each| Claws
+    end
+
+    subgraph EPHEMERAL["EPHEMERAL CLAW EXECUTION"]
+        direction TB
+        ClawRuntime["`**claw_runtime.spawn()**
+        loads claw def from spine,
+        invokes model with tools,
+        returns typed output`"]
+        Models["Models:
+        Haiku / Sonnet /
+        Gemini / GPT-Pro"]
+        ClawRuntime -->|invokes| Models
+        Models -->|response| ClawRuntime
+    end
+
+    Claws -->|each spawn| ClawRuntime
+    ClawRuntime -->|writes row| Ledger
+    ClawRuntime -->|writes artifact| Labs
+    ClawRuntime -.->|loads pinned version| Spine
+
+    Director -->|read artifact directly,<br/>not via Bridge| Labs
+    Director -->|publish to Drive| Drive[("`**Drive
+    Director Inbox**`")]
+
+    SESSION -.->|on detach,<br/>all claws die| EPHEMERAL
+
+    classDef persistent fill:#1e3a8a,stroke:#1e40af,color:#fff
+    classDef session fill:#92400e,stroke:#9a3412,color:#fff
+    classDef ephemeral fill:#581c87,stroke:#6b21a8,color:#fff
+    classDef passive fill:#365314,stroke:#3f6212,color:#fff
+    classDef cron fill:#374151,stroke:#4b5563,color:#fff
+
+    class Spine,Labs,Ledger,Queue,Snapshots persistent
+    class Director,Bridge,Cockpit,Triage,Cast,Claws,Plays session
+    class ClawRuntime,Models ephemeral
+    class BC,Sources passive
+    class Render cron

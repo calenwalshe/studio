@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""
+cgl-diagram-add — register a mermaid diagram on cairnlabs.org/diagrams/
+
+Adds a new entry to the diagrams primitive:
+  1. Copies the .mmd source into lab/web/cairnlabs.org/diagrams/<slug>.mmd
+  2. Appends a manifest entry to lab/web/cairnlabs.org/diagrams/manifest.json
+  3. Prints the live URL
+
+The Caddy deploy hook auto-syncs both files to the served path on save.
+
+Usage:
+    cgl-diagram-add <slug> <path-to-source.mmd>
+                    --title "<title>"
+                    [--desc "<description>"]
+                    [--source <original-repo-path>]
+                    [--legend <color>=<label> --legend ...]
+                    [--notes-file <path-to-notes.md>]
+    cgl-diagram-add --list
+    cgl-diagram-add --remove <slug>
+    cgl-diagram-add --help
+
+Examples:
+    cgl-diagram-add studio-architecture lab/studio/studio-flow.mmd \\
+        --title "Studio Architecture" \\
+        --desc "Data flow + ops for the studio meta-framework" \\
+        --source lab/studio/studio-flow.mmd
+
+    cgl-diagram-add --list
+    cgl-diagram-add --remove studio-architecture
+
+The slug must be lowercase, alphanumeric, hyphens only (no dots).
+The .mmd file is copied; the original at <path-to-source.mmd> is left in place.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shutil
+import sys
+from datetime import date
+from pathlib import Path
+
+
+LAB_ROOT = Path("/home/agent/projects/cairn-gate-labs/lab")
+DIAGRAMS_DIR = LAB_ROOT / "web" / "cairnlabs.org" / "diagrams"
+MANIFEST_PATH = DIAGRAMS_DIR / "manifest.json"
+LIVE_BASE = "https://cairnlabs.org/diagrams"
+
+SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def load_manifest() -> dict:
+    if not MANIFEST_PATH.exists():
+        return {"schema_version": 1, "diagrams": []}
+    return json.loads(MANIFEST_PATH.read_text())
+
+
+def save_manifest(manifest: dict) -> None:
+    MANIFEST_PATH.write_text(json.dumps(manifest, indent=2) + "\n")
+
+
+def cmd_list() -> None:
+    manifest = load_manifest()
+    diagrams = manifest.get("diagrams", [])
+    if not diagrams:
+        print("(no diagrams registered)")
+        return
+    print(f"# Diagrams registered ({len(diagrams)})\n")
+    for d in sorted(diagrams, key=lambda x: x.get("created", ""), reverse=True):
+        print(f"- {d.get('created', '?'):10s}  {d.get('title', d['slug'])} [{d['slug']}]")
+        print(f"    {LIVE_BASE}/{d['slug']}")
+        if d.get("source_path"):
+            print(f"    source: {d['source_path']}")
+        print()
+
+
+def cmd_remove(slug: str) -> None:
+    manifest = load_manifest()
+    diagrams = manifest.get("diagrams", [])
+    matching = [d for d in diagrams if d["slug"] == slug]
+    if not matching:
+        sys.exit(f"error: no diagram with slug {slug!r}")
+
+    # Remove from manifest
+    manifest["diagrams"] = [d for d in diagrams if d["slug"] != slug]
+    save_manifest(manifest)
+
+    # Remove the .mmd file
+    mmd_path = DIAGRAMS_DIR / f"{slug}.mmd"
+    if mmd_path.exists():
+        mmd_path.unlink()
+        print(f"removed: {mmd_path}")
+
+    print(f"removed from manifest: {slug}")
+    print(f"\nNote: also delete the served copy if needed:")
+    print(f"  rm /home/agent/agent-stack/caddy/static/cairnlabs/diagrams/{slug}.mmd")
+
+
+def cmd_add(args) -> None:
+    slug = args.slug
+    if not SLUG_RE.match(slug):
+        sys.exit(
+            f"error: slug must be lowercase alphanumeric+hyphens "
+            f"(got {slug!r})"
+        )
+    if "." in slug:
+        sys.exit(f"error: slug cannot contain '.' (got {slug!r})")
+
+    src = Path(args.source_mmd).resolve()
+    if not src.exists():
+        sys.exit(f"error: source not found: {src}")
+    if src.suffix != ".mmd":
+        # Soft warning, don't block
+        print(f"warning: source extension is {src.suffix!r}, expected '.mmd'", file=sys.stderr)
+
+    if not args.title:
+        sys.exit("error: --title is required")
+
+    manifest = load_manifest()
+    diagrams = manifest.get("diagrams", [])
+    existing = next((d for d in diagrams if d["slug"] == slug), None)
+
+    if existing and not args.force:
+        sys.exit(
+            f"error: slug {slug!r} already registered. "
+            f"Use --force to overwrite."
+        )
+
+    # Copy the .mmd into the diagrams dir
+    target_mmd = DIAGRAMS_DIR / f"{slug}.mmd"
+    DIAGRAMS_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src, target_mmd)
+    print(f"copied: {src} → {target_mmd}")
+
+    # Build the manifest entry
+    entry: dict = {
+        "slug": slug,
+        "title": args.title,
+        "description": args.desc or "",
+        "created": str(date.today()),
+        "source_path": args.source or str(src.relative_to(LAB_ROOT.parent.parent) if src.is_relative_to(LAB_ROOT.parent.parent) else src),
+    }
+
+    if args.legend:
+        legend_items = []
+        for spec in args.legend:
+            if "=" not in spec:
+                sys.exit(f"error: --legend must be 'color=label', got {spec!r}")
+            color, label = spec.split("=", 1)
+            legend_items.append({"color": color.strip(), "label": label.strip()})
+        entry["legend"] = legend_items
+
+    if args.notes_file:
+        notes_path = Path(args.notes_file).resolve()
+        if not notes_path.exists():
+            sys.exit(f"error: notes file not found: {notes_path}")
+        entry["notes"] = notes_path.read_text()
+
+    # Update or insert
+    if existing:
+        for i, d in enumerate(diagrams):
+            if d["slug"] == slug:
+                diagrams[i] = entry
+                break
+    else:
+        diagrams.append(entry)
+    manifest["diagrams"] = diagrams
+    save_manifest(manifest)
+
+    # Manually sync the .mmd to served path (Caddy hook only fires on Edit/Write tools)
+    served_dir = Path("/home/agent/agent-stack/caddy/static/cairnlabs/diagrams")
+    if served_dir.exists():
+        served_target = served_dir / f"{slug}.mmd"
+        shutil.copy(target_mmd, served_target)
+        print(f"synced to served: {served_target}")
+
+    print(f"\nregistered: {slug}")
+    print(f"live URL:  {LIVE_BASE}/{slug}")
+    print(f"manifest:  {MANIFEST_PATH}")
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(
+        description="Register a mermaid diagram on cairnlabs.org/diagrams/",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    p.add_argument("--list", action="store_true", help="List registered diagrams")
+    p.add_argument("--remove", metavar="SLUG", help="Remove a diagram by slug")
+    p.add_argument("--force", action="store_true", help="Overwrite existing slug")
+
+    p.add_argument("slug", nargs="?", help="Diagram slug (lowercase, hyphens, no dots)")
+    p.add_argument("source_mmd", nargs="?", help="Path to .mmd source file")
+    p.add_argument("--title", help="Diagram title (human-readable)")
+    p.add_argument("--desc", help="One-paragraph description")
+    p.add_argument("--source", help="Original source path (for the 'source' link in the page)")
+    p.add_argument("--legend", action="append", default=[],
+                   help="Legend entry as 'color=label'. Repeatable.")
+    p.add_argument("--notes-file", help="Path to a markdown file for additional notes section")
+
+    args = p.parse_args()
+
+    if args.list:
+        cmd_list()
+        return
+    if args.remove:
+        cmd_remove(args.remove)
+        return
+
+    if not args.slug or not args.source_mmd:
+        p.print_help()
+        sys.exit(2)
+
+    cmd_add(args)
+
+
+if __name__ == "__main__":
+    main()

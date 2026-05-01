@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# cgl-arm — manage git worktree arms under trees/.
+#
+# Each arm is a git worktree of lab/, on its own branch. Long-lived parallel
+# initiatives live as arms so they don't contend with main.
+#
+# Usage:
+#   cgl-arm new <name> [--from <ref>]
+#       Create trees/<name>/ as a new worktree on branch arm/<name>,
+#       branched from <ref> (default: main of lab/).
+#
+#   cgl-arm merge <name>
+#       Merge arm/<name> into the current main branch of lab/. Aborts if:
+#         - arm has uncommitted changes
+#         - rebase onto main has conflicts
+#       After successful merge, prompts to remove the worktree.
+#
+#   cgl-arm kill <name>
+#       Remove the worktree at trees/<name>/ AND delete branch arm/<name>.
+#       Aborts if there are uncommitted changes (use --force to override).
+#
+#   cgl-arm list
+#       List all arms with branch + status.
+
+set -euo pipefail
+
+LAB="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
+TREES="$(dirname "$LAB")/trees"
+
+cmd="${1:-list}"
+shift || true
+
+# Pick the lab's main branch — usually 'main' but fall back to whatever HEAD's upstream is.
+lab_main_branch() {
+  if git -C "$LAB" show-ref --verify --quiet refs/heads/main; then
+    echo main
+  elif git -C "$LAB" show-ref --verify --quiet refs/heads/master; then
+    echo master
+  else
+    git -C "$LAB" rev-parse --abbrev-ref HEAD
+  fi
+}
+
+case "$cmd" in
+  new)
+    NAME="${1:?usage: cgl-arm new <name> [--from <ref>]}"
+    FROM="$(lab_main_branch)"
+    shift
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --from) FROM="$2"; shift 2 ;;
+        *) echo "unknown flag: $1" >&2; exit 2 ;;
+      esac
+    done
+    BRANCH="arm/$NAME"
+    DEST="$TREES/$NAME"
+    if [[ -e "$DEST" ]]; then
+      echo "error: $DEST already exists" >&2
+      exit 1
+    fi
+    if git -C "$LAB" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+      echo "error: branch $BRANCH already exists" >&2
+      exit 1
+    fi
+    mkdir -p "$TREES"
+    git -C "$LAB" worktree add -b "$BRANCH" "$DEST" "$FROM"
+    echo
+    echo "✓ arm '$NAME' ready at $DEST"
+    echo "  branch: $BRANCH (from $FROM)"
+    echo "  open:   cd $DEST"
+    ;;
+
+  merge)
+    NAME="${1:?usage: cgl-arm merge <name>}"
+    BRANCH="arm/$NAME"
+    DEST="$TREES/$NAME"
+    if [[ ! -d "$DEST" ]]; then
+      echo "error: arm '$NAME' not found at $DEST" >&2
+      exit 1
+    fi
+    # Check for uncommitted changes
+    if [[ -n "$(git -C "$DEST" status --porcelain)" ]]; then
+      echo "error: arm '$NAME' has uncommitted changes:" >&2
+      git -C "$DEST" status --short >&2
+      exit 1
+    fi
+    MAIN="$(lab_main_branch)"
+    echo "merging $BRANCH → $MAIN..."
+    # Rebase arm onto main first to keep history linear
+    if ! git -C "$DEST" rebase "$MAIN"; then
+      echo "error: rebase onto $MAIN had conflicts. resolve in $DEST and re-run." >&2
+      exit 1
+    fi
+    # Fast-forward main to the rebased arm
+    git -C "$LAB" merge --ff-only "$BRANCH"
+    echo "✓ merged $BRANCH into $MAIN"
+    echo
+    echo "  remove the worktree?  cgl-arm kill $NAME"
+    ;;
+
+  kill)
+    NAME="${1:?usage: cgl-arm kill <name> [--force]}"
+    BRANCH="arm/$NAME"
+    DEST="$TREES/$NAME"
+    FORCE=""
+    [[ "${2:-}" == "--force" ]] && FORCE="--force"
+
+    if [[ ! -d "$DEST" ]]; then
+      echo "warning: $DEST already gone" >&2
+    else
+      if [[ -z "$FORCE" ]] && [[ -n "$(git -C "$DEST" status --porcelain)" ]]; then
+        echo "error: arm '$NAME' has uncommitted changes (use --force):" >&2
+        git -C "$DEST" status --short >&2
+        exit 1
+      fi
+      git -C "$LAB" worktree remove $FORCE "$DEST"
+      echo "✓ worktree removed: $DEST"
+    fi
+    if git -C "$LAB" show-ref --verify --quiet "refs/heads/$BRANCH"; then
+      git -C "$LAB" branch -D "$BRANCH" 2>&1
+      echo "✓ branch deleted: $BRANCH"
+    fi
+    ;;
+
+  list)
+    if [[ ! -d "$TREES" ]]; then
+      echo "(no arms — $TREES does not exist)"
+      exit 0
+    fi
+    echo "arms under $TREES:"
+    for d in "$TREES"/*/; do
+      [[ -d "$d" ]] || continue
+      name="$(basename "$d")"
+      branch="$(git -C "$d" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+      dirty="clean"
+      if [[ -n "$(git -C "$d" status --porcelain 2>/dev/null)" ]]; then
+        dirty="dirty"
+      fi
+      printf "  %-25s %-30s %s\n" "$name" "$branch" "$dirty"
+    done
+    ;;
+
+  *)
+    echo "usage: cgl-arm {new|merge|kill|list} [...]" >&2
+    sed -n '3,/^set -euo/p' "$0" | grep '^#' | sed 's/^# \?//' >&2
+    exit 2
+    ;;
+esac

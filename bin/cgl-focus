@@ -1,0 +1,804 @@
+#!/usr/bin/env python3
+"""cgl-focus — produce a director's-HUD snapshot for a lab.
+
+Scrapes:
+  - lab metadata (kind, status, days since touch, path)
+  - live URL probe (HTTP status + content-length + last-modified)
+  - last 3 commits affecting the lab's subpath
+  - claws: counts by status, recent ones with their summary
+  - uncommitted deltas in the lab subpath
+  - supervisor session: last 3 user msgs, last 3 assistant outputs
+  - cost: today and last hour from the ledger
+
+Outputs:
+  cgl-focus <slug>             → human-readable text
+  cgl-focus <slug> --json      → structured JSON
+  cgl-focus <slug> --rollup    → human text + Haiku-condensed briefing
+
+The --rollup version caches by content hash to avoid re-billing identical state.
+Cache: ~/.local/state/cgl/focus-cache/<sha256>.txt
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import subprocess
+import sys
+import urllib.request
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+LAB_ROOT = Path(os.environ.get(
+    "CGL_LAB_ROOT",
+    "/home/agent/projects/cairn-gate-labs/lab",
+))
+sys.path.insert(0, str(LAB_ROOT / "studio"))
+from lib import state_reader as sr  # noqa: E402
+
+CACHE_DIR = Path.home() / ".local" / "state" / "cgl" / "focus-cache"
+SUPERVISORS_FILE = Path.home() / ".local" / "state" / "cgl" / "supervisors.json"
+
+
+def load_supervisor_uuid(slug: str) -> str | None:
+    if not SUPERVISORS_FILE.exists():
+        return None
+    data = json.loads(SUPERVISORS_FILE.read_text())
+    return data.get("supervisors", {}).get(slug, {}).get("uuid")
+
+
+def session_log_path(slug: str, lab_path: Path) -> Path | None:
+    sid = load_supervisor_uuid(slug)
+    if not sid:
+        return None
+    cwd_slug = str(lab_path).replace("/", "-").replace(".", "-")
+    log = Path.home() / ".claude" / "projects" / cwd_slug / f"{sid}.jsonl"
+    return log if log.exists() else None
+
+
+def tail_session(log: Path, max_user: int = 3, max_assistant: int = 3):
+    """Return last N user messages and last N assistant text outputs.
+
+    Each list element is a {text, ts} dict. ts is the ISO timestamp the
+    Claude session line itself carries (top-level "timestamp" field).
+    """
+    if not log.exists():
+        return [], []
+    users: list[dict] = []
+    assistants: list[dict] = []
+    with log.open() as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                d = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            msg = d.get("message") or {}
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                content = " ".join(
+                    c.get("text", "") for c in content if isinstance(c, dict) and c.get("type") == "text"
+                )
+            content = (content or "").strip()
+            if not content:
+                continue
+            ts = d.get("timestamp")
+            entry = {"text": content, "ts": ts}
+            if role == "user":
+                users.append(entry)
+            elif role == "assistant":
+                assistants.append(entry)
+    return users[-max_user:], assistants[-max_assistant:]
+
+
+def probe_url(slug: str) -> dict:
+    """Probe the public surface URL via curl (Cloudflare 403s urllib)."""
+    if not slug.startswith("surface/"):
+        return {}
+    name = slug.split("/", 1)[1]
+    url = f"https://cairnlabs.org/{name}/"
+    try:
+        result = subprocess.run(
+            ["curl", "-sI", "--max-time", "3", url],
+            capture_output=True, text=True, timeout=4,
+        )
+        if result.returncode != 0:
+            return {"url": url, "status": "error", "error": result.stderr[:80]}
+        # Parse status line + headers
+        lines = result.stdout.splitlines()
+        status = "?"
+        headers = {}
+        if lines:
+            first = lines[0].split(" ", 2)
+            if len(first) >= 2:
+                status = first[1]
+            for ln in lines[1:]:
+                if ":" in ln:
+                    k, v = ln.split(":", 1)
+                    headers[k.lower().strip()] = v.strip()
+        return {
+            "url": url,
+            "status": status,
+            "content_length": headers.get("content-length"),
+            "last_modified": headers.get("last-modified"),
+        }
+    except Exception as e:
+        return {"url": url, "status": "error", "error": str(e)[:80]}
+
+
+def lab_subpath(lab_path: Path) -> str:
+    return str(lab_path.relative_to(LAB_ROOT))
+
+
+def recent_commits(lab_path: Path, n: int = 3) -> list[dict]:
+    sp = lab_subpath(lab_path)
+    out = subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "log", f"-{n}", "--pretty=%h|%s|%ar", "--", sp],
+        capture_output=True, text=True,
+    )
+    rows = []
+    for line in out.stdout.strip().splitlines():
+        parts = line.split("|", 2)
+        if len(parts) == 3:
+            rows.append({"sha": parts[0], "subject": parts[1], "ago": parts[2]})
+    return rows
+
+
+def uncommitted_in_subpath(lab_path: Path) -> list[str]:
+    sp = lab_subpath(lab_path)
+    out = subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "status", "--porcelain", "--", sp],
+        capture_output=True, text=True,
+    )
+    return [l for l in out.stdout.splitlines() if l.strip()]
+
+
+def claws_state(lab_path: Path) -> dict:
+    claws_dir = lab_path / ".claws"
+    if not claws_dir.exists():
+        return {"by_status": {}, "recent": []}
+    by_status: dict[str, int] = {}
+    recent = []
+    metas = sorted(claws_dir.glob("*.meta.json"), reverse=True)
+    for meta_path in metas[:10]:
+        try:
+            m = json.loads(meta_path.read_text())
+        except Exception:
+            continue
+        status = m.get("status", "?")
+        by_status[status] = by_status.get(status, 0) + 1
+        # Pull a 1-line summary if available
+        ts = m.get("ts", meta_path.stem.replace(".meta", ""))
+        result_path = claws_dir / f"{ts}.result.md"
+        summary = ""
+        if result_path.exists():
+            for ln in result_path.read_text().splitlines():
+                if ln.strip():
+                    summary = ln.strip()[:120]
+                    break
+        recent.append({"ts": ts, "status": status, "summary": summary})
+    return {"by_status": by_status, "recent": recent[:5]}
+
+
+def cost_window(slug: str) -> dict:
+    """Cumulative cost for this lab today + last 1h."""
+    rows = sr.lab_ledger(slug, limit=500)
+    now = datetime.now(timezone.utc)
+    today_cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    hour_cutoff = now - timedelta(hours=1)
+    today = sum(r.cost_usd for r in rows if r.timestamp >= today_cutoff)
+    last_hour = sum(r.cost_usd for r in rows if r.timestamp >= hour_cutoff)
+    return {"today": round(today, 4), "last_hour": round(last_hour, 4), "total_events": len(rows)}
+
+
+def collect(slug: str) -> dict:
+    lab = sr.get_lab(slug)
+    if lab is None:
+        return {"error": f"unknown lab: {slug}"}
+
+    snapshot = {
+        "slug": slug,
+        "kind": lab.kind,
+        "status": lab.status,
+        "days_since_touch": lab.days_since_touch,
+        "rot_color": lab.rot_color,
+        "path": str(lab.path) if lab.path else None,
+        "description": lab.description,
+        "url_probe": probe_url(slug),
+        "recent_commits": recent_commits(lab.path) if lab.path else [],
+        "uncommitted": uncommitted_in_subpath(lab.path) if lab.path else [],
+        "claws": claws_state(lab.path) if lab.path else {},
+        "cost": cost_window(slug),
+    }
+
+    log = session_log_path(slug, lab.path) if lab.path else None
+    if log:
+        users, assistants = tail_session(log)
+        snapshot["session"] = {
+            "log_path": str(log),
+            "last_user_full": users,  # list of {text, ts}
+            "last_assistant_full": assistants,
+            "last_user": [u["text"][:300] for u in users],
+            "last_assistant": [a["text"][:300] for a in assistants],
+        }
+    else:
+        snapshot["session"] = None
+    return snapshot
+
+
+def render_human(snap: dict) -> str:
+    if "error" in snap:
+        return snap["error"]
+    out = []
+    out.append(f"# {snap['slug']} ({snap['kind']}) · {snap['status']} · {snap['days_since_touch']}d")
+    if snap.get("description"):
+        out.append(f"  {snap['description'][:120]}")
+    p = snap.get("url_probe") or {}
+    if p:
+        out.append(
+            f"\n● live: {p.get('url')} → {p.get('status')} "
+            f"({p.get('content_length','-')} bytes, mod {p.get('last_modified','-')})"
+        )
+    out.append("\n● cost: ${:.4f} today · ${:.4f} last hour · {} events".format(
+        snap["cost"]["today"], snap["cost"]["last_hour"], snap["cost"]["total_events"],
+    ))
+    if snap["recent_commits"]:
+        out.append("\n● commits (subpath):")
+        for c in snap["recent_commits"]:
+            out.append(f"    {c['sha']}  {c['subject'][:80]}  ({c['ago']})")
+    if snap["uncommitted"]:
+        out.append(f"\n● uncommitted ({len(snap['uncommitted'])}):")
+        for u in snap["uncommitted"][:5]:
+            out.append(f"    {u}")
+    cl = snap["claws"]
+    if cl.get("by_status"):
+        bs = " · ".join(f"{k}:{v}" for k, v in cl["by_status"].items())
+        out.append(f"\n● claws: {bs}")
+        for r in cl.get("recent", []):
+            out.append(f"    [{r['status']}] {r['ts']} · {r['summary'][:80]}")
+    sess = snap.get("session")
+    if sess:
+        if sess["last_user"]:
+            out.append("\n● recent director → supervisor:")
+            for u in sess["last_user"][-3:]:
+                out.append(f"    > {u[:160]}")
+        if sess["last_assistant"]:
+            out.append("\n● recent supervisor:")
+            for a in sess["last_assistant"][-3:]:
+                out.append(f"    < {a[:160]}")
+    return "\n".join(out)
+
+
+def cache_key(snap: dict) -> str:
+    # Hash the structurally-relevant fields (skip path, description, etc.)
+    payload = json.dumps({
+        "claws": snap.get("claws"),
+        "url": snap.get("url_probe", {}).get("status"),
+        "url_size": snap.get("url_probe", {}).get("content_length"),
+        "url_mod": snap.get("url_probe", {}).get("last_modified"),
+        "commits": [c["sha"] for c in snap.get("recent_commits", [])],
+        "uncommitted": snap.get("uncommitted", []),
+        "cost": snap.get("cost"),
+        "last_user": snap.get("session", {}).get("last_user") if snap.get("session") else [],
+        "last_assistant": snap.get("session", {}).get("last_assistant") if snap.get("session") else [],
+    }, sort_keys=True)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def haiku_rollup(snap: dict) -> str:
+    """Cached Haiku 4.5 condensation of the snapshot to 4-6 dense lines."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = cache_key(snap)
+    cached = CACHE_DIR / f"{key}.txt"
+    if cached.exists():
+        return cached.read_text()
+
+    text = render_human(snap)
+    prompt = f"""You are a director's HUD layer. Given this raw lab status, produce 4-6 short
+lines — terse fragments, no headers, no filler — that tell the director what
+they need to know to guide this lab right now. Lead with the most actionable
+signal. Use unicode symbols sparingly (●, →, ⚠) for emphasis. Each line ≤ 90
+chars. No preamble, no markdown, no closing line.
+
+LAB STATUS:
+{text}
+
+OUTPUT (4-6 lines):"""
+
+    try:
+        result = subprocess.run(
+            ["claude", "-p",
+             "--model", "claude-haiku-4-5",
+             "--output-format", "text",
+             "--dangerously-skip-permissions",
+             prompt],
+            capture_output=True, text=True, timeout=30,
+        )
+        rollup = (result.stdout or "").strip()
+        if not rollup:
+            rollup = "(haiku produced no output)"
+    except subprocess.TimeoutExpired:
+        rollup = "(haiku timed out)"
+    except Exception as e:
+        rollup = f"(haiku error: {e})"
+
+    cached.write_text(rollup)
+    return rollup
+
+
+def collect_events(slug: str, limit: int = 30) -> list[dict]:
+    """Return events for a lab, newest first.
+
+    Event sources:
+      - supervisor jsonl: user/assistant messages
+      - claws/.meta.json files: spawn/merge/abandon
+      - git log on the lab subpath: commits
+    Each event: {ts (iso), kind, text, meta}
+    """
+    lab = sr.get_lab(slug)
+    if lab is None or not lab.path:
+        return []
+    events: list[dict] = []
+
+    # Supervisor session messages
+    log = session_log_path(slug, lab.path)
+    if log:
+        users, assistants = tail_session(log, max_user=15, max_assistant=15)
+        for u in users:
+            events.append({
+                "ts": u.get("ts"),
+                "kind": "ask",
+                "text": u["text"][:200],
+            })
+        for a in assistants:
+            events.append({
+                "ts": a.get("ts"),
+                "kind": "reply",
+                "text": a["text"][:200],
+            })
+
+    # Claws
+    claws_dir = lab.path / ".claws"
+    if claws_dir.exists():
+        for meta_path in claws_dir.glob("*.meta.json"):
+            try:
+                m = json.loads(meta_path.read_text())
+            except Exception:
+                continue
+            ts = meta_path.stem.replace(".meta", "")  # e.g. 20260429-234717
+            try:
+                spawn_iso = datetime.strptime(ts, "%Y%m%d-%H%M%S").astimezone().isoformat()
+            except Exception:
+                spawn_iso = None
+            status = m.get("status", "?")
+            # Spawn event
+            events.append({
+                "ts": spawn_iso,
+                "kind": "claw-spawn",
+                "text": f"claw {ts} spawned",
+            })
+            if m.get("ended"):
+                events.append({
+                    "ts": m.get("ended"),
+                    "kind": f"claw-{status}",
+                    "text": f"claw {ts} → {status}",
+                })
+            if m.get("merged_at"):
+                events.append({
+                    "ts": m.get("merged_at"),
+                    "kind": "claw-merged",
+                    "text": f"claw {ts} merged",
+                })
+
+    # Commits
+    sp = lab_subpath(lab.path)
+    out = subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "log", "-15",
+         "--pretty=%h|%s|%cI", "--", sp],
+        capture_output=True, text=True,
+    )
+    for line in out.stdout.strip().splitlines():
+        parts = line.split("|", 2)
+        if len(parts) == 3:
+            events.append({
+                "ts": parts[2],
+                "kind": "commit",
+                "text": f"{parts[0]} {parts[1][:160]}",
+            })
+
+    # Sort newest first; missing ts goes last
+    def sort_key(e):
+        ts = e.get("ts") or ""
+        return ts
+    events.sort(key=sort_key, reverse=True)
+    return events[:limit]
+
+
+def _load_themes_for(slug: str) -> list[dict]:
+    """Read themes jsonl for a slug. Empty list if none."""
+    encoded = slug.replace("/", "-")
+    p = LAB_ROOT / ".themes" / f"{encoded}.jsonl"
+    if not p.exists():
+        return []
+    out = []
+    for line in p.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return out
+
+
+def _ts_to_dt(ts: str | None):
+    """ISO timestamp → tz-aware datetime, or None."""
+    if not ts:
+        return None
+    try:
+        s = ts[:-1] + "+00:00" if ts.endswith("Z") else ts
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except Exception:
+        return None
+
+
+def _claw_ts_to_dt(claw_ts: str):
+    """YYYYMMDD-HHMMSS → tz-aware datetime, or None."""
+    if not claw_ts or len(claw_ts) < 15:
+        return None
+    try:
+        return datetime.strptime(claw_ts, "%Y%m%d-%H%M%S").astimezone()
+    except Exception:
+        return None
+
+
+def stale_and_blocked() -> list[dict]:
+    """Per-lab health check. Returns issues sorted worst-first.
+
+    Each item: {lab, reason, since, severity}
+    Severity: 1=critical (URL down, claw failed), 2=blocked (stuck on theme),
+    3=stale (no activity), 4=fyi (uncommitted, etc.)
+    """
+    now = datetime.now(timezone.utc)
+    issues = []
+    for lab in sr.list_labs():
+        slug = lab.slug
+        snap = collect(slug)
+
+        # 1. URL down (only for surfaces)
+        url = snap.get("url_probe") or {}
+        if slug.startswith("surface/") and url.get("status") not in (None, "200", "?"):
+            issues.append({
+                "lab": slug, "reason": f"URL {url.get('status')}",
+                "since": "ongoing", "severity": 1,
+            })
+
+        # 2. Claw failed/abandoned recently (last 24h)
+        for r in (snap.get("claws", {}).get("recent") or [])[:5]:
+            status = r.get("status", "")
+            if status in ("failed", "abandoned"):
+                ts_dt = _claw_ts_to_dt(r.get("ts", ""))
+                if ts_dt and (now - ts_dt).days < 1:
+                    issues.append({
+                        "lab": slug,
+                        "reason": f"claw {status}: {(r.get('summary') or '')[:60]}",
+                        "since": _human_delta(now, ts_dt),
+                        "severity": 1 if status == "failed" else 2,
+                    })
+
+        # 3. Stuck — last theme has status-keyword "blocked"/"failed"/"can't"
+        themes = _load_themes_for(slug)
+        if themes:
+            last = themes[-1]
+            theme_text = (last.get("theme") or "").lower()
+            stuck_kws = ["blocked", "blocker", "stuck", "can't", "cannot", "failed", "broken"]
+            if any(kw in theme_text for kw in stuck_kws):
+                ts_dt = _ts_to_dt(last.get("ts"))
+                if ts_dt:
+                    issues.append({
+                        "lab": slug,
+                        "reason": f"stuck: {last.get('theme', '')[:80]}",
+                        "since": _human_delta(now, ts_dt),
+                        "severity": 2,
+                    })
+
+        # 4. Idle — no commits + no claws + last touch >2d
+        days = lab.days_since_touch
+        no_claws = not (snap.get("claws", {}).get("recent") or [])
+        no_uncommitted = not (snap.get("uncommitted") or [])
+        if (days is not None and days >= 2 and no_claws):
+            issues.append({
+                "lab": slug, "reason": f"idle {days}d (no commits, no claws)",
+                "since": f"{days}d", "severity": 3,
+            })
+
+        # 5. Uncommitted left around (only if also stale)
+        unc = snap.get("uncommitted") or []
+        if unc and days is not None and days >= 1:
+            issues.append({
+                "lab": slug,
+                "reason": f"{len(unc)} uncommitted file{'s' if len(unc)!=1 else ''}",
+                "since": f"{days}d",
+                "severity": 4,
+            })
+
+    issues.sort(key=lambda i: (i["severity"], i["lab"]))
+    return issues
+
+
+def _human_delta(now, then) -> str:
+    secs = int((now - then).total_seconds())
+    if secs < 60:
+        return f"{secs}s"
+    if secs < 3600:
+        return f"{secs // 60}m"
+    if secs < 86400:
+        return f"{secs // 3600}h"
+    return f"{secs // 86400}d"
+
+
+def director_inbox() -> list[dict]:
+    """Open asks across all labs, oldest-first.
+
+    A theme of kind=ask is "open" if:
+      - it's less than 24h old, AND
+      - no later outcome/decision theme exists on the same lab after it
+    Older asks or asks followed by an outcome are treated as resolved.
+    """
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=24)
+    items = []
+    for lab in sr.list_labs():
+        slug = lab.slug
+        themes = _load_themes_for(slug)
+        # Find ts of latest outcome/decision per lab — treat all asks BEFORE
+        # that ts as resolved.
+        latest_outcome_ts = ""
+        for t in themes:
+            if t.get("kind") in ("outcome", "outcome-fail", "decision"):
+                ts = t.get("ts") or ""
+                if ts > latest_outcome_ts:
+                    latest_outcome_ts = ts
+
+        for t in themes:
+            if t.get("kind") != "ask":
+                continue
+            ts = t.get("ts") or ""
+            ts_dt = _ts_to_dt(ts)
+            if ts_dt is None or ts_dt < cutoff:
+                continue
+            if latest_outcome_ts and ts < latest_outcome_ts:
+                continue  # an outcome resolved this ask
+            items.append({
+                "lab": slug,
+                "ts": ts,
+                "theme": t.get("theme", ""),
+                "source": t.get("source", "?"),
+            })
+    items.sort(key=lambda i: i.get("ts") or "")
+    return items
+
+
+def investment_dashboard() -> list[dict]:
+    """Per-lab cumulative spend + claw counts.
+
+    Returns list of {lab, dollars_today, dollars_total, claws_running,
+                     claws_merged, claws_abandoned, claws_failed, last_shipped}.
+    Sorted by dollars_total desc.
+    """
+    rows = []
+    for lab in sr.list_labs():
+        slug = lab.slug
+        ledger = sr.lab_ledger(slug, limit=10000)
+        now = datetime.now(timezone.utc)
+        today_cutoff = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        dollars_today = sum(r.cost_usd for r in ledger if r.timestamp >= today_cutoff)
+        dollars_total = sum(r.cost_usd for r in ledger)
+
+        # Claws
+        claws_running = claws_merged = claws_abandoned = claws_failed = 0
+        last_shipped_ts = None
+        if lab.path:
+            claws_dir = lab.path / ".claws"
+            if claws_dir.exists():
+                for meta_path in claws_dir.glob("*.meta.json"):
+                    try:
+                        m = json.loads(meta_path.read_text())
+                    except Exception:
+                        continue
+                    status = m.get("status", "")
+                    if status == "running":
+                        claws_running += 1
+                    elif status == "merged":
+                        claws_merged += 1
+                        merged_at = m.get("merged_at")
+                        if merged_at and (last_shipped_ts is None or merged_at > last_shipped_ts):
+                            last_shipped_ts = merged_at
+                    elif status == "abandoned":
+                        claws_abandoned += 1
+                    elif status == "failed":
+                        claws_failed += 1
+
+        rows.append({
+            "lab": slug,
+            "dollars_today": round(dollars_today, 4),
+            "dollars_total": round(dollars_total, 4),
+            "claws_running": claws_running,
+            "claws_merged": claws_merged,
+            "claws_abandoned": claws_abandoned,
+            "claws_failed": claws_failed,
+            "last_shipped": last_shipped_ts,
+        })
+    rows.sort(key=lambda r: -r["dollars_total"])
+    return rows
+
+
+def collect_whole() -> dict:
+    """Federation-level snapshot: scrape all labs in one pass."""
+    out = {"labs": [], "generated_at": datetime.now(timezone.utc).isoformat()}
+    labs = sr.list_labs()
+    for lab in labs:
+        out["labs"].append(collect(lab.slug))
+    out["orphan_worktrees"] = sr.legacy_orphan_worktrees()
+    out["stale_and_blocked"] = stale_and_blocked()
+    out["director_inbox"] = director_inbox()
+    out["investment"] = investment_dashboard()
+    return out
+
+
+def render_whole_human(whole: dict) -> str:
+    out = []
+    out.append(f"# federation status — {len(whole['labs'])} labs")
+    for snap in whole["labs"]:
+        if "error" in snap:
+            out.append(f"  ⚠ {snap.get('slug', '?')}: {snap['error']}")
+            continue
+        url = snap.get("url_probe") or {}
+        url_str = ""
+        if url:
+            s = str(url.get("status", "?"))
+            url_str = f" [url={s}]"
+        cl = snap.get("claws") or {}
+        bs = cl.get("by_status") or {}
+        claws_str = ""
+        if bs:
+            claws_str = " claws=" + "/".join(f"{k}:{v}" for k, v in bs.items())
+        out.append(
+            f"  {snap['slug']:<40} {snap.get('status','?')}"
+            f" {snap.get('days_since_touch','?')}d{url_str}{claws_str}"
+        )
+        # Surface anything actionable
+        for r in (cl.get("recent") or []):
+            if r["status"] == "running":
+                out.append(f"    ⟳ claw {r['ts']} running · {r.get('summary','')[:80]}")
+            elif r["status"] == "done":
+                out.append(f"    ✓ claw {r['ts']} ready-to-merge · {r.get('summary','')[:80]}")
+        if snap.get("uncommitted"):
+            out.append(f"    ⚠ {len(snap['uncommitted'])} uncommitted")
+    if whole.get("orphan_worktrees"):
+        out.append("\nOrphan worktrees (not attached to any lab):")
+        for o in whole["orphan_worktrees"]:
+            out.append(f"  · {o['name']} (branch {o['branch']})")
+    return "\n".join(out)
+
+
+def whole_cache_key(whole: dict) -> str:
+    keys = []
+    for snap in whole["labs"]:
+        keys.append(cache_key(snap))
+    keys.extend(o["branch"] for o in whole.get("orphan_worktrees", []))
+    return hashlib.sha256("|".join(keys).encode()).hexdigest()[:16]
+
+
+def haiku_whole_rollup(whole: dict) -> str:
+    """Federation-level Haiku rollup. Inbox-style key updates across labs."""
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    key = "whole-" + whole_cache_key(whole)
+    cached = CACHE_DIR / f"{key}.txt"
+    if cached.exists():
+        return cached.read_text()
+
+    text = render_whole_human(whole)
+    prompt = f"""You are the lab director's federation inbox. Given this status across
+ALL labs, produce 4-8 short lines — terse fragments, no headers, no filler —
+that tell the director what they need to know about the federation right now.
+
+Lead with the most actionable: ready-to-merge claws, broken URLs, stuck
+supervisors, suspicious staleness, ⚠ alerts. Then notable activity per lab.
+
+Each line ≤ 100 chars. Use ●/→/⚠/⟳/✓ for emphasis. No preamble, no markdown,
+no closing line. Reference labs by their full slug.
+
+FEDERATION STATUS:
+{text}
+
+OUTPUT (4-8 lines):"""
+
+    try:
+        result = subprocess.run(
+            ["claude", "-p",
+             "--model", "claude-haiku-4-5",
+             "--output-format", "text",
+             "--dangerously-skip-permissions",
+             prompt],
+            capture_output=True, text=True, timeout=45,
+        )
+        rollup = (result.stdout or "").strip() or "(haiku produced no output)"
+    except subprocess.TimeoutExpired:
+        rollup = "(haiku timed out)"
+    except Exception as e:
+        rollup = f"(haiku error: {e})"
+
+    cached.write_text(rollup)
+    return rollup
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Director's HUD for a lab")
+    p.add_argument("slug", nargs="?", help="Lab slug (omit when --whole)")
+    p.add_argument("--json", action="store_true", help="Output structured JSON")
+    p.add_argument("--rollup", action="store_true", help="Append Haiku rollup")
+    p.add_argument("--rollup-only", action="store_true", help="Only output the Haiku rollup")
+    p.add_argument("--whole", action="store_true",
+                   help="Federation-level snapshot across all labs (no slug needed)")
+    p.add_argument("--events", action="store_true",
+                   help="Output a flat list of events (newest first) for the slug.")
+    args = p.parse_args()
+
+    if args.events:
+        if not args.slug:
+            p.print_help()
+            sys.exit(2)
+        evs = collect_events(args.slug)
+        if args.json:
+            print(json.dumps(evs, indent=2, default=str))
+        else:
+            for e in evs:
+                ts = (e.get("ts") or "")[:19]
+                print(f"{ts}  [{e['kind']:<13}]  {e['text']}")
+        return
+
+    if args.whole:
+        whole = collect_whole()
+        if args.json:
+            print(json.dumps(whole, indent=2, default=str))
+            return
+        if args.rollup_only:
+            print(haiku_whole_rollup(whole))
+            return
+        print(render_whole_human(whole))
+        if args.rollup:
+            print()
+            print("─" * 60)
+            print(haiku_whole_rollup(whole))
+        return
+
+    if not args.slug:
+        p.print_help()
+        sys.exit(2)
+
+    snap = collect(args.slug)
+    if args.json:
+        print(json.dumps(snap, indent=2, default=str))
+        return
+    if args.rollup_only:
+        print(haiku_rollup(snap))
+        return
+    print(render_human(snap))
+    if args.rollup:
+        print()
+        print("─" * 60)
+        print(haiku_rollup(snap))
+
+
+if __name__ == "__main__":
+    main()

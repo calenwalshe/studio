@@ -1,0 +1,230 @@
+#!/usr/bin/env bash
+#
+# cgl-tmux — launcher for the Cairn Gate Labs federation tmux session.
+#
+# Properties:
+#   - Uses ONLY the project-local .tmux.conf at lab/.tmux.conf
+#   - Does NOT read your global ~/.tmux.conf
+#   - Idempotent: if the session already exists, just attaches
+#   - Lab window 0 is always present, on `main`, in `lab/`
+#   - Other windows correspond 1:1 with active git worktrees under trees/
+#
+# Discipline:
+#   - Tmux is the director's command center, NOT a runtime substrate for agents
+#   - Long-lived agent processes are NOT expected here. Shells persist; Claude
+#     sessions are summoned per task.
+#   - If this script or tmux dies, the lab keeps working. Recreate with one
+#     invocation.
+#
+# Usage:
+#   cgl-tmux              attach to (or create) the federation session
+#   cgl-tmux --status     print session state (windows + worktrees) and exit
+#   cgl-tmux --kill       kill the federation session (lab files untouched)
+#   cgl-tmux --help
+
+set -euo pipefail
+
+LAB_DIR="$HOME/projects/cairn-gate-labs/lab"
+WRAPPER_DIR="$HOME/projects/cairn-gate-labs"
+TREES_DIR="$WRAPPER_DIR/trees"
+SESSION="cgl"
+CONFIG="$LAB_DIR/.tmux.conf"
+
+# ── Sanity checks ────────────────────────────────────────────────────────────
+
+if [[ ! -d "$LAB_DIR" ]]; then
+  echo "error: lab dir not found at $LAB_DIR" >&2
+  exit 1
+fi
+if [[ ! -f "$CONFIG" ]]; then
+  echo "error: config not found at $CONFIG" >&2
+  exit 1
+fi
+if ! command -v tmux >/dev/null; then
+  echo "error: tmux not installed" >&2
+  exit 1
+fi
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+session_exists() {
+  tmux -L cgl has-session -t "$SESSION" 2>/dev/null
+}
+
+list_arm_worktrees() {
+  # Outputs: <slug>\t<absolute_path> for every worktree under trees/, one per line.
+  if [[ ! -d "$TREES_DIR" ]]; then return; fi
+  for d in "$TREES_DIR"/*/; do
+    [[ -d "$d" ]] || continue
+    local slug
+    slug="$(basename "$d")"
+    printf "%s\t%s\n" "$slug" "${d%/}"
+  done
+}
+
+ensure_window() {
+  # Creates window for arm if missing. Pre-condition: session exists.
+  local slug="$1"
+  local path="$2"
+  if tmux -L cgl list-windows -t "$SESSION" -F '#W' 2>/dev/null | grep -qx "$slug"; then
+    return 0
+  fi
+  tmux -L cgl new-window -t "$SESSION" -n "$slug" -c "$path"
+}
+
+setup_lab_window() {
+  # Configures the lab window as the command center: three panes.
+  #   director (top-left)   — shell, primed for `claude`
+  #   status (top-right)    — live federation status panel (auto-refreshing)
+  #   utility (bottom)      — utility shell for cgl-* commands
+  #
+  # Idempotent: skips setup if the lab window already has >1 pane.
+  # Uses pane IDs (%N) rather than indices — robust against pane-base-index.
+  local pane_count
+  pane_count=$(tmux -L cgl list-panes -t "$SESSION:lab" 2>/dev/null | wc -l)
+  if [[ "$pane_count" -gt 1 ]]; then
+    return 0  # already set up
+  fi
+
+  # Capture the original (only) pane's ID — this becomes the director pane
+  local director_pane
+  director_pane=$(tmux -L cgl list-panes -t "$SESSION:lab" -F '#{pane_id}' | head -1)
+
+  # Split off the bottom utility shell from the director pane
+  local utility_pane
+  utility_pane=$(tmux -L cgl split-window -t "$director_pane" -v -l 35% -c "$LAB_DIR" -P -F '#{pane_id}')
+
+  # Split the director pane horizontally to create the status pane on the right
+  local status_pane
+  status_pane=$(tmux -L cgl split-window -t "$director_pane" -h -l 45% -c "$LAB_DIR" -P -F '#{pane_id}')
+
+  # Director pane: print hint banner, leave shell ready
+  tmux -L cgl send-keys -t "$director_pane" \
+    "clear && cat <<'BANNER'
+╭───────────────────────────────────────────────────────────╮
+│  cgl federation — director's command center               │
+│                                                           │
+│  This is the director pane. Run \`claude\` to start a       │
+│  conversation with me; or use commands directly.          │
+│                                                           │
+│  Quick reference:                                         │
+│    /director status                  full status report    │
+│    cgl-reports                       federation overview   │
+│    cgl-reports --unreviewed          WIP                   │
+│    cgl-delegate <slug> \"<task>\"      bounded delegation   │
+│    cgl-send <slug> \"<cmd>\"           shell to arm window  │
+│                                                           │
+│  Navigate: Ctrl-b 1/2/...            arm windows           │
+│            Ctrl-b 0                  back here             │
+│            Ctrl-b S / A              status / arms popup   │
+╰───────────────────────────────────────────────────────────╯
+BANNER" Enter
+
+  # Status pane: live federation status via watch
+  tmux -L cgl send-keys -t "$status_pane" \
+    "watch -t -c -n 30 cgl-status-pane" Enter
+
+  # Utility pane: small hint banner
+  tmux -L cgl send-keys -t "$utility_pane" \
+    "clear && echo '  ── utility shell ──  cgl-* commands here  ──' && echo" Enter
+
+  # Focus on the director pane
+  tmux -L cgl select-pane -t "$director_pane"
+}
+
+# ── Subcommands ──────────────────────────────────────────────────────────────
+
+cmd_status() {
+  echo "session: $SESSION"
+  if session_exists; then
+    echo "  state:    running"
+    echo "  windows:"
+    tmux -L cgl list-windows -t "$SESSION" -F "    #I  #W  (#{pane_current_path})"
+  else
+    echo "  state:    not running"
+  fi
+  echo ""
+  echo "worktrees under $TREES_DIR:"
+  if [[ -d "$TREES_DIR" ]]; then
+    while IFS=$'\t' read -r slug path; do
+      [[ -n "$slug" ]] && echo "  $slug  ($path)"
+    done < <(list_arm_worktrees)
+  else
+    echo "  (trees/ does not exist)"
+  fi
+}
+
+cmd_kill() {
+  if session_exists; then
+    tmux -L cgl kill-session -t "$SESSION"
+    echo "killed session: $SESSION"
+  else
+    echo "session not running"
+  fi
+}
+
+cmd_help() {
+  sed -n '3,/^set -euo/p' "$0" | grep '^#' | sed 's/^# \?//'
+}
+
+cmd_attach() {
+  if session_exists; then
+    # Session already exists — just sync windows for any new worktrees, then attach.
+    while IFS=$'\t' read -r slug path; do
+      [[ -n "$slug" ]] && ensure_window "$slug" "$path"
+    done < <(list_arm_worktrees)
+    # Idempotently set up lab layout (no-op if already multi-pane)
+    setup_lab_window
+  else
+    # Create session with window 0 = lab, on main worktree.
+    tmux -L cgl -f "$CONFIG" new-session -d -s "$SESSION" -n "lab" -c "$LAB_DIR"
+    # Set up the command-center layout in window 0
+    setup_lab_window
+    # Add window for each arm worktree.
+    while IFS=$'\t' read -r slug path; do
+      [[ -n "$slug" ]] && ensure_window "$slug" "$path"
+    done < <(list_arm_worktrees)
+    # Focus the lab window.
+    tmux -L cgl select-window -t "$SESSION:lab"
+  fi
+
+  # Attach to the cgl-socket session.
+  #
+  # Note: we always use `attach` (never `switch-client`) because the cgl session
+  # lives on its own tmux socket (-L cgl). switch-client only works within the
+  # same socket; it cannot move a client between sockets.
+  #
+  # Caveat: tmux refuses `attach` with no current client when called from
+  # inside another tmux session. To work around, we detach the inner session
+  # implicitly by execing tmux directly — the user's outer tmux client gets
+  # reused as the new client for the cgl socket.
+  if [[ -n "${TMUX:-}" ]]; then
+    cat <<EOF
+You're inside another tmux session (default socket).
+The cgl federation session lives on its own socket and can't be switched
+into from here. Either:
+
+  1. Detach from the current tmux first (Ctrl-b d), then run cgl-tmux again
+  2. Open a fresh terminal that's NOT inside tmux, and run cgl-tmux there
+
+The cgl session is alive and waiting:
+$(tmux -L cgl list-windows -t "$SESSION" -F "  #I  #W  (#{pane_current_path})")
+EOF
+    return 1
+  fi
+  tmux -L cgl attach -t "$SESSION"
+}
+
+# ── Dispatch ─────────────────────────────────────────────────────────────────
+
+case "${1:-attach}" in
+  --status|-s|status)  cmd_status ;;
+  --kill|-k|kill)      cmd_kill ;;
+  --help|-h|help)      cmd_help ;;
+  attach|"")           cmd_attach ;;
+  *)
+    echo "unknown command: $1" >&2
+    cmd_help
+    exit 2
+    ;;
+esac

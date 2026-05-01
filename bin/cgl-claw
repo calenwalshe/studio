@@ -1,0 +1,276 @@
+#!/usr/bin/env bash
+# cgl-claw — spawn a background Claude worker (claw) for a lab.
+#
+# Each claw runs in its OWN ephemeral git worktree branched off the lab's
+# current HEAD, so multiple claws can run in parallel without contending
+# on the working tree. After a claw finishes, its work lives on the branch
+# claw/<slug-safe>/<ts> until the supervisor reviews and merges it (or
+# abandons it).
+#
+# Usage:
+#   cgl-claw spawn <slug> "<task>"
+#       Spawns a `claude -p` worker in background. Worktree at
+#       trees/claw/<slug-safe>-<ts>/, branch claw/<slug-safe>/<ts>.
+#       Logs/result land in <lab>/.claws/<ts>.{log,result.md} so the
+#       supervisor can review without having to know the worktree path.
+#
+#   cgl-claw list <slug>
+#       List claws for a lab with status (running/done/merged/abandoned).
+#
+#   cgl-claw tail <slug>
+#       Tail the most recent claw log.
+#
+#   cgl-claw merge <slug> <ts>
+#       Merge the claw's branch into the lab's main branch + sync deploy.
+#
+#   cgl-claw abandon <slug> <ts>
+#       Drop the worktree + branch without merging.
+
+set -euo pipefail
+
+CMD="${1:-}"
+shift || true
+
+LAB_ROOT="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
+TREES_ROOT="$(dirname "$LAB_ROOT")/trees"
+SERVED_BASE="/home/agent/agent-stack/caddy/static/cairnlabs"
+
+# Slug-safe = surface/snake → surface-snake
+slug_safe() { echo "$1" | tr '/' '-'; }
+
+lab_path() {
+  python3 -c "
+import sys
+sys.path.insert(0, '$LAB_ROOT/studio')
+from lib import state_reader as sr
+lab = sr.get_lab('$1')
+if lab is None or not lab.path:
+    sys.exit(f\"unknown lab: $1\")
+print(lab.path)
+"
+}
+
+# Subpath within the repo (e.g. lab/surfaces/snake → surfaces/snake)
+lab_subpath() {
+  python3 -c "
+import os, sys
+lab_root = '$LAB_ROOT'
+lab_path = '$1'
+print(os.path.relpath(lab_path, lab_root))
+"
+}
+
+lab_main_branch() {
+  if git -C "$LAB_ROOT" show-ref --verify --quiet refs/heads/main; then
+    echo main
+  elif git -C "$LAB_ROOT" show-ref --verify --quiet refs/heads/master; then
+    echo master
+  else
+    git -C "$LAB_ROOT" rev-parse --abbrev-ref HEAD
+  fi
+}
+
+case "$CMD" in
+  spawn)
+    SLUG="${1:?slug required}"
+    TASK="${2:?task required}"
+    LP="$(lab_path "$SLUG")"
+    SP="$(lab_subpath "$LP")"
+    SAFE="$(slug_safe "$SLUG")"
+    TS="$(date +%Y%m%d-%H%M%S)"
+
+    # Set up bookkeeping in the LAB (not the worktree) so the supervisor
+    # can review without knowing where the worktree lives.
+    CLAWS_DIR="$LP/.claws"
+    mkdir -p "$CLAWS_DIR"
+    LOG="$CLAWS_DIR/$TS.log"
+    RESULT="$CLAWS_DIR/$TS.result.md"
+    META="$CLAWS_DIR/$TS.meta.json"
+
+    # Create the claw's ephemeral worktree
+    BRANCH="claw/$SAFE/$TS"
+    WORKTREE="$TREES_ROOT/claw-$SAFE-$TS"
+    HEAD_REF="$(git -C "$LAB_ROOT" rev-parse --abbrev-ref HEAD)"
+    mkdir -p "$TREES_ROOT"
+    git -C "$LAB_ROOT" worktree add -b "$BRANCH" "$WORKTREE" "$HEAD_REF" >/dev/null
+
+    # Write metadata so we can find the worktree later
+    cat > "$META" <<EOF
+{
+  "slug": "$SLUG",
+  "ts": "$TS",
+  "branch": "$BRANCH",
+  "worktree": "$WORKTREE",
+  "head_at_spawn": "$HEAD_REF",
+  "task_subpath": "$SP",
+  "status": "running"
+}
+EOF
+
+    cat > "$LOG" <<EOF
+# claw spawn
+slug:     $SLUG
+task:     $TASK
+started:  $(date -Iseconds)
+worktree: $WORKTREE
+branch:   $BRANCH
+cwd:      $WORKTREE/$SP
+
+EOF
+
+    # Run in background — cwd is the lab subpath INSIDE the worktree
+    (
+      cd "$WORKTREE/$SP"
+      claude -p \
+        --output-format text \
+        --dangerously-skip-permissions \
+        "$TASK" \
+        >> "$LOG" 2>&1
+      RC=$?
+      # Auto-commit any worktree changes so they're recoverable
+      if [[ -n "$(git -C "$WORKTREE" status --porcelain)" ]]; then
+        git -C "$WORKTREE" add -A 2>/dev/null || true
+        git -C "$WORKTREE" -c user.email=claw@cgl -c user.name=claw \
+          commit -m "claw $TS: $(echo "$TASK" | head -c 80)" >/dev/null 2>&1 || true
+      fi
+
+      echo "" >> "$LOG"
+      echo "# finished" >> "$LOG"
+      echo "ended:    $(date -Iseconds)" >> "$LOG"
+      echo "exit:     $RC" >> "$LOG"
+      # Result = everything after the spawn header, before the # finished marker
+      awk '/^$/{p=1;next} p && !/^# finished/{print} /^# finished/{exit}' "$LOG" > "$RESULT"
+      # Update meta status
+      python3 -c "
+import json
+m = json.load(open('$META'))
+m['status'] = 'done' if $RC == 0 else 'failed'
+m['ended'] = '$(date -Iseconds)'
+m['exit'] = $RC
+json.dump(m, open('$META','w'), indent=2)
+" 2>/dev/null || true
+
+      # Append to costs ledger (best-effort)
+      printf '{"timestamp":"%s","lab":"%s","skill":"claw","model":"claude","cost_usd":0,"artifact_path":"%s"}\n' \
+        "$(date -Iseconds)" "$SLUG" "$RESULT" \
+        >> "$LAB_ROOT/intel/costs.jsonl" 2>/dev/null || true
+
+      # Report back to supervisor
+      SUMMARY=$(grep -v '^$' "$RESULT" 2>/dev/null | head -1 | cut -c 1-180)
+      [[ -z "$SUMMARY" ]] && SUMMARY="(no summary)"
+      cgl-tell "$SLUG" "[claw $TS ready-to-merge] $SUMMARY · merge: cgl-claw merge $SLUG $TS" 2>/dev/null || true
+    ) &
+    PID=$!
+    disown $PID 2>/dev/null || true
+
+    echo "spawned: $TS (pid=$PID)"
+    echo "branch:  $BRANCH"
+    echo "tree:    $WORKTREE"
+    echo "log:     $LOG"
+    echo "result:  $RESULT"
+    ;;
+
+  list)
+    SLUG="${1:?slug required}"
+    LP="$(lab_path "$SLUG")"
+    CLAWS_DIR="$LP/.claws"
+    if [[ ! -d "$CLAWS_DIR" ]]; then
+      echo "(no claws yet)"
+      exit 0
+    fi
+    for meta in $(ls -t "$CLAWS_DIR"/*.meta.json 2>/dev/null); do
+      ts=$(basename "$meta" .meta.json)
+      status=$(jq -r '.status' "$meta" 2>/dev/null || echo "?")
+      branch=$(jq -r '.branch' "$meta" 2>/dev/null || echo "?")
+      printf "%-15s  %s  %s\n" "$status" "$ts" "$branch"
+    done
+    ;;
+
+  tail)
+    SLUG="${1:?slug required}"
+    LP="$(lab_path "$SLUG")"
+    LATEST=$(ls -t "$LP"/.claws/*.log 2>/dev/null | head -1)
+    [[ -z "$LATEST" ]] && { echo "(no claws)"; exit 0; }
+    tail -f "$LATEST"
+    ;;
+
+  merge)
+    SLUG="${1:?slug required}"
+    TS="${2:?ts required}"
+    LP="$(lab_path "$SLUG")"
+    META="$LP/.claws/$TS.meta.json"
+    if [[ ! -f "$META" ]]; then
+      echo "error: no meta for $TS at $META" >&2
+      exit 1
+    fi
+    BRANCH=$(jq -r '.branch' "$META")
+    WORKTREE=$(jq -r '.worktree' "$META")
+    MAIN="$(lab_main_branch)"
+
+    # Check the worktree has no uncommitted changes
+    if [[ -n "$(git -C "$WORKTREE" status --porcelain 2>/dev/null)" ]]; then
+      echo "error: worktree has uncommitted changes" >&2
+      exit 1
+    fi
+
+    # Resolve $MAIN to its current SHA in the lab repo so the worktree
+    # rebase targets the up-to-date tip (refs across worktrees are shared,
+    # but we use an explicit SHA to avoid any caching/staleness surprises).
+    MAIN_SHA="$(git -C "$LAB_ROOT" rev-parse "$MAIN")"
+    echo "rebasing $BRANCH onto $MAIN ($MAIN_SHA)..."
+    if ! git -C "$WORKTREE" rebase "$MAIN_SHA"; then
+      echo "error: rebase had conflicts. resolve in $WORKTREE then re-run merge." >&2
+      exit 1
+    fi
+    echo "ff-merging into $MAIN..."
+    if ! git -C "$LAB_ROOT" merge --ff-only "$BRANCH"; then
+      echo "error: ff-merge failed even after rebase. lab repo may be on a wrong branch." >&2
+      exit 1
+    fi
+
+    # Sync any web/ changes to served path (caddy-deploy hook only fires on Edit/Write tools)
+    if [[ -d "$LAB_ROOT/web/cairnlabs.org" ]] && [[ -d "$SERVED_BASE" ]]; then
+      rsync -a --delete-after \
+        "$LAB_ROOT/web/cairnlabs.org/" "$SERVED_BASE/" 2>/dev/null || true
+    fi
+
+    # Remove the worktree + branch
+    git -C "$LAB_ROOT" worktree remove "$WORKTREE" 2>/dev/null || true
+    git -C "$LAB_ROOT" branch -D "$BRANCH" 2>/dev/null || true
+
+    # Update meta status
+    python3 -c "
+import json
+m = json.load(open('$META'))
+m['status'] = 'merged'
+m['merged_at'] = '$(date -Iseconds)'
+json.dump(m, open('$META','w'), indent=2)
+"
+    echo "✓ merged $BRANCH → $MAIN, worktree removed, deploy synced"
+    ;;
+
+  abandon)
+    SLUG="${1:?slug required}"
+    TS="${2:?ts required}"
+    LP="$(lab_path "$SLUG")"
+    META="$LP/.claws/$TS.meta.json"
+    [[ ! -f "$META" ]] && { echo "error: no meta for $TS"; exit 1; }
+    BRANCH=$(jq -r '.branch' "$META")
+    WORKTREE=$(jq -r '.worktree' "$META")
+    git -C "$LAB_ROOT" worktree remove --force "$WORKTREE" 2>/dev/null || true
+    git -C "$LAB_ROOT" branch -D "$BRANCH" 2>/dev/null || true
+    python3 -c "
+import json
+m = json.load(open('$META'))
+m['status'] = 'abandoned'
+json.dump(m, open('$META','w'), indent=2)
+"
+    echo "✓ abandoned $BRANCH"
+    ;;
+
+  *)
+    echo "usage: cgl-claw {spawn|list|tail|merge|abandon} ..." >&2
+    sed -n '3,/^set -euo/p' "$0" | grep '^#' | sed 's/^# \?//' >&2
+    exit 2
+    ;;
+esac
