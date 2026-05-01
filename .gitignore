@@ -18,3 +18,4 @@ Thumbs.db
 venv/
 .vscode/
 .pytest_cache/
+snapshot_report.html
