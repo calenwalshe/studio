@@ -1,0 +1,22 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Local secrets — defense-in-depth, none should live in this repo at all
+.env
+*.pem
+*.key
+
+# Per-machine state — must never be committed
+.local-state/
