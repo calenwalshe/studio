@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/lab.schema.json",
+  "title": "lab.toml",
+  "description": "Per-lab identity and directory layout configuration.",
+  "type": "object",
+  "required": ["id", "title", "kind", "version", "director", "paths"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique slug identifier for the lab."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable display name."
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["surface", "investigation", "systems", "federation-root"],
+      "description": "Lab kind."
+    },
+    "version": {
+      "type": "integer",
+      "description": "Schema version."
+    },
+    "director": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["single-human"]
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "required": ["surfaces", "systems", "investigations", "spine_skills", "runbooks", "decisions", "intel", "claws"],
+      "properties": {
+        "surfaces": { "type": "string" },
+        "systems": { "type": "string" },
+        "investigations": { "type": "string" },
+        "spine_skills": { "type": "string" },
+        "runbooks": { "type": "string" },
+        "decisions": { "type": "string" },
+        "intel": { "type": "string" },
+        "claws": { "type": "string" }
+      }
+    }
+  }
+}

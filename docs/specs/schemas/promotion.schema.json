@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/promotion.schema.json",
+  "title": "promotion.toml",
+  "description": "Promotion outcomes, candidate types, and default verification checks.",
+  "type": "object",
+  "required": ["outcomes", "candidate_types", "checks"],
+  "properties": {
+    "outcomes": {
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["abandon", "keep_evidence", "continue", "merge", "publish", "graduate_to_spine"]
+          }
+        }
+      }
+    },
+    "candidate_types": {
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "evidence",
+              "investigation_update",
+              "system_change",
+              "surface_change",
+              "runbook_candidate",
+              "skill_candidate",
+              "source_pack_candidate"
+            ]
+          }
+        }
+      }
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/checkEntry"
+      }
+    }
+  },
+  "$defs": {
+    "checkEntry": {
+      "type": "object",
+      "properties": {
+        "require_result": { "type": "boolean" },
+        "require_meta": { "type": "boolean" },
+        "require_trace": { "type": "boolean" },
+        "require_director_approval": { "type": "boolean" }
+      }
+    }
+  }
+}

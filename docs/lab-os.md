@@ -34,3 +34,33 @@ These concepts shape where Studio is heading:
 
 Until these are implemented, they should be treated as design language,
 not runtime guarantees.
+
+## Where we are now
+
+**Arc A — schema and example (this migration):**
+
+- `.studio/` control-plane schema added to `examples/hello-lab/`: `lab.toml`,
+  `orientations.toml`, `roles.toml`, `capabilities.toml`, `runtimes.toml`,
+  `promotion.toml`, `sources.toml`.
+- `.claws/<id>/` artifact bundle contract established as a hand-written fixture:
+  `meta.json`, `trace.jsonl`, `evidence.jsonl`, `result.md`.
+- `docs/specs/studio-lab-os-spec.md` published as the authoritative target
+  architecture reference.
+- `docs/specs/walkthrough-hello-lab.md` added as a guided teaching document.
+- Top-level README updated to surface the lab OS direction.
+
+The v0 harness is unmodified. All Arc A additions are declarative — no new
+runtime behavior.
+
+**Arc B — dry-run CLI (planned):**
+
+- `cgl-orient create`, `cgl-orient list`, `cgl-claw spawn --orientation <id> --role <role> --dry-run`.
+- Stubs that write artifact bundles without running a real claw.
+- See spec §14 Phase 4.
+
+**Arc C — promotion queue and capability checks (planned):**
+
+- Bridge reads artifact bundles and surfaces promotion candidates.
+- Capability gateway enforces at least: role must exist, capability profile must
+  exist, output contract required, no ambient secrets by default.
+- See spec §14 Phases 5–7.

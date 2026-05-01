@@ -1,0 +1,4 @@
+[sources.studio-current-repo]
+type = "github_repo"
+url = "https://github.com/calenwalshe/studio"
+source_pack = "github-repo-research"
