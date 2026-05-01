@@ -1,0 +1,292 @@
+#!/usr/bin/env python3
+"""cgl-orient — inspect and create orientations for a Studio lab.
+
+Reads $CGL_LAB_ROOT/.studio/orientations.toml (and the other six .toml
+files in that directory for validation).
+
+Subcommands:
+    cgl-orient list
+        List all orientations: id, status, truncated objective.
+
+    cgl-orient show <id>
+        Print full details of one orientation.
+
+    cgl-orient validate
+        Load all .studio/*.toml files and report errors. Exit 0 if clean.
+
+    cgl-orient create --id <id> --lab <slug> --objective <text>
+                      [--role <r> ...] [--source <s> ...]
+        Append a new [[orientation]] entry to orientations.toml.
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from _studio_orient import (  # noqa: E402
+    load_studio_config,
+    list_orientations,
+    get_orientation,
+    StudioConfigError,
+)
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _lab_root() -> Path:
+    val = os.environ.get("CGL_LAB_ROOT", "")
+    if not val:
+        print("error: CGL_LAB_ROOT is not set", file=sys.stderr)
+        print("  set it to your lab directory, e.g.:", file=sys.stderr)
+        print('    export CGL_LAB_ROOT="$HOME/projects/my-lab"', file=sys.stderr)
+        print("  or run install.sh to write a config file.", file=sys.stderr)
+        sys.exit(1)
+    p = Path(val)
+    if not p.is_dir():
+        print(f"error: CGL_LAB_ROOT={val} is not a directory", file=sys.stderr)
+        sys.exit(1)
+    return p
+
+
+def _studio_dir(lab_root: Path) -> Path:
+    return lab_root / ".studio"
+
+
+def _orientations_toml(lab_root: Path) -> Path:
+    return _studio_dir(lab_root) / "orientations.toml"
+
+
+# ---------------------------------------------------------------------------
+# Subcommand: list
+# ---------------------------------------------------------------------------
+
+def cmd_list(_args) -> None:
+    lab_root = _lab_root()
+    try:
+        config = load_studio_config(lab_root)
+        orientations = list_orientations(config)
+    except StudioConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    if not orientations:
+        print("(no orientations)")
+        return
+
+    id_w = max(len(o.id) for o in orientations)
+    st_w = max(len(o.status) for o in orientations)
+    id_w = max(id_w, 2)
+    st_w = max(st_w, 6)
+
+    for o in orientations:
+        objective = o.objective
+        if len(objective) > 60:
+            objective = objective[:57] + "..."
+        print(f"{o.id:<{id_w}}  {o.status:<{st_w}}  {objective}")
+
+
+# ---------------------------------------------------------------------------
+# Subcommand: show
+# ---------------------------------------------------------------------------
+
+def cmd_show(args) -> None:
+    lab_root = _lab_root()
+    try:
+        config = load_studio_config(lab_root)
+        orientation = get_orientation(config, args.id)
+    except StudioConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"id:         {orientation.id}")
+    print(f"lab:        {orientation.lab}")
+    print(f"status:     {orientation.status}")
+    print(f"stop_rule:  {orientation.stop_rule}")
+    print(f"objective:  {orientation.objective}")
+
+    print("roles:")
+    if orientation.roles:
+        for r in orientation.roles:
+            print(f"  {r}")
+    else:
+        print("  (none)")
+
+    print("sources:")
+    if orientation.sources:
+        for s in orientation.sources:
+            print(f"  {s}")
+    else:
+        print("  (none)")
+
+    print("outputs:")
+    if orientation.outputs:
+        for out in orientation.outputs:
+            print(f"  {out}")
+    else:
+        print("  (none)")
+
+    print("constraints:")
+    if orientation.constraints:
+        for k, v in orientation.constraints.items():
+            print(f"  {k}: {v}")
+    else:
+        print("  (none)")
+
+
+# ---------------------------------------------------------------------------
+# Subcommand: validate
+# ---------------------------------------------------------------------------
+
+_STUDIO_TOML_FILES = [
+    "capabilities.toml",
+    "lab.toml",
+    "orientations.toml",
+    "promotion.toml",
+    "roles.toml",
+    "runtimes.toml",
+    "sources.toml",
+]
+
+
+def cmd_validate(_args) -> None:
+    lab_root = _lab_root()
+    studio = _studio_dir(lab_root)
+    errors = []
+
+    try:
+        load_studio_config(lab_root)
+    except StudioConfigError as exc:
+        errors.append(str(exc))
+
+    # Also check each file is parseable individually as TOML.
+    import tomllib  # Python 3.11+; fall back to tomli if needed.
+
+    for name in _STUDIO_TOML_FILES:
+        path = studio / name
+        if not path.exists():
+            errors.append(f"{name}: file not found")
+            continue
+        try:
+            tomllib.loads(path.read_text())
+        except tomllib.TOMLDecodeError as exc:
+            errors.append(f"{name}: {exc}")
+
+    if errors:
+        for msg in errors:
+            print(f"error: {msg}", file=sys.stderr)
+        sys.exit(1)
+
+    print("ok: .studio/ is valid")
+
+
+# ---------------------------------------------------------------------------
+# Subcommand: create
+# ---------------------------------------------------------------------------
+
+_DEFAULT_CONSTRAINTS = {
+    "run_untrusted_code": False,
+    "install_dependencies": False,
+    "require_provenance": True,
+    "implementation_allowed": False,
+}
+_DEFAULT_STATUS = "draft"
+_DEFAULT_STOP_RULE = "director_review_after_first_spec"
+_DEFAULT_OUTPUTS = ["evidence_bundle"]
+
+
+def _toml_bool(val: bool) -> str:
+    return "true" if val else "false"
+
+
+def _toml_string_list(items: list[str]) -> str:
+    quoted = ", ".join(f'"{item}"' for item in items)
+    return f"[{quoted}]"
+
+
+def cmd_create(args) -> None:
+    lab_root = _lab_root()
+    toml_path = _orientations_toml(lab_root)
+
+    try:
+        config = load_studio_config(lab_root)
+    except StudioConfigError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        get_orientation(config, args.id)
+    except StudioConfigError:
+        pass
+    else:
+        print(f"error: orientation '{args.id}' already exists", file=sys.stderr)
+        sys.exit(1)
+
+    roles = args.role or []
+    sources = args.source or []
+    outputs = _DEFAULT_OUTPUTS
+
+    # Build the TOML fragment manually to match existing file formatting.
+    lines = ["", "[[orientation]]"]
+    lines.append(f'id = "{args.id}"')
+    lines.append(f'lab = "{args.lab}"')
+    lines.append(f'objective = "{args.objective}"')
+    lines.append(f'status = "{_DEFAULT_STATUS}"')
+    lines.append(f'stop_rule = "{_DEFAULT_STOP_RULE}"')
+    lines.append(f"roles = {_toml_string_list(roles)}")
+    lines.append(f"sources = {_toml_string_list(sources)}")
+    lines.append(f"outputs = {_toml_string_list(outputs)}")
+    lines.append("")
+    lines.append("[orientation.constraints]")
+    for k, v in _DEFAULT_CONSTRAINTS.items():
+        lines.append(f"{k} = {_toml_bool(v)}")
+
+    fragment = "\n".join(lines) + "\n"
+
+    try:
+        with toml_path.open("a") as fh:
+            fh.write(fragment)
+    except OSError as exc:
+        print(f"error: could not write {toml_path}: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"created orientation {args.id}")
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Inspect and create Studio orientations")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("list", help="List all orientations").set_defaults(func=cmd_list)
+
+    sh = sub.add_parser("show", help="Show full details of one orientation")
+    sh.add_argument("id", help="Orientation ID")
+    sh.set_defaults(func=cmd_show)
+
+    sub.add_parser("validate", help="Validate all .studio/*.toml files").set_defaults(
+        func=cmd_validate
+    )
+
+    cr = sub.add_parser("create", help="Append a new orientation entry")
+    cr.add_argument("--id", required=True, help="Unique orientation ID")
+    cr.add_argument("--lab", required=True, help="Lab slug (e.g. investigation/foo)")
+    cr.add_argument("--objective", required=True, help="Orientation objective text")
+    cr.add_argument("--role", action="append", metavar="ROLE", help="Role (repeatable)")
+    cr.add_argument("--source", action="append", metavar="SRC", help="Source (repeatable)")
+    cr.set_defaults(func=cmd_create)
+
+    args = p.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

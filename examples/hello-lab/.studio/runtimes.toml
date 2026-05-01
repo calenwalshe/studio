@@ -1,0 +1,14 @@
+[runtimes.claude]
+command = "claude"
+mode = "interactive"
+status = "implemented-v0"
+
+[runtimes.claude_print]
+command = "claude -p"
+mode = "oneshot"
+status = "implemented-v0"
+
+[runtimes.codex]
+command = "codex"
+mode = "oneshot"
+status = "future"

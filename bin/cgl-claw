@@ -14,6 +14,11 @@
 #       Logs/result land in <lab>/.claws/<ts>.{log,result.md} so the
 #       supervisor can review without having to know the worktree path.
 #
+#   cgl-claw spawn --orientation <id> --role <role> --dry-run
+#       Dry-run a role-based claw against the orientation. Writes a stub
+#       artifact bundle to .claws/<id>/. Does not execute claude. Real
+#       claw integration arrives in Arc C.
+#
 #   cgl-claw list <slug>
 #       List claws for a lab with status (running/done/merged/abandoned).
 #
@@ -76,6 +81,21 @@ lab_main_branch() {
 
 case "$CMD" in
   spawn)
+    # Detect new orientation-driven mode
+    USE_ORIENTATION=0
+    for arg in "$@"; do
+      if [[ "$arg" == "--orientation" ]]; then
+        USE_ORIENTATION=1
+        break
+      fi
+    done
+
+    if [[ "$USE_ORIENTATION" == "1" ]]; then
+      # New path — delegate to Python helper
+      exec python3 "$HARNESS/bin/_studio_orient_spawn.py" "$@"
+    fi
+
+    # Existing path — unchanged below this line
     SLUG="${1:?slug required}"
     TASK="${2:?task required}"
     LP="$(lab_path "$SLUG")"

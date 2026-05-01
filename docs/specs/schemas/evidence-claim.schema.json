@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio.cgl/schemas/evidence-claim.schema.json",
+  "title": "Claw Artifact Bundle — evidence.jsonl line",
+  "description": "Schema for one line (JSON object) in a claw's evidence.jsonl. Each line is a single extracted claim with full provenance.",
+  "type": "object",
+  "required": ["id", "claim", "source", "support", "confidence"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique claim identifier within this bundle. Use a simple sequential slug (e.g. claim-001).",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "examples": ["claim-001", "claim-042"]
+    },
+    "claim": {
+      "type": "string",
+      "description": "Precise, falsifiable statement of what was found. Should be a complete sentence. Avoid vague language.",
+      "minLength": 10,
+      "examples": [
+        "Studio v0 uses tmux sessions as the supervisor primitive.",
+        "Claws are intended to run in ephemeral git worktrees."
+      ]
+    },
+    "source": {
+      "type": "string",
+      "description": "URL or source key (from sources.toml) where the evidence was found. Must be specific enough to relocate the evidence.",
+      "examples": [
+        "https://github.com/calenwalshe/studio",
+        "studio-current-repo",
+        "https://github.com/bradAGI/awesome-cli-coding-agents"
+      ]
+    },
+    "support": {
+      "type": "string",
+      "description": "Verbatim quote or close paraphrase of the supporting evidence with enough surrounding context to verify without re-reading the source. Cite file paths or sections where applicable.",
+      "minLength": 10,
+      "examples": [
+        "bin/cgl-supervisor shows tmux new-session calls; docs/concepts.md states 'Supervisor — persistent Claude session for a lab'."
+      ]
+    },
+    "confidence": {
+      "type": "string",
+      "description": "Confidence level. low = circumstantial or single ambiguous signal. medium = multiple corroborating signals or clear but non-definitive source. high = directly stated with no ambiguity, or multiple independent confirmations.",
+      "enum": ["low", "medium", "high"]
+    }
+  }
+}

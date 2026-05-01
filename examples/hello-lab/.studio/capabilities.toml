@@ -1,0 +1,23 @@
+[capabilities.research_readonly]
+filesystem = "read-lab-write-artifacts"
+network = "ask"
+shell = "none"
+secrets = []
+tools = ["github.fetch", "web.fetch"]
+promotion = "human"
+
+[capabilities.build_worktree]
+filesystem = "worktree"
+network = "ask"
+shell = "allowlisted"
+secrets = []
+tools = ["shell", "git", "tests"]
+promotion = "human"
+
+[capabilities.operator_scoped]
+filesystem = "worktree"
+network = "restricted"
+shell = "allowlisted"
+secrets = ["scoped-only"]
+tools = ["approved-api-tools"]
+promotion = "human"

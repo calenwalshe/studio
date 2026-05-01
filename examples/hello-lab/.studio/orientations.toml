@@ -1,0 +1,15 @@
+[[orientation]]
+id = "orient-hello-lab-studio-exploration"
+lab = "investigation/studio-exploration"
+objective = "Explore the Studio repo structure and document how the lab OS primitives fit together."
+status = "draft"
+stop_rule = "director_review_after_first_spec"
+roles = ["scout", "researcher", "curator"]
+sources = ["studio-current-repo"]
+outputs = ["evidence_bundle", "gap_analysis", "spec"]
+
+[orientation.constraints]
+run_untrusted_code = false
+install_dependencies = false
+require_provenance = true
+implementation_allowed = false

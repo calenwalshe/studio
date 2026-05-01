@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/sources.schema.json",
+  "title": "sources.toml",
+  "description": "Source registry for a lab's orientations.",
+  "type": "object",
+  "required": ["sources"],
+  "properties": {
+    "sources": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/sourceEntry"
+      }
+    }
+  },
+  "$defs": {
+    "sourceEntry": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["github_repo", "web_url", "local_path", "api"]
+        },
+        "url": {
+          "type": "string"
+        },
+        "source_pack": {
+          "type": "string",
+          "description": "Optional source pack to use for acquisition."
+        }
+      }
+    }
+  }
+}

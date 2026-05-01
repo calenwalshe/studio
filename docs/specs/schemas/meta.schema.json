@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio.cgl/schemas/meta.schema.json",
+  "title": "Claw Artifact Bundle — meta.json",
+  "description": "Machine-readable metadata for a single claw execution bundle stored at .claws/<id>/meta.json.",
+  "type": "object",
+  "required": [
+    "id",
+    "orientation_id",
+    "lab_slug",
+    "role",
+    "runtime",
+    "capability_profile",
+    "source_scope",
+    "status",
+    "started_at",
+    "ended_at",
+    "promotion_recommendation"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Artifact bundle ID. Must match the containing directory name. Format: YYYYMMDD-HHMMSS-<role>-<lab-slug-safe>.",
+      "pattern": "^\\d{8}-\\d{6}-(scout|researcher|builder|reviewer|operator|curator)-[a-z0-9-]+$",
+      "examples": ["20260501-150000-scout-hello-lab"]
+    },
+    "orientation_id": {
+      "type": "string",
+      "description": "ID of the orientation that spawned this claw. Must match an orientation defined in .studio/orientations.toml.",
+      "examples": ["orient-hello-lab-studio-exploration"]
+    },
+    "lab_slug": {
+      "type": "string",
+      "description": "Lab path/slug identifying the lab. May include a kind prefix separated by /.",
+      "examples": ["hello-lab", "investigation/agent-infra", "systems/etl-pipeline"]
+    },
+    "role": {
+      "type": "string",
+      "description": "The claw's assigned role.",
+      "enum": ["scout", "researcher", "builder", "reviewer", "operator", "curator"]
+    },
+    "runtime": {
+      "type": "string",
+      "description": "Runtime adapter used to execute the claw.",
+      "enum": ["claude", "claude_print", "codex"]
+    },
+    "capability_profile": {
+      "type": "string",
+      "description": "Capability profile name as defined in .studio/capabilities.toml.",
+      "examples": ["research_readonly", "build_worktree", "operator_scoped"]
+    },
+    "source_scope": {
+      "type": "array",
+      "description": "List of source keys in scope for this claw run. Keys must match entries in .studio/sources.toml. May be empty.",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["studio-current-repo"], ["github-awesome-cli-agents", "studio-current-repo"]]
+    },
+    "status": {
+      "type": "string",
+      "description": "Terminal status of the claw run.",
+      "enum": ["finished", "error", "abandoned"]
+    },
+    "started_at": {
+      "type": "string",
+      "description": "RFC3339 UTC timestamp when the claw started.",
+      "format": "date-time",
+      "examples": ["2026-05-01T15:00:00Z"]
+    },
+    "ended_at": {
+      "type": "string",
+      "description": "RFC3339 UTC timestamp when the claw finished.",
+      "format": "date-time",
+      "examples": ["2026-05-01T15:12:00Z"]
+    },
+    "promotion_recommendation": {
+      "type": "string",
+      "description": "The claw's recommendation to the director. The director makes the final promotion decision.",
+      "enum": ["abandon", "keep_evidence", "continue", "merge", "publish", "graduate_to_spine"]
+    }
+  }
+}
