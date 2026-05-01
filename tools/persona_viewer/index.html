@@ -220,7 +220,7 @@
     #run-verdict.warn { border-color: var(--yellow); color: var(--yellow); }
 
     /* ------------------------------------------------------------------ */
-    /* Steps                                                                */
+    /* Steps (classic persona format)                                       */
     /* ------------------------------------------------------------------ */
     #steps-container {
       padding: 20px 28px;
@@ -309,6 +309,142 @@
       color: var(--text-primary);
       white-space: pre-wrap;
       overflow-x: auto;
+      word-break: break-word;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Director persona (exchanges format)                                  */
+    /* ------------------------------------------------------------------ */
+    #exchanges-container {
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .exchange-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .exchange-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exchange-num-badge {
+      background: #4a3f8a;
+      color: var(--text-primary);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .exchange-timing {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .exchange-screenshot-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exchange-screenshot-col {
+      padding: 10px;
+      background: var(--bg-base);
+      cursor: zoom-in;
+    }
+
+    .exchange-screenshot-col:first-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .exchange-screenshot-label {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .exchange-screenshot-col img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 3px;
+      display: block;
+    }
+
+    .exchange-chat-section {
+      padding: 16px 18px;
+    }
+
+    .human-bubble {
+      border-left: 3px solid var(--accent);
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      background: var(--bg-step);
+      border-radius: 0 4px 4px 0;
+    }
+
+    .human-bubble-label {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    .human-bubble-text {
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .agent-bubble {
+      background: #12122a;
+      border: 1px solid #2a2a5a;
+      border-radius: 6px;
+      padding: 12px 14px;
+    }
+
+    .agent-bubble-label {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .agent-bubble-text {
+      font-size: 12px;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.7;
+    }
+
+    /* Scenario label for director runs */
+    #run-scenario {
+      font-size: 12px;
+      color: var(--text-primary);
+      background: var(--bg-step);
+      border-left: 3px solid #6a3fba;
+      padding: 8px 12px;
+      border-radius: 0 4px 4px 0;
+      white-space: pre-wrap;
       word-break: break-word;
     }
 
@@ -473,10 +609,18 @@ function renderSidebar() {
       const item = document.createElement("div");
       item.className = "run-item" + (run.run_id === activeRunId ? " active" : "");
       item.dataset.runId = run.run_id;
+      const isDirector = run.run_type === "director";
+      const countLabel = isDirector
+        ? `${run.exchange_count} exchange${run.exchange_count !== 1 ? "s" : ""}`
+        : `${run.step_count} step${run.step_count !== 1 ? "s" : ""}`;
+      const snippetText = isDirector
+        ? (run.scenario || "").slice(0, 60)
+        : (run.final_verdict || "").slice(0, 60);
+      const typeTag = isDirector ? " [director]" : "";
       item.innerHTML = `
-        <div class="run-item-slug">${esc(run.persona_slug)}</div>
-        <div class="run-item-time">${esc(formatTime(run.started_at))} &bull; ${run.step_count} step${run.step_count !== 1 ? "s" : ""}</div>
-        <div class="run-item-verdict">${esc(run.final_verdict.slice(0, 60))}</div>
+        <div class="run-item-slug">${esc(run.persona_slug)}${esc(typeTag)}</div>
+        <div class="run-item-time">${esc(formatTime(run.started_at))} &bull; ${esc(countLabel)}</div>
+        <div class="run-item-verdict">${esc(snippetText)}</div>
       `;
       item.addEventListener("click", () => selectRun(run.run_id));
       list.appendChild(item);
@@ -523,7 +667,18 @@ function duration(started, ended) {
 function renderMain(run) {
   const main = document.getElementById("main");
 
-  // Build header
+  if (run.run_type === "director") {
+    renderDirectorRun(run, main);
+  } else {
+    renderClassicRun(run, main);
+  }
+}
+
+// -------------------------------------------------------------------------
+// Classic run renderer (steps + decisions)
+// -------------------------------------------------------------------------
+
+function renderClassicRun(run, main) {
   const dur = duration(run.started_at, run.ended_at);
   const vclass = verdictClass(run.final_verdict);
 
@@ -580,7 +735,6 @@ function renderMain(run) {
 
   html += `</div>`;
 
-  // Findings
   if (run.findings && run.findings.length > 0) {
     html += `
       <div id="findings-section">
@@ -599,9 +753,92 @@ function renderMain(run) {
 
   main.innerHTML = html;
 
-  // Wire up screenshot clicks for lightbox
   main.querySelectorAll(".step-screenshot-wrap").forEach(wrap => {
     wrap.addEventListener("click", () => openLightbox(wrap.dataset.img));
+  });
+}
+
+// -------------------------------------------------------------------------
+// Director run renderer (exchanges with before/after screenshots)
+// -------------------------------------------------------------------------
+
+function renderDirectorRun(run, main) {
+  const dur = duration(run.started_at, run.ended_at);
+
+  let html = `
+    <div id="run-header">
+      <div id="run-title">${esc(run.persona_slug)} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">[director chat]</span></div>
+      <div id="run-meta">
+        <div class="meta-chip"><span class="label">Run ID</span><span class="value">${esc(run.run_id)}</span></div>
+        <div class="meta-chip"><span class="label">Exchanges</span><span class="value">${run.exchange_count}</span></div>
+        <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
+        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc(run.started_at.slice(0,19).replace("T"," "))}</span></div>
+      </div>
+      <div id="run-scenario">${esc(run.scenario)}</div>
+    </div>
+
+    <div id="exchanges-container">
+  `;
+
+  for (const ex of run.exchanges) {
+    const ms = ex.agent_response_ms || 0;
+    const timingStr = ms > 0 ? `${(ms / 1000).toFixed(1)}s` : "";
+
+    html += `
+      <div class="exchange-card">
+        <div class="exchange-card-header">
+          <span class="exchange-num-badge">Exchange ${ex.exchange_num}</span>
+          ${timingStr ? `<span class="exchange-timing">${esc(timingStr)}</span>` : ""}
+        </div>
+    `;
+
+    // Before / after screenshots side by side
+    if (ex.before_png || ex.after_png) {
+      html += `<div class="exchange-screenshot-row">`;
+      if (ex.before_png) {
+        html += `
+          <div class="exchange-screenshot-col" data-img="${esc(ex.before_png)}" title="Click to enlarge — before">
+            <div class="exchange-screenshot-label">Before</div>
+            <img src="${esc(ex.before_png)}" alt="Before exchange ${ex.exchange_num}" loading="lazy" />
+          </div>
+        `;
+      } else {
+        html += `<div class="exchange-screenshot-col"><div class="exchange-screenshot-label">Before</div><span style="color:var(--text-dim)">(none)</span></div>`;
+      }
+      if (ex.after_png) {
+        html += `
+          <div class="exchange-screenshot-col" data-img="${esc(ex.after_png)}" title="Click to enlarge — after">
+            <div class="exchange-screenshot-label">After</div>
+            <img src="${esc(ex.after_png)}" alt="After exchange ${ex.exchange_num}" loading="lazy" />
+          </div>
+        `;
+      } else {
+        html += `<div class="exchange-screenshot-col"><div class="exchange-screenshot-label">After</div><span style="color:var(--text-dim)">(none)</span></div>`;
+      }
+      html += `</div>`;
+    }
+
+    // Chat transcript
+    html += `
+        <div class="exchange-chat-section">
+          <div class="human-bubble">
+            <div class="human-bubble-label">&gt; human-director</div>
+            <div class="human-bubble-text">${esc(ex.human_message)}</div>
+          </div>
+          <div class="agent-bubble">
+            <div class="agent-bubble-label">director agent</div>
+            <div class="agent-bubble-text">${esc(ex.agent_response)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  main.innerHTML = html;
+
+  main.querySelectorAll(".exchange-screenshot-col[data-img]").forEach(col => {
+    col.addEventListener("click", () => openLightbox(col.dataset.img));
   });
 }
 

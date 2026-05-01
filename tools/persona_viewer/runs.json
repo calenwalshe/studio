@@ -1,8 +1,144 @@
 [
   {
+    "run_id": "20260501-180751-human-director-triage",
+    "run_type": "director",
+    "persona_slug": "human-director-triage",
+    "goal": "",
+    "scenario": "First-time director triages the federation across all labs",
+    "started_at": "2026-05-01T18:07:51.386837+00:00",
+    "ended_at": "2026-05-01T18:09:52.480268+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-180751-human-director-triage/step-0-before.png",
+        "human_message": "What needs my attention right now?",
+        "agent_response": "## Needs your attention\n\n**1 bundle awaiting director review** in `hello-lab`:\n\n- **Claw:** `20260501-150000-scout-hello-lab` (scout, finished)\n- **Recommendation:** `keep_evidence`\n- **Evidence:** 3 claims, 9 trace events\n- **Sample claim (high confidence):** \"Studio v0 uses tmux sessions as the primary supervisor primitive.\"\n\nThe lab status is `needs_review` because the stop rule (`director_review_after_first_spec`) fired after this scout finished.\n\n## What I'd recommend\n\n**Approve the `keep_evidence` promotion** \u2014 the scout flagged its own output as worth retaining, not promoting to a spec. Smallest next step: read the full result + 3 claims, then approve or reject the bundle.\n\nWant me to surface the full result and all 3 claims so you can decide?",
+        "agent_response_ms": 14659,
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-0-after.png"
+      },
+      {
+        "exchange_num": 1,
+        "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-180751-human-director-triage/step-1-before.png",
+        "human_message": "Walk me through the keep_evidence claw -- what did it find and why?",
+        "agent_response": "I don't have the full claim text or result body in this snapshot \u2014 only the first line of the result and one sample claim. To walk you through it properly I need to read the actual evidence files.\n\n## What I can see\n\n**Claw:** `20260501-150000-scout-hello-lab`\n- Role: `scout` (exploratory, not a spec writer)\n- Status: `finished`\n- Recommendation: `keep_evidence` (scout chose to preserve findings rather than escalate)\n- Output: 3 claims + 9 trace events\n- Result header: `# Result \u2014 20260501-150000-scout-hello-lab`\n- One claim surfaced: *[high] Studio v0 uses tmux sessions as the primary supervisor primitive.*\n\n## What I don't see\n\nThe other 2 claims, the full result body, and the trace event sequence are not in my snapshot.\n\n## Why `keep_evidence` (my read)\n\nA scout recommending `keep_evidence` typically means: *\"I found something real and worth keeping in the record, but it's not yet a spec-ready problem to solve.\"* Given the orientation (*explore Studio repo structure, document how lab OS primitives fit*), this is the expected shape \u2014 the scout was mapping terrain, not proposing work.\n\n## Smallest next step\n\nWant me to read `evidence.jsonl` and the result file for that claw and walk you through all 3 claims + the trace? That's the only way to answer \"what did it find\" with specifics rather than inference.",
+        "agent_response_ms": 18139,
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-1-after.png"
+      },
+      {
+        "exchange_num": 2,
+        "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-180751-human-director-triage/step-2-before.png",
+        "human_message": "Should I keep this evidence or merge it? What's the risk of each?",
+        "agent_response": "## The two options\n\n**Keep evidence** \u2014 the scout's recommendation. Bundle stays in `hello-lab`'s claw history as a finished artifact. Claims are preserved, indexable, but not promoted into a spec or merged into a parent lab's orientation.\n\n**Merge** \u2014 fold the claims into a parent context (a spec, a new orientation, or another lab's evidence stream) so they actively inform downstream work.\n\n## Risk of `keep_evidence`\n\n- **Buried findings.** 3 claims sit in `hello-lab`'s history. If no one queries this lab, the tmux-supervisor insight (and the 2 I can't see) doesn't propagate.\n- **Stop rule resolved cheaply.** `director_review_after_first_spec` was meant to gate spec-quality output. Approving `keep_evidence` clears the gate without anything escalating \u2014 fine if exploration was the goal, wasteful if you expected a spec.\n- **Low downside.** Evidence is immutable; you can always merge later.\n\n## Risk of `merge`\n\n- **Premature promotion.** Scout explicitly chose *not* to promote \u2014 overriding that says you saw something the scout didn't. With only 1 visible claim, you'd be merging on partial information.\n- **Pollutes the target.** Merging into a spec or parent orientation commits those claims to drive future claws. If a claim is wrong or scoped wrong, it propagates.\n- **Irreversible-ish.** Unmerging is messier than promoting later.\n\n## My read\n\nDefault to **keep_evidence** unless you read the full bundle and one of the 3 claims is clearly spec-worthy. The scout's own judgment + the orientation being \"explore + document\" both point to keeping.\n\n## Smallest next step\n\nLet me read the result file and `evidence.jsonl` so you decide on actual claim content, not my inference. Want me to pull them?",
+        "agent_response_ms": 21832,
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-2-after.png"
+      },
+      {
+        "exchange_num": 3,
+        "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-180751-human-director-triage/step-3-before.png",
+        "human_message": "If I want to spawn a follow-up claw, what role and orientation would you suggest?",
+        "agent_response": "## Suggested follow-up\n\n**Role: `cartographer`** (or whatever your spec-writing role is called \u2014 scout already mapped, next step is structuring).\n\nA scout just finished an exploratory pass and chose `keep_evidence`. The natural next move isn't another scout (you'd duplicate terrain-mapping) \u2014 it's a claw that takes the 3 claims and turns them into something actionable.\n\n## Orientation candidates\n\nPick based on what you actually want:\n\n**A. Spec-writer follow-up** \u2014 *\"Given the scout's findings on Studio v0 primitives (tmux supervisor + 2 unseen claims), draft a spec for [specific primitive interaction]. Cite the claw's claims by id.\"*\n- Use when: one of the 3 claims looks spec-worthy on read.\n\n**B. Deeper scout on a single primitive** \u2014 *\"Investigate how tmux session lifecycle maps to claw status transitions. Produce evidence claims, not a spec.\"*\n- Use when: the tmux claim is interesting but you want more depth before specifying.\n\n**C. Synthesis claw** \u2014 *\"Read the hello-lab scout bundle and produce a one-page primitives map (supervisor, claw, evidence, orientation, stop rule) with relationships.\"*\n- Use when: you want a navigable artifact for the lab itself, not downstream work.\n\n## My read\n\n**B or C, not A.** With only 1 visible claim, jumping to spec is premature. C gives you a reusable orientation document; B sharpens one claim into a richer evidence base.\n\n## Smallest next step\n\nTell me which option (or describe what you actually want), and let me read the full bundle first so the orientation cites real claim ids instead of placeholders.",
+        "agent_response_ms": 20427,
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-3-after.png"
+      },
+      {
+        "exchange_num": 4,
+        "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-180751-human-director-triage/step-4-before.png",
+        "human_message": "Summarize the state of the federation in 3 sentences for my standup tomorrow.",
+        "agent_response": "One lab in the federation \u2014 `hello-lab` (investigation, status `needs_review`) \u2014 exploring how Studio v0's primitives fit together. Its single scout claw `20260501-150000-scout-hello-lab` finished with recommendation `keep_evidence`, surfacing 3 claims (notably: *Studio v0 uses tmux sessions as the primary supervisor primitive*) and tripping the `director_review_after_first_spec` stop rule. **Blocking on me:** decide whether to approve `keep_evidence` or merge/promote \u2014 no other labs in flight.",
+        "agent_response_ms": 14400,
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-4-after.png"
+      }
+    ],
+    "exchange_count": 5,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-180751-human-director-triage/manifest.json"
+  },
+  {
+    "run_id": "20260501-180332-human-director-triage",
+    "run_type": "director",
+    "persona_slug": "human-director-triage",
+    "goal": "",
+    "scenario": "First-time director triages the federation across all labs",
+    "started_at": "2026-05-01T18:03:32.153914+00:00",
+    "ended_at": "2026-05-01T18:03:51.923806+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-180332-human-director-triage/step-0-before.png",
+        "human_message": "What needs my attention right now?",
+        "agent_response": "",
+        "agent_response_ms": 2087,
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-0-after.png"
+      },
+      {
+        "exchange_num": 1,
+        "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-180332-human-director-triage/step-1-before.png",
+        "human_message": "Walk me through the keep_evidence claw -- what did it find and why?",
+        "agent_response": "",
+        "agent_response_ms": 2088,
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-1-after.png"
+      },
+      {
+        "exchange_num": 2,
+        "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-180332-human-director-triage/step-2-before.png",
+        "human_message": "Should I keep this evidence or merge it? What's the risk of each?",
+        "agent_response": "",
+        "agent_response_ms": 2088,
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-2-after.png"
+      },
+      {
+        "exchange_num": 3,
+        "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-180332-human-director-triage/step-3-before.png",
+        "human_message": "If I want to spawn a follow-up claw, what role and orientation would you suggest?",
+        "agent_response": "",
+        "agent_response_ms": 2089,
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-3-after.png"
+      },
+      {
+        "exchange_num": 4,
+        "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-180332-human-director-triage/step-4-before.png",
+        "human_message": "Summarize the state of the federation in 3 sentences for my standup tomorrow.",
+        "agent_response": "",
+        "agent_response_ms": 2089,
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-4-after.png"
+      }
+    ],
+    "exchange_count": 5,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-180332-human-director-triage/manifest.json"
+  },
+  {
     "run_id": "20260501-172052-power-user",
+    "run_type": "classic",
     "persona_slug": "power-user",
     "goal": "You are a Studio director using the cockpit. Your goal: inspect the EVIDENCE behind the keep_evidence promotion candidate for hello-lab \u2014 read the actual claim text, the sources cited, and the trace events. Decide whether to abandon, keep_evidence, or merge. You MUST see the underlying data, not just the summary on the home screen. Report what you found and what action you'd take.",
+    "scenario": "",
     "started_at": "2026-05-01T17:20:52.265434+00:00",
     "ended_at": "2026-05-01T17:21:13.224338+00:00",
     "final_verdict": "Cannot drill into evidence from cockpit \u2014 no navigation path to view claim text, sources, or trace events",
@@ -65,6 +201,8 @@
         "screen_text": "=== Studio Cockpit ===\nTitle: Studio Cockpit \u2014 hello-lab\nSubtitle: 1 lab \u2014 /home/agent/projects/studio-tui/examples/hello-lab\n\nDataTable#lab-table:\n  Columns: St | Lab ID | Kind | Orientation (current) | Claws | Promo\n  Rows (1 total):\n    [0] ! | hello-lab | investigation | Explore the Studio repo structure and document how... | 1 | 1 <-- cursor\n\nDirectorQueue#queue-pane:\n  hello-lab: 20260501-150000-scout-hello-lab: keep_evidence\n\nFooter: (bindings unavailable)\n"
       }
     ],
+    "exchanges": [],
+    "exchange_count": 0,
     "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-172052-power-user/manifest.json"
   }
 ]
