@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# cgl-lab <slug> — launch the Lab TUI for a specific lab.
+# cgl-lab <slug> — launch the Lab TUI for a specific lab
 set -euo pipefail
-LAB_ROOT="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
-VENV="$LAB_ROOT/studio/.venv"
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+VENV="$HARNESS/studio/.venv"
 if [[ $# -lt 1 ]]; then
   echo "usage: cgl-lab <slug>" >&2
   exit 2
@@ -11,4 +12,4 @@ if [[ ! -x "$VENV/bin/python" ]]; then
   echo "error: textual venv missing at $VENV" >&2
   exit 1
 fi
-exec "$VENV/bin/python" "$LAB_ROOT/studio/lab_tui/app.py" "$@"
+exec "$VENV/bin/python" "$HARNESS/studio/lab_tui/app.py" "$@"

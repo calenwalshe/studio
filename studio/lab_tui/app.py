@@ -22,12 +22,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-LAB_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(LAB_ROOT / "studio"))
+_HARNESS_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_HARNESS_ROOT / "studio"))
 
 from textual.app import App, ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
 from textual.containers import Horizontal, Vertical  # noqa: E402
+
+from lib import _env  # noqa: E402
 from textual.widgets import DataTable, Footer, Header, Static  # noqa: E402
 
 from lib import state_reader as sr  # noqa: E402
@@ -169,7 +171,7 @@ class LabApp(App):
         super().__init__()
         self.slug = slug
         self.lab = sr.get_lab(slug)
-        self.title = f"cairn-gate-labs · lab/{slug}"
+        self.title = f"{_env.TITLE} · lab/{slug}"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)

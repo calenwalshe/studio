@@ -10,27 +10,32 @@
 
 set -euo pipefail
 
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+
 SLUG="${1:?slug required (e.g. surface/snake or 'director')}"
 MSG="${2:?message required}"
 
+PANES_FILE="$CGL_STATE_DIR/panes.json"
+
 # Special slug: 'director' routes to the director pane in panes.json.
 if [[ "$SLUG" == "director" ]]; then
-  PANE=$(jq -r '.panes.director // empty' "$HOME/.local/state/cgl/panes.json" 2>/dev/null)
+  PANE=$(jq -r '.panes.director // empty' "$PANES_FILE" 2>/dev/null)
   if [[ -z "$PANE" ]]; then
     echo "error: no director pane registered in panes.json" >&2
     exit 1
   fi
 else
   # Try title match first
-  PANE=$(tmux -L cgl list-panes -s -t cgl -F '#{pane_id}|#{pane_title}' 2>/dev/null \
+  PANE=$(tmux -L cgl list-panes -s -t "$CGL_TMUX_SESSION" -F '#{pane_id}|#{pane_title}' 2>/dev/null \
     | awk -F'|' -v slug="$SLUG" '$2 == slug {print $1; exit}')
 
   # Fallback: if the slug matches the currently-visible supervisor in panes.json,
   # use that pane id (Claude Code may have overwritten our title).
-  if [[ -z "$PANE" ]] && [[ -f "$HOME/.local/state/cgl/panes.json" ]]; then
-    CURRENT_SLUG=$(jq -r '.supervisor_slug // empty' "$HOME/.local/state/cgl/panes.json" 2>/dev/null)
+  if [[ -z "$PANE" ]] && [[ -f "$PANES_FILE" ]]; then
+    CURRENT_SLUG=$(jq -r '.supervisor_slug // empty' "$PANES_FILE" 2>/dev/null)
     if [[ "$CURRENT_SLUG" == "$SLUG" ]]; then
-      PANE=$(jq -r '.panes.supervisor // empty' "$HOME/.local/state/cgl/panes.json")
+      PANE=$(jq -r '.panes.supervisor // empty' "$PANES_FILE")
     fi
   fi
 fi
@@ -38,7 +43,7 @@ fi
 if [[ -z "$PANE" ]]; then
   echo "error: no supervisor pane for $SLUG" >&2
   echo "available supervisor panes:" >&2
-  tmux -L cgl list-panes -s -t cgl -F '  #{pane_title} (#{pane_id})' 2>/dev/null \
+  tmux -L cgl list-panes -s -t "$CGL_TMUX_SESSION" -F '  #{pane_title} (#{pane_id})' 2>/dev/null \
     | grep -v '^  agent-stack-dev\|^  _placeholder\|^  Claude Code' >&2
   exit 1
 fi

@@ -1,22 +1,19 @@
-# Python
+*~
+.DS_Store
+.env
+.idea/
+*.key
+# Local secrets — defense-in-depth, none should live in this repo at all
+.local-state/
+# OS / editor
+*.pem
+# Per-machine state — must never be committed
 *.pyc
 __pycache__/
 *.pyo
+# Python
+*.swp
+Thumbs.db
 .venv/
 venv/
-
-# OS / editor
-.DS_Store
-Thumbs.db
-*.swp
-*~
-.idea/
 .vscode/
-
-# Local secrets — defense-in-depth, none should live in this repo at all
-.env
-*.pem
-*.key
-
-# Per-machine state — must never be committed
-.local-state/

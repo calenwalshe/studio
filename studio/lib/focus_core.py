@@ -9,14 +9,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-LAB_ROOT = Path(os.environ.get(
-    "CGL_LAB_ROOT",
-    "/home/agent/projects/cairn-gate-labs/lab",
-))
+from . import _env
 from . import state_reader as sr
 
-CACHE_DIR = Path.home() / ".local" / "state" / "cgl" / "focus-cache"
-SUPERVISORS_FILE = Path.home() / ".local" / "state" / "cgl" / "supervisors.json"
+LAB_ROOT = _env.LAB_ROOT
+CACHE_DIR = _env.STATE_DIR / "focus-cache"
+SUPERVISORS_FILE = _env.STATE_DIR / "supervisors.json"
 
 
 def load_supervisor_uuid(slug: str) -> str | None:
@@ -74,11 +72,17 @@ def tail_session(log: Path, max_user: int = 3, max_assistant: int = 3):
 
 
 def probe_url(slug: str) -> dict:
-    """Probe the public surface URL via curl (Cloudflare 403s urllib)."""
+    """Probe the public surface URL via curl (Cloudflare 403s urllib).
+
+    No-op unless $CGL_PUBLIC_HOST is set. URL pattern:
+        https://$CGL_PUBLIC_HOST/<surface-name>/
+    """
     if not slug.startswith("surface/"):
         return {}
+    if not _env.PUBLIC_HOST:
+        return {}
     name = slug.split("/", 1)[1]
-    url = f"https://cairnlabs.org/{name}/"
+    url = f"https://{_env.PUBLIC_HOST}/{name}/"
     try:
         result = subprocess.run(
             ["curl", "-sI", "--max-time", "3", url],

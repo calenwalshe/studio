@@ -28,12 +28,16 @@
 
 set -euo pipefail
 
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+
 CMD="${1:-}"
 shift || true
 
-LAB_ROOT="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
+LAB_ROOT="$CGL_LAB_ROOT"
 TREES_ROOT="$(dirname "$LAB_ROOT")/trees"
-SERVED_BASE="/home/agent/agent-stack/caddy/static/cairnlabs"
+# Optional: if CGL_DEPLOY_PATH is set, claw merges sync there too.
+SERVED_BASE="${CGL_DEPLOY_PATH:-}"
 
 # Slug-safe = surface/snake → surface-snake
 slug_safe() { echo "$1" | tr '/' '-'; }
@@ -228,10 +232,15 @@ json.dump(m, open('$META','w'), indent=2)
       exit 1
     fi
 
-    # Sync any web/ changes to served path (caddy-deploy hook only fires on Edit/Write tools)
-    if [[ -d "$LAB_ROOT/web/cairnlabs.org" ]] && [[ -d "$SERVED_BASE" ]]; then
-      rsync -a --delete-after \
-        "$LAB_ROOT/web/cairnlabs.org/" "$SERVED_BASE/" 2>/dev/null || true
+    # Optional: sync lab web/ contents to a deploy target ($CGL_DEPLOY_PATH).
+    # Skipped silently when not configured.
+    if [[ -n "$SERVED_BASE" ]] && [[ -d "$LAB_ROOT/web" ]] && [[ -d "$SERVED_BASE" ]]; then
+      # If user has a single site, mirror the site dir directly. The convention
+      # is one "domain dir" inside web/. Pick the first one and sync it.
+      site_dir=$(find "$LAB_ROOT/web" -mindepth 1 -maxdepth 1 -type d | head -1)
+      if [[ -n "$site_dir" ]]; then
+        rsync -a --delete-after "$site_dir/" "$SERVED_BASE/" 2>/dev/null || true
+      fi
     fi
 
     # Remove the worktree + branch

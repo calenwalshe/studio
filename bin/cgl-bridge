@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # cgl-bridge — launch the Bridge TUI (top-level director console)
 set -euo pipefail
-LAB_ROOT="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
-VENV="$LAB_ROOT/studio/.venv"
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+VENV="$HARNESS/studio/.venv"
 if [[ ! -x "$VENV/bin/python" ]]; then
   echo "error: textual venv missing at $VENV" >&2
   echo "run: python3 -m venv $VENV && $VENV/bin/pip install textual" >&2
   exit 1
 fi
-exec "$VENV/bin/python" "$LAB_ROOT/studio/bridge/app.py" "$@"
+exec "$VENV/bin/python" "$HARNESS/studio/bridge/app.py" "$@"

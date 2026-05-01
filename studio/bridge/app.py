@@ -26,7 +26,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-PANES_FILE = Path.home() / ".local" / "state" / "cgl" / "panes.json"
+# State paths — resolved via lib._env (which honours $CGL_LAB_ROOT, $CGL_PROFILE)
+# Imported below after the sys.path is set up.
+PANES_FILE: Path
+SUPERVISORS_FILE: Path
 
 
 def relative_time(ts: str | None) -> str:
@@ -110,16 +113,20 @@ def _short_ago(ago: str) -> str:
     return ago[:6]
 
 # Make studio/lib importable when run as a module
-LAB_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(LAB_ROOT / "studio"))
+_HARNESS_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(_HARNESS_ROOT / "studio"))
 
 from textual.app import App, ComposeResult  # noqa: E402
 from textual.binding import Binding  # noqa: E402
 from textual.containers import Horizontal, Vertical, VerticalScroll  # noqa: E402
 from textual.widgets import DataTable, Footer, Header, Input, RichLog, Select, Static  # noqa: E402
 
+from lib import _env  # noqa: E402
 from lib import state_reader as sr  # noqa: E402
 from lib import focus_core  # noqa: E402
+
+PANES_FILE = _env.STATE_DIR / "panes.json"
+SUPERVISORS_FILE = _env.STATE_DIR / "supervisors.json"
 
 
 ROT_STYLE = {
@@ -632,7 +639,7 @@ class FocusPane(Vertical):
         # session log changed since the last reflection. The .pyc-fast path:
         # mtime check is one stat() syscall — no subprocess unless dirty.
         try:
-            uuid_map = json.loads((Path.home() / ".local/state/cgl/supervisors.json").read_text())
+            uuid_map = json.loads((SUPERVISORS_FILE).read_text())
             sup_uuid = (uuid_map.get("supervisors") or {}).get(slug, {}).get("uuid")
             if sup_uuid:
                 cwd_slug = str(sr.LAB_ROOT / Path(slug.replace("surface/", "surfaces/").replace("investigation/", "research/investigations/").replace("systems/", "systems/"))).replace("/", "-").replace(".", "-")
@@ -685,7 +692,7 @@ class FocusPane(Vertical):
         if getattr(self, "_fed_reflect_in_flight", False):
             return
         try:
-            sups_file = Path.home() / ".local/state/cgl/supervisors.json"
+            sups_file = SUPERVISORS_FILE
             if not sups_file.exists():
                 return
             sups = (json.loads(sups_file.read_text()).get("supervisors") or {})
@@ -1139,7 +1146,7 @@ class BridgeApp(App):
     #focus-events { height: 1fr; border-top: solid #57534e; padding: 0 1; background: #1c1917; }
     """
 
-    TITLE = "cairn-gate-labs · bridge"
+    TITLE = f"{_env.TITLE} · bridge"
     SUB_TITLE = "director console"
 
     BINDINGS = [

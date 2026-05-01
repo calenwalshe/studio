@@ -19,7 +19,7 @@ Subcommands:
         List all known supervisors with slug → uuid → path.
 
 State:
-    ~/.local/state/cgl/supervisors.json
+    $CGL_STATE_DIR/supervisors.json
     {"schema": 1, "supervisors": {<slug>: {"uuid": "...", "path": "..."}}}
 """
 
@@ -32,11 +32,11 @@ import sys
 import uuid
 from pathlib import Path
 
-LAB_ROOT = Path(os.environ.get(
-    "CGL_LAB_ROOT",
-    "/home/agent/projects/cairn-gate-labs/lab",
-))
-STATE_DIR = Path.home() / ".local" / "state" / "cgl"
+_HARNESS = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_HARNESS / "studio"))
+from lib import _env  # noqa: E402
+LAB_ROOT = _env.LAB_ROOT
+STATE_DIR = _env.STATE_DIR
 STATE_FILE = STATE_DIR / "supervisors.json"
 
 
@@ -53,7 +53,6 @@ def save_state(state: dict) -> None:
 
 def get_lab_path(slug: str) -> Path:
     """Resolve a lab slug to its on-disk path via state_reader."""
-    sys.path.insert(0, str(LAB_ROOT / "studio"))
     from lib import state_reader as sr
     lab = sr.get_lab(slug)
     if lab is None:

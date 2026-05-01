@@ -21,7 +21,7 @@ Pipeline stages, run on `cgl-themes <slug> --reflect`:
 Storage:
   lab/.intel/themes/<slug>.jsonl                     ← vault (graduated themes)
   lab/.intel/themes/<slug>.impressions.json          ← idempotence index
-  ~/.local/state/cgl/themes-cache/<sha>.json         ← Haiku score cache
+  $CGL_STATE_DIR/themes-cache/<sha>.json         ← Haiku score cache
 
 Usage:
   cgl-themes <slug>            Render vault (newest first)
@@ -46,14 +46,14 @@ from pathlib import Path
 
 # ── Paths ────────────────────────────────────────────────────────────
 
-LAB_ROOT = Path(os.environ.get(
-    "CGL_LAB_ROOT",
-    "/home/agent/projects/cairn-gate-labs/lab",
-))
+_HARNESS = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_HARNESS / "studio"))
+from lib import _env  # noqa: E402
+LAB_ROOT = _env.LAB_ROOT
 THEMES_DIR = LAB_ROOT / ".intel" / "themes"
 THEMES_DIR.mkdir(parents=True, exist_ok=True)
 
-CACHE_DIR = Path.home() / ".local" / "state" / "cgl" / "themes-cache"
+CACHE_DIR = _env.STATE_DIR / "themes-cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 SCORE_THRESHOLD = 0.7

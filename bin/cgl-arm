@@ -24,7 +24,9 @@
 
 set -euo pipefail
 
-LAB="${CGL_LAB_ROOT:-/home/agent/projects/cairn-gate-labs/lab}"
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+LAB="$CGL_LAB_ROOT"
 TREES="$(dirname "$LAB")/trees"
 
 cmd="${1:-list}"

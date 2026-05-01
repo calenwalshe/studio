@@ -28,11 +28,9 @@ from typing import Optional
 # Paths
 # ──────────────────────────────────────────────────────────────────────
 
-LAB_ROOT = Path(os.environ.get(
-    "CGL_LAB_ROOT",
-    "/home/agent/projects/cairn-gate-labs/lab",
-))
-WRAPPER_ROOT = LAB_ROOT.parent  # cairn-gate-labs/
+from . import _env
+LAB_ROOT = _env.LAB_ROOT
+WRAPPER_ROOT = LAB_ROOT.parent  # the dir containing the lab + trees/
 TREES_ROOT = WRAPPER_ROOT / "trees"
 
 INTEL_DIR = LAB_ROOT / "intel"
@@ -42,7 +40,6 @@ RESEARCH_DIR = LAB_ROOT / "research"
 INVESTIGATIONS_DIR = RESEARCH_DIR / "investigations"
 DECISIONS_DIR = LAB_ROOT / "decisions"
 RUNBOOKS_DIR = LAB_ROOT / "runbooks"
-WEB_DIAGRAMS_DIR = LAB_ROOT / "web" / "cairnlabs.org" / "diagrams"
 
 PUBLISH_LOG = INTEL_DIR / "publish-log.jsonl"
 STATE_JSON = INTEL_DIR / "state.json"
@@ -345,7 +342,7 @@ def list_investigations() -> list[Lab]:
 
 
 def list_worktree_arms() -> list[Lab]:
-    """Federation arm worktrees under cairn-gate-labs/trees/<slug>/."""
+    """Federation arm worktrees under <wrapper>/trees/<slug>/."""
     out = []
     if not TREES_ROOT.exists():
         return out

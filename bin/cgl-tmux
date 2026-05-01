@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 #
-# cgl-tmux — launcher for the Cairn Gate Labs federation tmux session.
+# cgl-tmux — launcher for the studio federation tmux session.
 #
 # Properties:
-#   - Uses ONLY the project-local .tmux.conf at lab/.tmux.conf
+#   - Uses ONLY the lab-local .tmux.conf (or harness default if missing)
 #   - Does NOT read your global ~/.tmux.conf
 #   - Idempotent: if the session already exists, just attaches
-#   - Lab window 0 is always present, on `main`, in `lab/`
-#   - Other windows correspond 1:1 with active git worktrees under trees/
+#   - Lab window 0 is always present, in $CGL_LAB_ROOT
+#   - Other windows correspond 1:1 with git worktrees under trees/ (sibling
+#     of the lab)
 #
 # Discipline:
 #   - Tmux is the director's command center, NOT a runtime substrate for agents
@@ -24,11 +25,16 @@
 
 set -euo pipefail
 
-LAB_DIR="$HOME/projects/cairn-gate-labs/lab"
-WRAPPER_DIR="$HOME/projects/cairn-gate-labs"
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+
+LAB_DIR="$CGL_LAB_ROOT"
+WRAPPER_DIR="$(dirname "$LAB_DIR")"
 TREES_DIR="$WRAPPER_DIR/trees"
-SESSION="cgl"
+SESSION="$CGL_TMUX_SESSION"
+# Lab's local tmux.conf if present, else fall back to the harness default.
 CONFIG="$LAB_DIR/.tmux.conf"
+[[ -f "$CONFIG" ]] || CONFIG="$HARNESS/tmux/tmux.conf"
 
 # ── Sanity checks ────────────────────────────────────────────────────────────
 
@@ -102,27 +108,26 @@ setup_lab_window() {
   tmux -L cgl send-keys -t "$director_pane" \
     "clear && cat <<'BANNER'
 ╭───────────────────────────────────────────────────────────╮
-│  cgl federation — director's command center               │
+│  studio federation — director's command center            │
 │                                                           │
 │  This is the director pane. Run \`claude\` to start a       │
 │  conversation with me; or use commands directly.          │
 │                                                           │
-│  Quick reference:                                         │
-│    /director status                  full status report    │
-│    cgl-reports                       federation overview   │
-│    cgl-reports --unreviewed          WIP                   │
-│    cgl-delegate <slug> \"<task>\"      bounded delegation   │
-│    cgl-send <slug> \"<cmd>\"           shell to arm window  │
+│  Primitives:                                              │
+│    cgl-bridge                  launch the Bridge TUI       │
+│    cgl-labs new <kind> <slug>  create a new lab            │
+│    cgl-arm new <name>          create a worktree arm       │
+│    cgl-claw spawn <slug> ...   spawn a background worker   │
+│    cgl-tell <slug> \"<msg>\"     send a message to a sup   │
 │                                                           │
-│  Navigate: Ctrl-b 1/2/...            arm windows           │
-│            Ctrl-b 0                  back here             │
-│            Ctrl-b S / A              status / arms popup   │
+│  Navigate: Ctrl-b 1/2/...      arm windows                 │
+│            Ctrl-b 0            back here                   │
 ╰───────────────────────────────────────────────────────────╯
 BANNER" Enter
 
-  # Status pane: live federation status via watch
+  # Bridge pane: the Bridge TUI is the canonical status view.
   tmux -L cgl send-keys -t "$status_pane" \
-    "watch -t -c -n 30 cgl-status-pane" Enter
+    "cgl-bridge" Enter
 
   # Utility pane: small hint banner
   tmux -L cgl send-keys -t "$utility_pane" \
