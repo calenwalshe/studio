@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$HARNESS/bin/_studio_env.sh"
+exec "$HARNESS/studio/.venv/bin/python" "$HARNESS/studio/lab_tui/cockpit.py" "$@"
