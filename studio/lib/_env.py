@@ -26,10 +26,26 @@ from pathlib import Path
 def _require_lab_root() -> Path:
     raw = os.environ.get("CGL_LAB_ROOT")
     if not raw:
+        # Fallback: config file
+        config_dir = Path(os.environ.get(
+            "XDG_CONFIG_HOME", str(Path.home() / ".config")
+        )) / "cgl"
+        config_file = config_dir / "config.toml"
+        if config_file.exists():
+            for line in config_file.read_text().splitlines():
+                line = line.strip()
+                if line.startswith("lab_root"):
+                    # parse: lab_root = "..."
+                    parts = line.split("=", 1)
+                    if len(parts) == 2:
+                        raw = parts[1].strip().strip('"').strip("'")
+                        break
+    if not raw:
         sys.stderr.write(
             "error: CGL_LAB_ROOT is not set\n"
             "  set it to your lab directory, e.g.:\n"
             "    export CGL_LAB_ROOT=\"$HOME/projects/my-lab\"\n"
+            "  or run install.sh to write a config file.\n"
         )
         sys.exit(1)
     p = Path(raw)

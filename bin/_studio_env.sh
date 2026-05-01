@@ -16,11 +16,18 @@
 #   CGL_PUBLIC_HOST       e.g. cairnlabs.org — for surface URL probes
 #   CGL_DEPLOY_PATH       e.g. /srv/static/example.com — for static deploy sync
 
-# Refuse to proceed without a lab root
+# Resolve CGL_LAB_ROOT: env var → config file → error
+if [[ -z "${CGL_LAB_ROOT:-}" ]]; then
+  CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/cgl/config.toml"
+  if [[ -f "$CONFIG" ]]; then
+    CGL_LAB_ROOT=$(grep -E '^lab_root\s*=' "$CONFIG" | head -1 | sed -E 's/.*=\s*"([^"]*)".*/\1/')
+  fi
+fi
 if [[ -z "${CGL_LAB_ROOT:-}" ]]; then
   echo "error: CGL_LAB_ROOT is not set" >&2
   echo "  set it to your lab directory, e.g.:" >&2
   echo "    export CGL_LAB_ROOT=\"\$HOME/projects/my-lab\"" >&2
+  echo "  or run install.sh to write a config file." >&2
   exit 1
 fi
 if [[ ! -d "$CGL_LAB_ROOT" ]]; then
