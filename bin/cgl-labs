@@ -166,14 +166,26 @@ last_reviewed: {today}
 """
         (target / "README.md").write_text(readme)
 
-    # Stage + commit so subsequent archive (git mv) works.
+    # Stage + commit so subsequent archive (git mv) works — but only if
+    # LAB_ROOT itself is the git toplevel. Otherwise we'd pollute a parent
+    # repo. Skip silently and let the user commit when they're ready.
     rel = target.relative_to(LAB_ROOT)
-    subprocess.run(["git", "-C", str(LAB_ROOT), "add", str(rel)], check=True)
-    subprocess.run(
-        ["git", "-C", str(LAB_ROOT), "commit", "-m", f"new({full}): scaffold"],
-        check=True, capture_output=True,
-    )
-    print(f"created: {target}")
+    toplevel = subprocess.run(
+        ["git", "-C", str(LAB_ROOT), "rev-parse", "--show-toplevel"],
+        capture_output=True, text=True,
+    ).stdout.strip()
+    if toplevel == str(LAB_ROOT):
+        subprocess.run(["git", "-C", str(LAB_ROOT), "add", str(rel)], check=True)
+        subprocess.run(
+            ["git", "-C", str(LAB_ROOT), "commit", "-m", f"new({full}): scaffold"],
+            check=True, capture_output=True,
+        )
+        print(f"created: {target}  (committed)")
+    else:
+        print(f"created: {target}")
+        print(f"  note: {LAB_ROOT} is not a git repo (or not the toplevel) —")
+        print(f"  scaffold not committed. Run 'git init' in your lab if you")
+        print(f"  want archive/restore to work.")
     print(f"slug:    {full}")
 
 
