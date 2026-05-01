@@ -1,6 +1,6 @@
 # studio
 
-A director-multiplexed lab management harness on top of tmux + Claude Code.
+A human-in-the-loop lab operating system for director-oriented intelligence work.
 
 > **Status:** v0 — extraction in progress. See [PLAN.md](PLAN.md).
 
@@ -17,7 +17,7 @@ directories. Updates to the harness never touch your lab content.
 ## Mental model
 
 ```
-~/projects/studio/                ← THE HARNESS (this repo)
+~/projects/studio/                ← THE LAB OS (this repo)
 └── you pull updates here
 
 ~/your-lab/                       ← YOUR DATA (you create this)
@@ -26,7 +26,7 @@ directories. Updates to the harness never touch your lab content.
 ├── research/investigations/
 └── …
 
-CGL_LAB_ROOT=~/your-lab cgl-tmux  ← run the harness against your lab
+CGL_LAB_ROOT=~/your-lab cgl-tmux  ← run Studio against your lab
 ```
 
 Same shape as `claude` itself: the tool is installed, your projects live
@@ -78,7 +78,8 @@ CGL_LAB_ROOT=~/personal-labs       cgl-tmux  # another, parallel
 - **Arm** — a long-lived parallel branch of a lab's work, also a worktree.
 - **Spine** — the lab's reusable technique library: skills, runbooks, ADRs.
 
-See [`docs/concepts.md`](docs/concepts.md) for the full taxonomy.
+See [`docs/concepts.md`](docs/concepts.md) for the full taxonomy and
+[`docs/lab-os.md`](docs/lab-os.md) for the target direction.
 
 ## What this is NOT
 
