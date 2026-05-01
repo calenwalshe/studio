@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/roles.schema.json",
+  "title": "roles.toml",
+  "description": "Role definitions for claw execution.",
+  "type": "object",
+  "required": ["roles"],
+  "properties": {
+    "roles": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/roleEntry"
+      }
+    }
+  },
+  "$defs": {
+    "roleEntry": {
+      "type": "object",
+      "required": ["description", "default_runtime", "default_capability", "outputs"],
+      "properties": {
+        "description": { "type": "string" },
+        "default_runtime": { "type": "string" },
+        "default_capability": { "type": "string" },
+        "outputs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

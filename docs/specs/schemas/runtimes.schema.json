@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/runtimes.schema.json",
+  "title": "runtimes.toml",
+  "description": "Runtime adapter definitions for claw execution.",
+  "type": "object",
+  "required": ["runtimes"],
+  "properties": {
+    "runtimes": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/runtimeEntry"
+      }
+    }
+  },
+  "$defs": {
+    "runtimeEntry": {
+      "type": "object",
+      "required": ["command", "mode", "status"],
+      "properties": {
+        "command": { "type": "string" },
+        "mode": {
+          "type": "string",
+          "enum": ["interactive", "oneshot"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["implemented-v0", "future"]
+        }
+      }
+    }
+  }
+}

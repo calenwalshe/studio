@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/orientation.schema.json",
+  "title": "orientation entry",
+  "description": "A single orientation in orientations.toml.",
+  "type": "object",
+  "required": ["id", "lab", "objective", "status", "stop_rule", "roles", "sources", "outputs", "constraints"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique orientation identifier."
+    },
+    "lab": {
+      "type": "string",
+      "description": "Lab path this orientation targets."
+    },
+    "objective": {
+      "type": "string",
+      "description": "One-sentence purpose of this orientation."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "active", "complete", "abandoned"]
+    },
+    "stop_rule": {
+      "type": "string",
+      "description": "Condition that triggers director review."
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["scout", "researcher", "builder", "reviewer", "operator", "curator"]
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Source keys referencing entries in sources.toml."
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "run_untrusted_code": { "type": "boolean" },
+        "install_dependencies": { "type": "boolean" },
+        "require_provenance": { "type": "boolean" },
+        "implementation_allowed": { "type": "boolean" }
+      }
+    }
+  }
+}

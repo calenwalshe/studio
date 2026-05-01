@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/calenwalshe/studio/schemas/capabilities.schema.json",
+  "title": "capabilities.toml",
+  "description": "Capability profiles controlling what a claw may access.",
+  "type": "object",
+  "required": ["capabilities"],
+  "properties": {
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/capabilityEntry"
+      }
+    }
+  },
+  "$defs": {
+    "capabilityEntry": {
+      "type": "object",
+      "required": ["filesystem", "network", "shell", "secrets", "tools", "promotion"],
+      "properties": {
+        "filesystem": {
+          "type": "string",
+          "enum": ["read-lab-write-artifacts", "worktree", "none"]
+        },
+        "network": {
+          "type": "string",
+          "enum": ["ask", "restricted", "none", "open"]
+        },
+        "shell": {
+          "type": "string",
+          "enum": ["none", "allowlisted", "open"]
+        },
+        "secrets": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "promotion": {
+          "type": "string",
+          "enum": ["human", "auto"]
+        }
+      }
+    }
+  }
+}
