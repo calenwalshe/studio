@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Studio Persona Run Viewer</title>
+  <!-- No frameworks, no build step. Vanilla HTML/CSS/JS. -->
+  <style>
+    /* ------------------------------------------------------------------ */
+    /* Reset & base                                                         */
+    /* ------------------------------------------------------------------ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-base:      #0f0f17;
+      --bg-sidebar:   #13131f;
+      --bg-card:      #1a1a2e;
+      --bg-step:      #16213e;
+      --bg-code:      #0d1117;
+      --border:       #2a2a4a;
+      --border-hi:    #4a4a8a;
+      --text-primary: #cdd6f4;
+      --text-muted:   #6c7086;
+      --text-dim:     #313244;
+      --accent:       #89b4fa;
+      --accent-hi:    #b4befe;
+      --green:        #a6e3a1;
+      --red:          #f38ba8;
+      --yellow:       #f9e2af;
+      --sidebar-w:    280px;
+      --header-h:     56px;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+      font-size: 13px;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Layout                                                               */
+    /* ------------------------------------------------------------------ */
+    #app {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #sidebar-header {
+      padding: 16px 14px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    #sidebar-header h1 {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    #sidebar-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 0;
+    }
+
+    .date-group-label {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      padding: 10px 14px 4px;
+    }
+
+    .run-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .run-item:hover {
+      background: var(--bg-card);
+    }
+
+    .run-item.active {
+      background: var(--bg-card);
+      border-left-color: var(--accent);
+    }
+
+    .run-item-slug {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .run-item-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .run-item-verdict {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Main panel */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Empty / loading state                                                */
+    /* ------------------------------------------------------------------ */
+    #empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      gap: 12px;
+    }
+
+    #empty-state p { font-size: 13px; }
+
+    /* ------------------------------------------------------------------ */
+    /* Run header                                                           */
+    /* ------------------------------------------------------------------ */
+    #run-header {
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+
+    #run-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent-hi);
+      margin-bottom: 6px;
+    }
+
+    #run-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .meta-chip {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .meta-chip .label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+
+    .meta-chip .value {
+      color: var(--text-primary);
+    }
+
+    #run-goal {
+      font-size: 12px;
+      color: var(--text-primary);
+      background: var(--bg-step);
+      border-left: 3px solid var(--border-hi);
+      padding: 8px 12px;
+      border-radius: 0 4px 4px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    #run-verdict {
+      margin-top: 10px;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      display: inline-block;
+    }
+
+    #run-verdict.ok   { border-color: var(--green); color: var(--green); }
+    #run-verdict.fail { border-color: var(--red);   color: var(--red);   }
+    #run-verdict.warn { border-color: var(--yellow); color: var(--yellow); }
+
+    /* ------------------------------------------------------------------ */
+    /* Steps                                                                */
+    /* ------------------------------------------------------------------ */
+    #steps-container {
+      padding: 20px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .step-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step-num-badge {
+      background: var(--border-hi);
+      color: var(--text-primary);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      letter-spacing: 0.05em;
+    }
+
+    .step-action-label {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .step-action-value {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .step-card-body {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .step-screenshot-wrap {
+      padding: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background: var(--bg-base);
+      border-bottom: 1px solid var(--border);
+      cursor: zoom-in;
+    }
+
+    .step-screenshot-wrap img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 3px;
+      display: block;
+    }
+
+    .step-decision-section {
+      padding: 12px 14px;
+    }
+
+    .step-decision-label {
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+    }
+
+    .step-decision-json {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      overflow-x: auto;
+      word-break: break-word;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Findings                                                             */
+    /* ------------------------------------------------------------------ */
+    #findings-section {
+      margin: 0 28px 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    #findings-header {
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    #findings-body {
+      padding: 12px 14px;
+      background: var(--bg-code);
+      font-size: 11px;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      overflow-x: auto;
+      word-break: break-word;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Lightbox                                                             */
+    /* ------------------------------------------------------------------ */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      z-index: 1000;
+      cursor: zoom-out;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #lightbox.open {
+      display: flex;
+    }
+
+    #lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Scrollbar styling                                                     */
+    /* ------------------------------------------------------------------ */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div id="sidebar-header">
+      <h1>Persona Runs</h1>
+    </div>
+    <div id="sidebar-list"></div>
+  </nav>
+
+  <!-- Main area -->
+  <main id="main">
+    <div id="empty-state">
+      <p>Select a run from the sidebar.</p>
+      <p style="font-size:11px; color: var(--text-dim);">
+        Runs are loaded from <code>runs.json</code> via fetch().
+      </p>
+    </div>
+  </main>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" role="dialog" aria-label="Full-size screenshot">
+  <img id="lightbox-img" src="" alt="Full-size TUI screenshot" />
+</div>
+
+<script>
+"use strict";
+
+// -------------------------------------------------------------------------
+// Data loading
+// -------------------------------------------------------------------------
+
+let allRuns = [];
+let activeRunId = null;
+
+async function loadRuns() {
+  try {
+    const resp = await fetch("runs.json");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    allRuns = await resp.json();
+  } catch (err) {
+    allRuns = [];
+    console.error("Could not load runs.json:", err);
+  }
+  renderSidebar();
+  if (allRuns.length > 0) {
+    selectRun(allRuns[0].run_id);
+  }
+}
+
+// -------------------------------------------------------------------------
+// Sidebar
+// -------------------------------------------------------------------------
+
+function groupByDate(runs) {
+  const groups = {};
+  for (const run of runs) {
+    const date = (run.started_at || "").slice(0, 10) || "unknown";
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(run);
+  }
+  // Sort dates descending
+  return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
+}
+
+function formatTime(iso) {
+  if (!iso) return "";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch { return iso.slice(11, 19); }
+}
+
+function renderSidebar() {
+  const list = document.getElementById("sidebar-list");
+  list.innerHTML = "";
+
+  if (allRuns.length === 0) {
+    list.innerHTML = '<p style="padding:14px;color:var(--text-muted);font-size:11px;">No runs found.</p>';
+    return;
+  }
+
+  const groups = groupByDate(allRuns);
+  for (const [date, runs] of groups) {
+    const label = document.createElement("div");
+    label.className = "date-group-label";
+    label.textContent = date;
+    list.appendChild(label);
+
+    for (const run of runs) {
+      const item = document.createElement("div");
+      item.className = "run-item" + (run.run_id === activeRunId ? " active" : "");
+      item.dataset.runId = run.run_id;
+      item.innerHTML = `
+        <div class="run-item-slug">${esc(run.persona_slug)}</div>
+        <div class="run-item-time">${esc(formatTime(run.started_at))} &bull; ${run.step_count} step${run.step_count !== 1 ? "s" : ""}</div>
+        <div class="run-item-verdict">${esc(run.final_verdict.slice(0, 60))}</div>
+      `;
+      item.addEventListener("click", () => selectRun(run.run_id));
+      list.appendChild(item);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------
+// Main area
+// -------------------------------------------------------------------------
+
+function selectRun(runId) {
+  activeRunId = runId;
+  renderSidebar();
+  const run = allRuns.find(r => r.run_id === runId);
+  if (!run) return;
+  renderMain(run);
+}
+
+function verdictClass(verdict) {
+  const v = (verdict || "").toLowerCase();
+  if (v.includes("stuck") || v.includes("cannot") || v.includes("no navigation") ||
+      v.includes("gap") || v.includes("wall") || v.includes("failed") ||
+      v.includes("error") || v.includes("unparseable") || v.includes("timed out")) {
+    return "fail";
+  }
+  if (v.includes("achieved") || v.includes("found") || v.includes("complete") ||
+      v.includes("identified") || v.includes("located")) {
+    return "ok";
+  }
+  return "warn";
+}
+
+function duration(started, ended) {
+  if (!started || !ended) return "";
+  try {
+    const ms = new Date(ended) - new Date(started);
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
+  } catch { return ""; }
+}
+
+function renderMain(run) {
+  const main = document.getElementById("main");
+
+  // Build header
+  const dur = duration(run.started_at, run.ended_at);
+  const vclass = verdictClass(run.final_verdict);
+
+  let html = `
+    <div id="run-header">
+      <div id="run-title">${esc(run.persona_slug)}</div>
+      <div id="run-meta">
+        <div class="meta-chip"><span class="label">Run ID</span><span class="value">${esc(run.run_id)}</span></div>
+        <div class="meta-chip"><span class="label">Steps</span><span class="value">${run.step_count}</span></div>
+        <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
+        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc(run.started_at.slice(0,19).replace("T"," "))}</span></div>
+      </div>
+      <div id="run-goal">${esc(run.goal)}</div>
+      <div id="run-verdict" class="${vclass}">Verdict: ${esc(run.final_verdict)}</div>
+    </div>
+
+    <div id="steps-container">
+  `;
+
+  for (const step of run.steps) {
+    const dec = step.decision || {};
+    const action = dec.action || "unknown";
+    const key = dec.key || "";
+    const actionLabel = action === "press_key" ? `press_key` : action;
+    const actionValue = action === "press_key" ? `"${key}"` : action === "done" ? dec.verdict?.slice(0, 80) || "" : "";
+
+    html += `
+      <div class="step-card">
+        <div class="step-card-header">
+          <span class="step-num-badge">Step ${step.step_num}</span>
+          <span class="step-action-label">${esc(actionLabel)}</span>
+          ${actionValue ? `<span class="step-action-value">${esc(actionValue)}</span>` : ""}
+        </div>
+        <div class="step-card-body">
+    `;
+
+    if (step.png_path) {
+      html += `
+          <div class="step-screenshot-wrap" data-img="${esc(step.png_path)}" title="Click to enlarge">
+            <img src="${esc(step.png_path)}" alt="Step ${step.step_num} screenshot" loading="lazy" />
+          </div>
+      `;
+    }
+
+    html += `
+          <div class="step-decision-section">
+            <div class="step-decision-label">Persona decision</div>
+            <pre class="step-decision-json">${esc(JSON.stringify(dec, null, 2))}</pre>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+
+  // Findings
+  if (run.findings && run.findings.length > 0) {
+    html += `
+      <div id="findings-section">
+        <div id="findings-header">Findings</div>
+        <pre id="findings-body">${esc(JSON.stringify(run.findings, null, 2))}</pre>
+      </div>
+    `;
+  } else {
+    html += `
+      <div id="findings-section">
+        <div id="findings-header">Findings</div>
+        <div id="findings-body" style="color:var(--text-muted)">(none reported)</div>
+      </div>
+    `;
+  }
+
+  main.innerHTML = html;
+
+  // Wire up screenshot clicks for lightbox
+  main.querySelectorAll(".step-screenshot-wrap").forEach(wrap => {
+    wrap.addEventListener("click", () => openLightbox(wrap.dataset.img));
+  });
+}
+
+// -------------------------------------------------------------------------
+// Lightbox
+// -------------------------------------------------------------------------
+
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add("open");
+}
+
+function closeLightbox() {
+  lightbox.classList.remove("open");
+  lightboxImg.src = "";
+}
+
+lightbox.addEventListener("click", closeLightbox);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+
+// -------------------------------------------------------------------------
+// Utility
+// -------------------------------------------------------------------------
+
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// -------------------------------------------------------------------------
+// Boot
+// -------------------------------------------------------------------------
+
+loadRuns();
+</script>
+
+<!-- Studio Persona Run Viewer — part of the Studio Lab OS toolchain -->
+</body>
+</html>

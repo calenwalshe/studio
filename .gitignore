@@ -19,3 +19,6 @@ venv/
 .vscode/
 .pytest_cache/
 snapshot_report.html
+# Persona run artifacts — ephemeral, not committed (except specific published runs below)
+tools/persona_runs/*
+!tools/persona_runs/20260501-172052-power-user/
