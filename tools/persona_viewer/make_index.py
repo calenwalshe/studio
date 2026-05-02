@@ -1,13 +1,17 @@
-"""make_index.py — scan tools/persona_runs/*/manifest.json and write runs.json.
+"""make_index.py — scan persona_runs/ and examiner/sessions/ then write index files.
 
-Handles two manifest formats:
+Handles two manifest formats for persona runs:
   - Classic persona runs: have a "steps" array with decision/screen_text.
   - Director persona runs: have an "exchanges" array with human_message/agent_response.
 
-Run after any persona capture run, or on demand:
+Also scans tools/evals/examiner/sessions/*/manifest.json and writes examiner.json.
+
+Run after any persona capture run or Examiner session, or on demand:
     studio/.venv/bin/python tools/persona_viewer/make_index.py
 
-Writes tools/persona_viewer/runs.json — the index consumed by index.html.
+Writes:
+  tools/persona_viewer/runs.json     — index for persona runs (unchanged schema)
+  tools/persona_viewer/examiner.json — index for Examiner sessions
 """
 from __future__ import annotations
 
@@ -18,6 +22,9 @@ from pathlib import Path
 VIEWER_DIR = Path(__file__).resolve().parent
 RUNS_DIR = VIEWER_DIR.parent / "persona_runs"
 RUNS_JSON = VIEWER_DIR / "runs.json"
+
+EXAMINER_SESSIONS_DIR = VIEWER_DIR.parent / "evals" / "examiner" / "sessions"
+EXAMINER_JSON = VIEWER_DIR / "examiner.json"
 
 
 def _rel_path(abs_path_str: str, run_id: str, filename: str) -> str:
@@ -118,18 +125,43 @@ def main() -> None:
         elif "exchanges" in manifest:
             exchanges_summary = []
             for ex in manifest.get("exchanges", []):
-                exchanges_summary.append({
+                step_type = ex.get("step_type", "chat")
+                entry: dict = {
                     "exchange_num": ex.get("exchange_num"),
+                    "step_type": step_type,
                     "before_svg": _resolve_exchange_path(ex, run_id, "before_svg"),
                     "before_png": _resolve_exchange_path(ex, run_id, "before_png"),
-                    "human_message": ex.get("human_message", ""),
-                    "agent_response": ex.get("agent_response", ""),
-                    "agent_response_ms": ex.get("agent_response_ms", 0),
                     "after_svg": _resolve_exchange_path(ex, run_id, "after_svg"),
                     "after_png": _resolve_exchange_path(ex, run_id, "after_png"),
-                })
+                }
+                if step_type == "keypress":
+                    entry["key"] = ex.get("key", "")
+                    entry["label"] = ex.get("label", "")
+                    entry["elapsed_ms"] = ex.get("elapsed_ms", 0)
+                elif step_type == "type":
+                    entry["input_id"] = ex.get("input_id", "")
+                    entry["text"] = ex.get("text", "")
+                    entry["label"] = ex.get("label", "")
+                    entry["elapsed_ms"] = ex.get("elapsed_ms", 0)
+                elif step_type == "action":
+                    entry["action_name"] = ex.get("action_name", "")
+                    entry["label"] = ex.get("label", "")
+                    entry["action_ok"] = ex.get("action_ok", False)
+                    entry["action_result_msg"] = ex.get("action_result_msg", "")
+                    entry["elapsed_ms"] = ex.get("elapsed_ms", 0)
+                elif step_type == "expand_lab":
+                    entry["lab_id"] = ex.get("lab_id", "")
+                    entry["label"] = ex.get("label", "")
+                    entry["expand_ok"] = ex.get("expand_ok", False)
+                    entry["expand_detail"] = ex.get("expand_detail", "")
+                    entry["elapsed_ms"] = ex.get("elapsed_ms", 0)
+                else:
+                    entry["human_message"] = ex.get("human_message", "")
+                    entry["agent_response"] = ex.get("agent_response", "")
+                    entry["agent_response_ms"] = ex.get("agent_response_ms", 0)
+                exchanges_summary.append(entry)
 
-            entries.append({
+            entry_dict: dict = {
                 "run_id": run_id,
                 "run_type": "director",
                 "persona_slug": manifest.get("persona_slug", "unknown"),
@@ -144,13 +176,86 @@ def main() -> None:
                 "exchanges": exchanges_summary,
                 "exchange_count": len(exchanges_summary),
                 "manifest_path": manifest_rel,
-            })
+            }
+            # Include eval block if present (augmented by eval_harness)
+            if "eval" in manifest:
+                entry_dict["eval"] = manifest["eval"]
+            entries.append(entry_dict)
 
         else:
             print(f"Warning: manifest {manifest_path} has neither 'steps' nor 'exchanges'", file=sys.stderr)
 
     RUNS_JSON.write_text(json.dumps(entries, indent=2), encoding="utf-8")
     print(f"Wrote {len(entries)} run(s) to {RUNS_JSON}")
+
+    # ---------------------------------------------------------------------- #
+    # Examiner sessions                                                        #
+    # ---------------------------------------------------------------------- #
+    _build_examiner_json()
+
+
+def _build_examiner_json() -> None:
+    """Scan tools/evals/examiner/sessions/*/manifest.json and write examiner.json."""
+    if not EXAMINER_SESSIONS_DIR.exists():
+        print(f"No examiner sessions dir at {EXAMINER_SESSIONS_DIR}", file=sys.stderr)
+        EXAMINER_JSON.write_text("[]", encoding="utf-8")
+        return
+
+    sessions: list[dict] = []
+
+    for manifest_path in sorted(EXAMINER_SESSIONS_DIR.glob("*/manifest.json"), reverse=True):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            print(f"Warning: could not read {manifest_path}: {exc}", file=sys.stderr)
+            continue
+
+        session_id = manifest.get("session_id", manifest_path.parent.name)
+        workflow_id = manifest.get("workflow_id", "")
+        started_at = manifest.get("started_at", "")
+        ended_at = manifest.get("ended_at", "")
+
+        wj = manifest.get("workflow_judgment", {})
+        qj = manifest.get("quality_judgment", {})
+
+        # Build transcript with relative screenshot paths
+        transcript_summary = []
+        for t in manifest.get("transcript", []):
+            dec = t.get("decision", {})
+            entry = {
+                "turn": t.get("turn"),
+                "action": dec.get("action", ""),
+                "reason": dec.get("reason", ""),
+                "workflow_progress": dec.get("workflow_progress", ""),
+                "action_success": t.get("action_success"),
+                "completion_reason": t.get("completion_reason", ""),
+            }
+            # Screenshot paths — stored as filenames relative to session_dir
+            for key in ("before_screenshot", "after_screenshot"):
+                fname = t.get(key, "")
+                if fname:
+                    entry[key] = fname  # just the filename; HTML prefixes session path
+                else:
+                    entry[key] = ""
+            # Inline findings for this turn
+            entry["findings"] = dec.get("findings", [])
+            transcript_summary.append(entry)
+
+        sessions.append({
+            "session_id": session_id,
+            "workflow_id": workflow_id,
+            "started_at": started_at,
+            "ended_at": ended_at,
+            "turns": manifest.get("turns", 0),
+            "findings": manifest.get("findings", []),
+            "features_exercised": manifest.get("features_exercised_this_session", {}),
+            "workflow_judgment": wj,
+            "quality_judgment": qj,
+            "transcript": transcript_summary,
+        })
+
+    EXAMINER_JSON.write_text(json.dumps(sessions, indent=2), encoding="utf-8")
+    print(f"Wrote {len(sessions)} examiner session(s) to {EXAMINER_JSON}")
 
 
 if __name__ == "__main__":

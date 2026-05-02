@@ -1,0 +1,26 @@
+[outcomes]
+allowed = [
+  "abandon",
+  "keep_evidence",
+  "continue",
+  "merge",
+  "publish",
+  "graduate_to_spine"
+]
+
+[candidate_types]
+allowed = [
+  "evidence",
+  "investigation_update",
+  "system_change",
+  "surface_change",
+  "runbook_candidate",
+  "skill_candidate",
+  "source_pack_candidate"
+]
+
+[checks.default]
+require_result = true
+require_meta = true
+require_trace = true
+require_director_approval = true

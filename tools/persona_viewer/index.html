@@ -128,6 +128,113 @@
       text-overflow: ellipsis;
     }
 
+    .eval-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .eval-badge.pass {
+      background: rgba(166, 227, 161, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+    }
+
+    .eval-badge.fail {
+      background: rgba(243, 139, 168, 0.15);
+      border: 1px solid var(--red);
+      color: var(--red);
+    }
+
+    /* Eval results section */
+    .eval-section {
+      margin: 16px 28px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .eval-section-header {
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .eval-score-chip {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 8px;
+      border-radius: 3px;
+    }
+
+    .eval-score-chip.pass {
+      background: rgba(166, 227, 161, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+    }
+
+    .eval-score-chip.fail {
+      background: rgba(243, 139, 168, 0.15);
+      border: 1px solid var(--red);
+      color: var(--red);
+    }
+
+    .eval-rubric-list {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .eval-rubric-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .eval-rubric-marker {
+      font-weight: 700;
+      min-width: 44px;
+      padding-top: 1px;
+    }
+
+    .eval-rubric-marker.pass { color: var(--green); }
+    .eval-rubric-marker.fail { color: var(--red); }
+
+    .eval-rubric-body {
+      flex: 1;
+      line-height: 1.5;
+    }
+
+    .eval-rubric-id {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .eval-rubric-desc {
+      color: var(--text-primary);
+    }
+
+    .eval-rubric-detail {
+      color: var(--text-muted);
+      font-size: 10px;
+      margin-top: 1px;
+    }
+
     /* Main panel */
     #main {
       flex: 1;
@@ -155,21 +262,21 @@
     /* ------------------------------------------------------------------ */
     /* Run header                                                           */
     /* ------------------------------------------------------------------ */
-    #run-header {
+    .run-header {
       padding: 20px 28px 16px;
       border-bottom: 1px solid var(--border);
       background: var(--bg-card);
       flex-shrink: 0;
     }
 
-    #run-title {
+    .run-title {
       font-size: 16px;
       font-weight: 700;
       color: var(--accent-hi);
       margin-bottom: 6px;
     }
 
-    #run-meta {
+    .run-meta {
       display: flex;
       flex-wrap: wrap;
       gap: 16px;
@@ -195,7 +302,7 @@
       color: var(--text-primary);
     }
 
-    #run-goal {
+    .run-goal {
       font-size: 12px;
       color: var(--text-primary);
       background: var(--bg-step);
@@ -206,7 +313,18 @@
       word-break: break-word;
     }
 
-    #run-verdict {
+    .run-scenario {
+      font-size: 12px;
+      color: var(--text-primary);
+      background: var(--bg-step);
+      border-left: 3px solid #6a3fba;
+      padding: 8px 12px;
+      border-radius: 0 4px 4px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .run-verdict {
       margin-top: 10px;
       font-size: 12px;
       padding: 6px 10px;
@@ -215,179 +333,143 @@
       display: inline-block;
     }
 
-    #run-verdict.ok   { border-color: var(--green); color: var(--green); }
-    #run-verdict.fail { border-color: var(--red);   color: var(--red);   }
-    #run-verdict.warn { border-color: var(--yellow); color: var(--yellow); }
+    .run-verdict.ok   { border-color: var(--green); color: var(--green); }
+    .run-verdict.fail { border-color: var(--red);   color: var(--red);   }
+    .run-verdict.warn { border-color: var(--yellow); color: var(--yellow); }
 
     /* ------------------------------------------------------------------ */
-    /* Steps (classic persona format)                                       */
+    /* Carousel                                                             */
     /* ------------------------------------------------------------------ */
-    #steps-container {
-      padding: 20px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    #carousel-section {
+      padding: 20px 28px 0;
     }
 
-    .step-card {
+    #carousel-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 14px;
+    }
+
+    .carousel-nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 16px;
+      padding: 4px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s;
+      user-select: none;
+    }
+
+    .carousel-nav-btn:hover:not(:disabled) {
+      background: var(--bg-step);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .carousel-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    #carousel-indicator {
+      font-size: 12px;
+      color: var(--text-muted);
+      min-width: 110px;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    #carousel-play-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.1s, border-color 0.1s, color 0.1s;
+      user-select: none;
+    }
+
+    #carousel-play-btn:hover {
+      background: var(--bg-step);
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    #carousel-play-btn.playing {
+      border-color: var(--yellow);
+      color: var(--yellow);
+    }
+
+    #carousel-img-wrap {
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      min-height: 200px;
+      position: relative;
+    }
+
+    #carousel-img-wrap img {
+      max-width: 100%;
+      max-height: 70vh;
+      object-fit: contain;
+      display: block;
+      border-radius: 3px;
+    }
+
+    #carousel-img-placeholder {
+      color: var(--text-dim);
+      font-size: 11px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Frame context (below screenshot)                                     */
+    /* ------------------------------------------------------------------ */
+    #frame-context {
+      margin: 14px 0 0;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
     }
 
-    .step-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
+    #frame-context-header {
       background: var(--bg-step);
       border-bottom: 1px solid var(--border);
-    }
-
-    .step-num-badge {
-      background: var(--border-hi);
-      color: var(--text-primary);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 10px;
-      letter-spacing: 0.05em;
-    }
-
-    .step-action-label {
-      font-size: 11px;
+      padding: 8px 14px;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       color: var(--text-muted);
-    }
-
-    .step-action-value {
-      font-size: 12px;
-      color: var(--accent);
       font-weight: 600;
     }
 
-    .step-card-body {
-      display: grid;
-      grid-template-columns: 1fr;
+    #frame-context-body {
+      padding: 14px 16px;
     }
 
-    .step-screenshot-wrap {
-      padding: 12px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      background: var(--bg-base);
-      border-bottom: 1px solid var(--border);
-      cursor: zoom-in;
-    }
-
-    .step-screenshot-wrap img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 3px;
-      display: block;
-    }
-
-    .step-decision-section {
-      padding: 12px 14px;
-    }
-
-    .step-decision-label {
-      font-size: 9px;
-      letter-spacing: 0.1em;
+    .frame-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--text-dim);
       margin-bottom: 6px;
-    }
-
-    .step-decision-json {
-      background: var(--bg-code);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 8px 10px;
-      font-size: 11px;
-      color: var(--text-primary);
-      white-space: pre-wrap;
-      overflow-x: auto;
-      word-break: break-word;
-    }
-
-    /* ------------------------------------------------------------------ */
-    /* Director persona (exchanges format)                                  */
-    /* ------------------------------------------------------------------ */
-    #exchanges-container {
-      padding: 20px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-    }
-
-    .exchange-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .exchange-card-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 14px;
-      background: var(--bg-step);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .exchange-num-badge {
-      background: #4a3f8a;
-      color: var(--text-primary);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 10px;
-      letter-spacing: 0.05em;
-    }
-
-    .exchange-timing {
-      font-size: 10px;
-      color: var(--text-muted);
-      margin-left: auto;
-    }
-
-    .exchange-screenshot-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .exchange-screenshot-col {
-      padding: 10px;
-      background: var(--bg-base);
-      cursor: zoom-in;
-    }
-
-    .exchange-screenshot-col:first-child {
-      border-right: 1px solid var(--border);
-    }
-
-    .exchange-screenshot-label {
-      font-size: 9px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 6px;
-    }
-
-    .exchange-screenshot-col img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 3px;
-      display: block;
-    }
-
-    .exchange-chat-section {
-      padding: 16px 18px;
     }
 
     .human-bubble {
@@ -436,29 +518,29 @@
       line-height: 1.7;
     }
 
-    /* Scenario label for director runs */
-    #run-scenario {
-      font-size: 12px;
+    .step-decision-json {
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 11px;
       color: var(--text-primary);
-      background: var(--bg-step);
-      border-left: 3px solid #6a3fba;
-      padding: 8px 12px;
-      border-radius: 0 4px 4px 0;
       white-space: pre-wrap;
+      overflow-x: auto;
       word-break: break-word;
     }
 
     /* ------------------------------------------------------------------ */
     /* Findings                                                             */
     /* ------------------------------------------------------------------ */
-    #findings-section {
-      margin: 0 28px 28px;
+    .findings-section {
+      margin: 16px 28px 28px;
       border: 1px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
     }
 
-    #findings-header {
+    .findings-header {
       background: var(--bg-step);
       border-bottom: 1px solid var(--border);
       padding: 10px 14px;
@@ -469,7 +551,7 @@
       font-weight: 600;
     }
 
-    #findings-body {
+    .findings-body {
       padding: 12px 14px;
       background: var(--bg-code);
       font-size: 11px;
@@ -512,6 +594,350 @@
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+    /* ------------------------------------------------------------------ */
+    /* Tab toggle (Persona Runs | Examiner Sessions)                        */
+    /* ------------------------------------------------------------------ */
+    #tab-toggle {
+      display: flex;
+      gap: 0;
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 5px 6px;
+      cursor: pointer;
+      transition: background 0.1s, color 0.1s;
+    }
+
+    .tab-btn:first-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-step);
+      color: var(--accent);
+    }
+
+    .tab-btn:hover:not(.active) {
+      background: var(--bg-card);
+      color: var(--text-primary);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Examiner sidebar items                                               */
+    /* ------------------------------------------------------------------ */
+    .examiner-item {
+      padding: 8px 14px;
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: background 0.1s, border-color 0.1s;
+    }
+
+    .examiner-item:hover {
+      background: var(--bg-card);
+    }
+
+    .examiner-item.active {
+      background: var(--bg-card);
+      border-left-color: #cba6f7;
+    }
+
+    .examiner-item-workflow {
+      font-size: 12px;
+      font-weight: 600;
+      color: #cba6f7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .examiner-item-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Examiner main pane                                                   */
+    /* ------------------------------------------------------------------ */
+    .examiner-header {
+      padding: 20px 28px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-card);
+      flex-shrink: 0;
+    }
+
+    .examiner-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #cba6f7;
+      margin-bottom: 6px;
+    }
+
+    .score-chip {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 3px;
+      margin-right: 6px;
+    }
+
+    .score-chip.pass {
+      background: rgba(166, 227, 161, 0.15);
+      border: 1px solid var(--green);
+      color: var(--green);
+    }
+
+    .score-chip.fail {
+      background: rgba(243, 139, 168, 0.15);
+      border: 1px solid var(--red);
+      color: var(--red);
+    }
+
+    .examiner-judge-section {
+      margin: 16px 28px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .examiner-judge-header {
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .examiner-judge-body {
+      padding: 12px 14px;
+      font-size: 11px;
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .judge-step-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 5px;
+      font-size: 11px;
+    }
+
+    .judge-step-marker {
+      font-weight: 700;
+      min-width: 44px;
+    }
+
+    .judge-step-marker.pass { color: var(--green); }
+    .judge-step-marker.fail { color: var(--red); }
+
+    /* Examiner findings */
+    .examiner-findings-section {
+      margin: 16px 28px 0;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .examiner-findings-header {
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    .examiner-findings-header:hover {
+      background: var(--bg-card);
+    }
+
+    .examiner-findings-body {
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .finding-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 11px;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 3px;
+      min-width: 56px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .severity-badge.critical {
+      background: rgba(243, 139, 168, 0.25);
+      border: 1px solid var(--red);
+      color: var(--red);
+    }
+
+    .severity-badge.high {
+      background: rgba(249, 226, 175, 0.15);
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+    }
+
+    .severity-badge.medium {
+      background: rgba(137, 180, 250, 0.12);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .severity-badge.low {
+      background: rgba(108, 112, 134, 0.2);
+      border: 1px solid var(--text-muted);
+      color: var(--text-muted);
+    }
+
+    .finding-body {
+      flex: 1;
+    }
+
+    .finding-summary {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .finding-evidence {
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .finding-id {
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    /* Examiner turn context */
+    .examiner-turn-context {
+      padding: 12px 16px;
+    }
+
+    .turn-action-badge {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(137, 180, 250, 0.12);
+      border: 1px solid var(--border-hi);
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
+    .turn-progress-badge {
+      display: inline-block;
+      font-size: 9px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .turn-success-ok   { color: var(--green); }
+    .turn-success-fail { color: var(--red); }
+
+    .examiner-turn-reason {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-primary);
+      border-left: 3px solid #cba6f7;
+      padding: 4px 10px;
+      background: var(--bg-step);
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Coverage panel */
+    .coverage-section {
+      margin: 16px 28px 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .coverage-header {
+      background: var(--bg-step);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .coverage-body {
+      padding: 12px 14px;
+      font-size: 11px;
+      color: var(--text-primary);
+      line-height: 1.8;
+    }
+
+    .coverage-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .coverage-status-covered {
+      color: var(--green);
+      font-weight: 700;
+      min-width: 70px;
+    }
+
+    .coverage-status-pending {
+      color: var(--text-muted);
+      min-width: 70px;
+    }
   </style>
 </head>
 <body>
@@ -520,7 +946,11 @@
   <!-- Sidebar -->
   <nav id="sidebar">
     <div id="sidebar-header">
-      <h1>Persona Runs</h1>
+      <h1 id="sidebar-title">Persona Runs</h1>
+      <div id="tab-toggle">
+        <button class="tab-btn active" id="tab-runs" onclick="switchTab('runs')">Persona Runs</button>
+        <button class="tab-btn" id="tab-examiner" onclick="switchTab('examiner')">Examiner</button>
+      </div>
     </div>
     <div id="sidebar-list"></div>
   </nav>
@@ -530,7 +960,7 @@
     <div id="empty-state">
       <p>Select a run from the sidebar.</p>
       <p style="font-size:11px; color: var(--text-dim);">
-        Runs are loaded from <code>runs.json</code> via fetch().
+        Runs are loaded from <code>runs.json</code> and <code>examiner.json</code> via fetch().
       </p>
     </div>
   </main>
@@ -550,6 +980,9 @@
 
 let allRuns = [];
 let activeRunId = null;
+let activeTab = "runs";  // "runs" | "examiner"
+let allExaminerSessions = [];
+let activeSessionId = null;
 
 async function loadRuns() {
   try {
@@ -559,10 +992,6 @@ async function loadRuns() {
   } catch (err) {
     allRuns = [];
     console.error("Could not load runs.json:", err);
-  }
-  renderSidebar();
-  if (allRuns.length > 0) {
-    selectRun(allRuns[0].run_id);
   }
 }
 
@@ -590,6 +1019,14 @@ function formatTime(iso) {
 }
 
 function renderSidebar() {
+  if (activeTab === "examiner") {
+    _renderExaminerSidebar();
+  } else {
+    _renderRunsSidebarImpl();
+  }
+}
+
+function _renderRunsSidebarImpl() {
   const list = document.getElementById("sidebar-list");
   list.innerHTML = "";
 
@@ -617,8 +1054,14 @@ function renderSidebar() {
         ? (run.scenario || "").slice(0, 60)
         : (run.final_verdict || "").slice(0, 60);
       const typeTag = isDirector ? " [director]" : "";
+      let evalBadgeHtml = "";
+      if (run.eval) {
+        const evalPct = Math.round((run.eval.score || 0) * 100);
+        const evalCls = run.eval.overall_pass ? "pass" : "fail";
+        evalBadgeHtml = `<span class="eval-badge ${evalCls}">EVAL: ${evalPct}%</span>`;
+      }
       item.innerHTML = `
-        <div class="run-item-slug">${esc(run.persona_slug)}${esc(typeTag)}</div>
+        <div class="run-item-slug">${esc(run.persona_slug)}${esc(typeTag)}${evalBadgeHtml}</div>
         <div class="run-item-time">${esc(formatTime(run.started_at))} &bull; ${esc(countLabel)}</div>
         <div class="run-item-verdict">${esc(snippetText)}</div>
       `;
@@ -634,6 +1077,8 @@ function renderSidebar() {
 
 function selectRun(runId) {
   activeRunId = runId;
+  // Stop any running autoplay before switching
+  carousel.stopAutoplay();
   renderSidebar();
   const run = allRuns.find(r => r.run_id === runId);
   if (!run) return;
@@ -665,182 +1110,469 @@ function duration(started, ended) {
 }
 
 function renderMain(run) {
-  const main = document.getElementById("main");
-
-  if (run.run_type === "director") {
-    renderDirectorRun(run, main);
-  } else {
-    renderClassicRun(run, main);
-  }
+  renderCarouselRun(run);
 }
 
 // -------------------------------------------------------------------------
-// Classic run renderer (steps + decisions)
+// Carousel state
 // -------------------------------------------------------------------------
 
-function renderClassicRun(run, main) {
-  const dur = duration(run.started_at, run.ended_at);
-  const vclass = verdictClass(run.final_verdict);
+const carousel = {
+  frames: [],          // [{src, label}]
+  currentFrame: 0,
+  autoplayTimer: null,
+  isPlaying: false,
 
-  let html = `
-    <div id="run-header">
-      <div id="run-title">${esc(run.persona_slug)}</div>
-      <div id="run-meta">
-        <div class="meta-chip"><span class="label">Run ID</span><span class="value">${esc(run.run_id)}</span></div>
-        <div class="meta-chip"><span class="label">Steps</span><span class="value">${run.step_count}</span></div>
-        <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
-        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc(run.started_at.slice(0,19).replace("T"," "))}</span></div>
-      </div>
-      <div id="run-goal">${esc(run.goal)}</div>
-      <div id="run-verdict" class="${vclass}">Verdict: ${esc(run.final_verdict)}</div>
-    </div>
+  stopAutoplay() {
+    if (this.autoplayTimer) {
+      clearInterval(this.autoplayTimer);
+      this.autoplayTimer = null;
+    }
+    this.isPlaying = false;
+    const btn = document.getElementById("carousel-play-btn");
+    if (btn) {
+      btn.textContent = "Play";
+      btn.classList.remove("playing");
+    }
+  },
 
-    <div id="steps-container">
-  `;
+  toggleAutoplay() {
+    if (this.isPlaying) {
+      this.stopAutoplay();
+    } else {
+      this.isPlaying = true;
+      const btn = document.getElementById("carousel-play-btn");
+      if (btn) {
+        btn.textContent = "Pause";
+        btn.classList.add("playing");
+      }
+      this.autoplayTimer = setInterval(() => {
+        if (this.currentFrame >= this.frames.length - 1) {
+          this.stopAutoplay();
+          return;
+        }
+        this.goto(this.currentFrame + 1);
+      }, 1500);
+    }
+  },
 
-  for (const step of run.steps) {
-    const dec = step.decision || {};
-    const action = dec.action || "unknown";
-    const key = dec.key || "";
-    const actionLabel = action === "press_key" ? `press_key` : action;
-    const actionValue = action === "press_key" ? `"${key}"` : action === "done" ? dec.verdict?.slice(0, 80) || "" : "";
+  goto(idx) {
+    if (idx < 0 || idx >= this.frames.length) return;
+    this.currentFrame = idx;
+    this._render();
+    this._prefetch(idx);
+  },
 
-    html += `
-      <div class="step-card">
-        <div class="step-card-header">
-          <span class="step-num-badge">Step ${step.step_num}</span>
-          <span class="step-action-label">${esc(actionLabel)}</span>
-          ${actionValue ? `<span class="step-action-value">${esc(actionValue)}</span>` : ""}
-        </div>
-        <div class="step-card-body">
-    `;
+  prev() {
+    if (this.currentFrame > 0) this.goto(this.currentFrame - 1);
+  },
 
-    if (step.png_path) {
-      html += `
-          <div class="step-screenshot-wrap" data-img="${esc(step.png_path)}" title="Click to enlarge">
-            <img src="${esc(step.png_path)}" alt="Step ${step.step_num} screenshot" loading="lazy" />
-          </div>
-      `;
+  next() {
+    if (this.currentFrame < this.frames.length - 1) this.goto(this.currentFrame + 1);
+  },
+
+  _render() {
+    const frame = this.frames[this.currentFrame];
+    const total = this.frames.length;
+
+    // Indicator
+    const indicator = document.getElementById("carousel-indicator");
+    if (indicator) {
+      indicator.textContent = `Frame ${this.currentFrame + 1} of ${total}`;
     }
 
-    html += `
-          <div class="step-decision-section">
-            <div class="step-decision-label">Persona decision</div>
-            <pre class="step-decision-json">${esc(JSON.stringify(dec, null, 2))}</pre>
-          </div>
-        </div>
-      </div>
-    `;
+    // Prev/next buttons
+    const prevBtn = document.getElementById("carousel-prev");
+    const nextBtn = document.getElementById("carousel-next");
+    if (prevBtn) prevBtn.disabled = this.currentFrame === 0;
+    if (nextBtn) nextBtn.disabled = this.currentFrame === total - 1;
+
+    // Image
+    const wrap = document.getElementById("carousel-img-wrap");
+    if (!wrap) return;
+
+    if (frame && frame.src) {
+      wrap.innerHTML = `<img src="${esc(frame.src)}" alt="Frame ${this.currentFrame + 1}" />`;
+      wrap.querySelector("img").addEventListener("click", () => {
+        if (frame.src) openLightbox(frame.src);
+      });
+    } else {
+      wrap.innerHTML = `<div id="carousel-img-placeholder">(no screenshot for this frame)</div>`;
+    }
+
+    // Context
+    const ctxBody = document.getElementById("frame-context-body");
+    if (ctxBody && frame) {
+      ctxBody.innerHTML = frame.contextHtml;
+    }
+  },
+
+  _prefetch(idx) {
+    // Eagerly load the next 2 frames
+    for (let i = idx + 1; i <= idx + 2 && i < this.frames.length; i++) {
+      const src = this.frames[i].src;
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    }
+  },
+};
+
+// -------------------------------------------------------------------------
+// Build frame list from a run
+// -------------------------------------------------------------------------
+
+function buildFrames(run) {
+  const frames = [];
+
+  if (run.exchanges && run.exchanges.length > 0) {
+    // Director run — before_png + after_png per exchange (chat or keypress)
+    for (const ex of run.exchanges) {
+      const n = ex.exchange_num;
+      const stepType = ex.step_type || "chat";
+
+      if (stepType === "keypress") {
+        // Before frame
+        frames.push({
+          src: ex.before_png || "",
+          contextHtml: buildKeypressBeforeContext(n, ex.key || "", ex.label || ""),
+        });
+        // After frame
+        frames.push({
+          src: ex.after_png || "",
+          contextHtml: buildKeypressAfterContext(n, ex.key || "", ex.label || ""),
+        });
+      } else if (stepType === "type") {
+        // Before frame
+        frames.push({
+          src: ex.before_png || "",
+          contextHtml: buildTypeBeforeContext(n, ex.input_id || "", ex.text || ""),
+        });
+        // After frame
+        frames.push({
+          src: ex.after_png || "",
+          contextHtml: buildTypeAfterContext(n, ex.input_id || "", ex.text || ""),
+        });
+      } else if (stepType === "action") {
+        // Before frame
+        frames.push({
+          src: ex.before_png || "",
+          contextHtml: buildActionBeforeContext(n, ex.action_name || "", ex.label || ""),
+        });
+        // After frame
+        frames.push({
+          src: ex.after_png || "",
+          contextHtml: buildActionAfterContext(n, ex.action_name || "", ex.label || "", ex.action_ok, ex.action_result_msg || ""),
+        });
+      } else {
+        // Before frame
+        const humanText = ex.human_message || "";
+        frames.push({
+          src: ex.before_png || "",
+          contextHtml: buildDirectorBeforeContext(n, humanText),
+        });
+        // After frame
+        const agentText = ex.agent_response || "";
+        frames.push({
+          src: ex.after_png || "",
+          contextHtml: buildDirectorAfterContext(n, agentText),
+        });
+      }
+    }
+  } else if (run.steps && run.steps.length > 0) {
+    // Classic run — one frame per step
+    for (const step of run.steps) {
+      const dec = step.decision || {};
+      frames.push({
+        src: step.png_path || "",
+        contextHtml: buildStepContext(step.step_num, dec),
+      });
+    }
   }
 
-  html += `</div>`;
+  return frames;
+}
 
-  if (run.findings && run.findings.length > 0) {
-    html += `
-      <div id="findings-section">
-        <div id="findings-header">Findings</div>
-        <pre id="findings-body">${esc(JSON.stringify(run.findings, null, 2))}</pre>
-      </div>
-    `;
-  } else {
-    html += `
-      <div id="findings-section">
-        <div id="findings-header">Findings</div>
-        <div id="findings-body" style="color:var(--text-muted)">(none reported)</div>
-      </div>
-    `;
-  }
+function buildDirectorBeforeContext(exchangeNum, humanMessage) {
+  return `
+    <div class="frame-label">Before exchange ${exchangeNum} &mdash; human typed:</div>
+    <div class="human-bubble">
+      <div class="human-bubble-label">&gt; human-director</div>
+      <div class="human-bubble-text">${esc(humanMessage) || '<span style="color:var(--text-dim)">(empty)</span>'}</div>
+    </div>
+  `;
+}
 
-  main.innerHTML = html;
+function buildDirectorAfterContext(exchangeNum, agentResponse) {
+  return `
+    <div class="frame-label">After exchange ${exchangeNum} &mdash; agent replied:</div>
+    <div class="agent-bubble">
+      <div class="agent-bubble-label">director agent</div>
+      <div class="agent-bubble-text">${esc(agentResponse) || '<span style="color:var(--text-dim)">(empty)</span>'}</div>
+    </div>
+  `;
+}
 
-  main.querySelectorAll(".step-screenshot-wrap").forEach(wrap => {
-    wrap.addEventListener("click", () => openLightbox(wrap.dataset.img));
-  });
+function buildKeypressBeforeContext(exchangeNum, key, label) {
+  return `
+    <div class="frame-label">Before keypress ${exchangeNum} &mdash; about to press:</div>
+    <div class="human-bubble">
+      <div class="human-bubble-label">&gt; keypress</div>
+      <div class="human-bubble-text">&gt; Pressed: <strong>${esc(key)}</strong>${label ? " (" + esc(label) + ")" : ""}</div>
+    </div>
+  `;
+}
+
+function buildKeypressAfterContext(exchangeNum, key, label) {
+  return `
+    <div class="frame-label">After keypress ${exchangeNum} &mdash; result:</div>
+    <div class="human-bubble" style="border-left-color: var(--yellow);">
+      <div class="human-bubble-label" style="color: var(--yellow);">&gt; keypress result</div>
+      <div class="human-bubble-text">&gt; Pressed: <strong>${esc(key)}</strong>${label ? " (" + esc(label) + ")" : ""}</div>
+    </div>
+  `;
+}
+
+function buildTypeBeforeContext(exchangeNum, inputId, text) {
+  return `
+    <div class="frame-label">Before type ${exchangeNum} &mdash; about to type into:</div>
+    <div class="human-bubble" style="border-left-color: var(--accent-hi);">
+      <div class="human-bubble-label" style="color: var(--accent-hi);">&gt; type</div>
+      <div class="human-bubble-text">&gt; Typed into <strong>#${esc(inputId)}</strong>: &quot;${esc(text)}&quot;</div>
+    </div>
+  `;
+}
+
+function buildTypeAfterContext(exchangeNum, inputId, text) {
+  return `
+    <div class="frame-label">After type ${exchangeNum} &mdash; input value set:</div>
+    <div class="human-bubble" style="border-left-color: var(--green);">
+      <div class="human-bubble-label" style="color: var(--green);">&gt; type result</div>
+      <div class="human-bubble-text">&gt; Typed into <strong>#${esc(inputId)}</strong>: &quot;${esc(text)}&quot;</div>
+    </div>
+  `;
+}
+
+function buildActionBeforeContext(exchangeNum, actionName, label) {
+  return `
+    <div class="frame-label">Before action ${exchangeNum} &mdash; about to execute:</div>
+    <div class="human-bubble" style="border-left-color: var(--yellow);">
+      <div class="human-bubble-label" style="color: var(--yellow);">&gt; action</div>
+      <div class="human-bubble-text">&gt; Action: <strong>${esc(actionName)}</strong>${label ? " — " + esc(label) : ""}</div>
+    </div>
+  `;
+}
+
+function buildActionAfterContext(exchangeNum, actionName, label, ok, resultMsg) {
+  const color = ok ? "var(--green)" : "var(--red)";
+  const badge = ok ? "OK" : "FAIL";
+  return `
+    <div class="frame-label">After action ${exchangeNum} &mdash; result:</div>
+    <div class="human-bubble" style="border-left-color: ${color};">
+      <div class="human-bubble-label" style="color: ${color};">&gt; action result [${esc(badge)}]</div>
+      <div class="human-bubble-text">&gt; <strong>${esc(actionName)}</strong>: ${esc(resultMsg)}</div>
+    </div>
+  `;
+}
+
+function buildStepContext(stepNum, decision) {
+  return `
+    <div class="frame-label">Step ${stepNum} &mdash; decision:</div>
+    <pre class="step-decision-json">${esc(JSON.stringify(decision, null, 2))}</pre>
+  `;
 }
 
 // -------------------------------------------------------------------------
-// Director run renderer (exchanges with before/after screenshots)
+// Unified carousel renderer
 // -------------------------------------------------------------------------
 
-function renderDirectorRun(run, main) {
+function renderCarouselRun(run) {
+  const main = document.getElementById("main");
   const dur = duration(run.started_at, run.ended_at);
+  const isDirector = run.run_type === "director";
 
-  let html = `
-    <div id="run-header">
-      <div id="run-title">${esc(run.persona_slug)} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">[director chat]</span></div>
-      <div id="run-meta">
+  // Build header HTML
+  let headerHTML = `<div class="run-header">`;
+  if (isDirector) {
+    headerHTML += `
+      <div class="run-title">${esc(run.persona_slug)} <span style="font-size:11px;color:var(--text-muted);font-weight:400;">[director chat]</span></div>
+      <div class="run-meta">
         <div class="meta-chip"><span class="label">Run ID</span><span class="value">${esc(run.run_id)}</span></div>
         <div class="meta-chip"><span class="label">Exchanges</span><span class="value">${run.exchange_count}</span></div>
         <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
-        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc(run.started_at.slice(0,19).replace("T"," "))}</span></div>
+        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc((run.started_at || "").slice(0,19).replace("T"," "))}</span></div>
       </div>
-      <div id="run-scenario">${esc(run.scenario)}</div>
-    </div>
+    `;
+    if (run.scenario) {
+      headerHTML += `<div class="run-scenario">${esc(run.scenario)}</div>`;
+    }
+  } else {
+    const vclass = verdictClass(run.final_verdict);
+    headerHTML += `
+      <div class="run-title">${esc(run.persona_slug)}</div>
+      <div class="run-meta">
+        <div class="meta-chip"><span class="label">Run ID</span><span class="value">${esc(run.run_id)}</span></div>
+        <div class="meta-chip"><span class="label">Steps</span><span class="value">${run.step_count}</span></div>
+        <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
+        <div class="meta-chip"><span class="label">Started</span><span class="value">${esc((run.started_at || "").slice(0,19).replace("T"," "))}</span></div>
+      </div>
+    `;
+    if (run.goal) {
+      headerHTML += `<div class="run-goal">${esc(run.goal)}</div>`;
+    }
+    if (run.final_verdict) {
+      headerHTML += `<div class="run-verdict ${vclass}">Verdict: ${esc(run.final_verdict)}</div>`;
+    }
+  }
+  headerHTML += `</div>`;
 
-    <div id="exchanges-container">
+  // Build frames
+  const frames = buildFrames(run);
+  carousel.frames = frames;
+  carousel.currentFrame = 0;
+  carousel.isPlaying = false;
+  if (carousel.autoplayTimer) {
+    clearInterval(carousel.autoplayTimer);
+    carousel.autoplayTimer = null;
+  }
+
+  const evalHTML = buildEvalHTML(run);
+
+  if (frames.length === 0) {
+    // Empty run — no screenshots
+    let findingsHTML = buildFindingsHTML(run);
+    main.innerHTML = headerHTML + evalHTML + `
+      <div style="padding:40px 28px; color:var(--text-muted); text-align:center;">
+        (no frames — this run has no steps or exchanges with screenshots)
+      </div>
+    ` + findingsHTML;
+    return;
+  }
+
+  // Carousel shell
+  const carouselHTML = `
+    <div id="carousel-section">
+      <div id="carousel-nav">
+        <button class="carousel-nav-btn" id="carousel-prev" title="Previous frame (left arrow)">&#8592;</button>
+        <span id="carousel-indicator">Frame 1 of ${frames.length}</span>
+        <button class="carousel-nav-btn" id="carousel-next" title="Next frame (right arrow)">&#8594;</button>
+        <button id="carousel-play-btn" title="Autoplay (spacebar)">Play</button>
+      </div>
+
+      <div id="carousel-img-wrap" title="Click to enlarge / advance">
+        <div id="carousel-img-placeholder">Loading...</div>
+      </div>
+
+      <div id="frame-context">
+        <div id="frame-context-header">Context for this frame</div>
+        <div id="frame-context-body"></div>
+      </div>
+    </div>
   `;
 
-  for (const ex of run.exchanges) {
-    const ms = ex.agent_response_ms || 0;
-    const timingStr = ms > 0 ? `${(ms / 1000).toFixed(1)}s` : "";
+  let findingsHTML = buildFindingsHTML(run);
 
-    html += `
-      <div class="exchange-card">
-        <div class="exchange-card-header">
-          <span class="exchange-num-badge">Exchange ${ex.exchange_num}</span>
-          ${timingStr ? `<span class="exchange-timing">${esc(timingStr)}</span>` : ""}
-        </div>
-    `;
+  main.innerHTML = headerHTML + evalHTML + carouselHTML + findingsHTML;
 
-    // Before / after screenshots side by side
-    if (ex.before_png || ex.after_png) {
-      html += `<div class="exchange-screenshot-row">`;
-      if (ex.before_png) {
-        html += `
-          <div class="exchange-screenshot-col" data-img="${esc(ex.before_png)}" title="Click to enlarge — before">
-            <div class="exchange-screenshot-label">Before</div>
-            <img src="${esc(ex.before_png)}" alt="Before exchange ${ex.exchange_num}" loading="lazy" />
-          </div>
-        `;
-      } else {
-        html += `<div class="exchange-screenshot-col"><div class="exchange-screenshot-label">Before</div><span style="color:var(--text-dim)">(none)</span></div>`;
-      }
-      if (ex.after_png) {
-        html += `
-          <div class="exchange-screenshot-col" data-img="${esc(ex.after_png)}" title="Click to enlarge — after">
-            <div class="exchange-screenshot-label">After</div>
-            <img src="${esc(ex.after_png)}" alt="After exchange ${ex.exchange_num}" loading="lazy" />
-          </div>
-        `;
-      } else {
-        html += `<div class="exchange-screenshot-col"><div class="exchange-screenshot-label">After</div><span style="color:var(--text-dim)">(none)</span></div>`;
-      }
-      html += `</div>`;
-    }
+  // Wire nav buttons
+  document.getElementById("carousel-prev").addEventListener("click", () => carousel.prev());
+  document.getElementById("carousel-next").addEventListener("click", () => carousel.next());
+  document.getElementById("carousel-play-btn").addEventListener("click", () => carousel.toggleAutoplay());
 
-    // Chat transcript
-    html += `
-        <div class="exchange-chat-section">
-          <div class="human-bubble">
-            <div class="human-bubble-label">&gt; human-director</div>
-            <div class="human-bubble-text">${esc(ex.human_message)}</div>
-          </div>
-          <div class="agent-bubble">
-            <div class="agent-bubble-label">director agent</div>
-            <div class="agent-bubble-text">${esc(ex.agent_response)}</div>
-          </div>
+  // Click on image wrap = advance (handled inside _render per-frame)
+  // Initial render
+  carousel._render();
+  carousel._prefetch(0);
+}
+
+function buildEvalHTML(run) {
+  if (!run.eval) return "";
+  const ev = run.eval;
+  const pct = Math.round((ev.score || 0) * 100);
+  const passedCount = (ev.rubric_results || []).filter(r => r.passed).length;
+  const total = (ev.rubric_results || []).length;
+  const overallCls = ev.overall_pass ? "pass" : "fail";
+  const overallLabel = ev.overall_pass ? "PASS" : "FAIL";
+
+  let itemsHtml = "";
+  for (const r of (ev.rubric_results || [])) {
+    const markerCls = r.passed ? "pass" : "fail";
+    const markerText = r.passed ? "[PASS]" : "[FAIL]";
+    itemsHtml += `
+      <div class="eval-rubric-item">
+        <div class="eval-rubric-marker ${markerCls}">${markerText}</div>
+        <div class="eval-rubric-body">
+          <div><span class="eval-rubric-id">${esc(r.id)}</span> <span class="eval-rubric-desc">${esc(r.description)}</span></div>
+          <div class="eval-rubric-detail">${esc(r.detail)}</div>
         </div>
       </div>
     `;
   }
 
-  html += `</div>`;
-  main.innerHTML = html;
-
-  main.querySelectorAll(".exchange-screenshot-col[data-img]").forEach(col => {
-    col.addEventListener("click", () => openLightbox(col.dataset.img));
-  });
+  return `
+    <div class="eval-section">
+      <div class="eval-section-header">
+        <span>Eval Results &mdash; ${esc(ev.scenario_name || "")}</span>
+        <span class="eval-score-chip ${overallCls}">${overallLabel} ${pct}% (${passedCount}/${total})</span>
+      </div>
+      <div class="eval-rubric-list">${itemsHtml}</div>
+    </div>
+  `;
 }
+
+function buildFindingsHTML(run) {
+  if (run.findings && run.findings.length > 0) {
+    return `
+      <div class="findings-section">
+        <div class="findings-header">Findings</div>
+        <pre class="findings-body">${esc(JSON.stringify(run.findings, null, 2))}</pre>
+      </div>
+    `;
+  }
+  return `
+    <div class="findings-section">
+      <div class="findings-header">Findings</div>
+      <div class="findings-body" style="color:var(--text-muted)">(none reported)</div>
+    </div>
+  `;
+}
+
+// -------------------------------------------------------------------------
+// Keyboard navigation
+// -------------------------------------------------------------------------
+
+document.addEventListener("keydown", e => {
+  // Don't intercept when focused on an input/textarea
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+  // Lightbox escape
+  if (e.key === "Escape") {
+    if (lightbox.classList.contains("open")) {
+      closeLightbox();
+      return;
+    }
+  }
+
+  // Don't intercept if lightbox is open (let Escape close it)
+  if (lightbox.classList.contains("open")) return;
+
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    carousel.prev();
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    carousel.next();
+  } else if (e.key === " ") {
+    e.preventDefault();
+    carousel.toggleAutoplay();
+  } else if (e.key >= "1" && e.key <= "9") {
+    const idx = parseInt(e.key, 10) - 1;
+    if (idx < carousel.frames.length) {
+      carousel.goto(idx);
+    }
+  }
+});
 
 // -------------------------------------------------------------------------
 // Lightbox
@@ -860,7 +1592,6 @@ function closeLightbox() {
 }
 
 lightbox.addEventListener("click", closeLightbox);
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
 
 // -------------------------------------------------------------------------
 // Utility
@@ -875,10 +1606,340 @@ function esc(str) {
 }
 
 // -------------------------------------------------------------------------
+// Tab state
+// -------------------------------------------------------------------------
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById("tab-runs").classList.toggle("active", tab === "runs");
+  document.getElementById("tab-examiner").classList.toggle("active", tab === "examiner");
+  carousel.stopAutoplay();
+  const main = document.getElementById("main");
+  main.innerHTML = `<div id="empty-state"><p>Select a ${tab === "examiner" ? "session" : "run"} from the sidebar.</p></div>`;
+  renderSidebar();
+}
+
+// -------------------------------------------------------------------------
+// Examiner data loading
+// -------------------------------------------------------------------------
+
+async function loadExaminerSessions() {
+  try {
+    const resp = await fetch("examiner.json");
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    allExaminerSessions = await resp.json();
+  } catch (err) {
+    allExaminerSessions = [];
+    console.error("Could not load examiner.json:", err);
+  }
+}
+
+function _renderExaminerSidebar() {
+  const list = document.getElementById("sidebar-list");
+  list.innerHTML = "";
+
+  if (allExaminerSessions.length === 0) {
+    list.innerHTML = '<p style="padding:14px;color:var(--text-muted);font-size:11px;">No examiner sessions found.</p>';
+    return;
+  }
+
+  const groups = groupByDate(allExaminerSessions.map(s => ({...s, run_id: s.session_id})));
+  for (const [date, sessions] of groups) {
+    const label = document.createElement("div");
+    label.className = "date-group-label";
+    label.textContent = date;
+    list.appendChild(label);
+
+    for (const sess of sessions) {
+      const sid = sess.session_id;
+      const wj = sess.workflow_judgment || {};
+      const pct = Math.round((wj.score || 0) * 100);
+      const passed = wj.passed;
+      const scoreCls = passed ? "pass" : "fail";
+      const badgeLabel = passed ? "PASS" : "FAIL";
+      const findingCount = (sess.findings || []).length;
+
+      const item = document.createElement("div");
+      item.className = "examiner-item" + (sid === activeSessionId ? " active" : "");
+      item.dataset.sessionId = sid;
+      item.innerHTML = `
+        <div class="examiner-item-workflow">
+          ${esc(sess.workflow_id)}
+          <span class="eval-badge ${scoreCls}">${badgeLabel} ${pct}%</span>
+        </div>
+        <div class="examiner-item-meta">
+          ${esc(formatTime(sess.started_at))} &bull; ${sess.turns} turn${sess.turns !== 1 ? "s" : ""} &bull; ${findingCount} finding${findingCount !== 1 ? "s" : ""}
+        </div>
+      `;
+      item.addEventListener("click", () => selectExaminerSession(sid));
+      list.appendChild(item);
+    }
+  }
+}
+
+// -------------------------------------------------------------------------
+// Examiner session renderer
+// -------------------------------------------------------------------------
+
+function selectExaminerSession(sessionId) {
+  activeSessionId = sessionId;
+  carousel.stopAutoplay();
+  _renderExaminerSidebar();
+  const sess = allExaminerSessions.find(s => s.session_id === sessionId);
+  if (!sess) return;
+  renderExaminerSession(sess);
+}
+
+function renderExaminerSession(sess) {
+  const main = document.getElementById("main");
+  const wj = sess.workflow_judgment || {};
+  const qj = sess.quality_judgment || {};
+  const wjPct = Math.round((wj.score || 0) * 100);
+  const qjPct = Math.round((qj.score || 0) * 100);
+  const wjCls = wj.passed ? "pass" : "fail";
+  const qjCls = (qj.score || 0) >= 0.75 ? "pass" : "fail";
+  const dur = duration(sess.started_at, sess.ended_at);
+
+  // Header
+  const headerHTML = `
+    <div class="examiner-header">
+      <div class="examiner-title">${esc(sess.workflow_id)}</div>
+      <div class="run-meta">
+        <div class="meta-chip"><span class="label">Session</span><span class="value">${esc(sess.session_id.slice(0, 20))}</span></div>
+        <div class="meta-chip"><span class="label">Turns</span><span class="value">${sess.turns}</span></div>
+        <div class="meta-chip"><span class="label">Findings</span><span class="value">${(sess.findings || []).length}</span></div>
+        <div class="meta-chip"><span class="label">Duration</span><span class="value">${esc(dur)}</span></div>
+      </div>
+      <div style="margin-top:8px;">
+        <span class="score-chip ${wjCls}">Workflow ${wjPct}%</span>
+        <span class="score-chip ${qjCls}">Quality ${qjPct}%</span>
+      </div>
+    </div>
+  `;
+
+  // Workflow judgment section
+  const canonical = (wj.canonical_steps_executed || []);
+  let stepsHtml = "";
+  if (canonical.length > 0) {
+    stepsHtml = canonical.map((ok, i) => {
+      const cls = ok ? "pass" : "fail";
+      const marker = ok ? "[OK]" : "[--]";
+      return `<div class="judge-step-row"><div class="judge-step-marker ${cls}">${marker}</div><div>Step ${i + 1}</div></div>`;
+    }).join("");
+  }
+  const wjHTML = `
+    <div class="examiner-judge-section">
+      <div class="examiner-judge-header">
+        Workflow Judgment
+        <span class="eval-score-chip ${wjCls}">${wj.passed ? "PASS" : "FAIL"} ${wjPct}%</span>
+      </div>
+      <div class="examiner-judge-body">
+        <div style="margin-bottom:10px;">${esc(wj.reasoning || "(no reasoning)")}</div>
+        ${stepsHtml ? `<div style="margin-top:8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:5px;">Canonical Steps</div>${stepsHtml}` : ""}
+      </div>
+    </div>
+  `;
+
+  // Quality judgment section
+  const perResp = qj.per_response || [];
+  let perRespHtml = "";
+  if (perResp.length > 0) {
+    perRespHtml = perResp.map(r => {
+      const cls = r.score >= 0.75 ? "pass" : "fail";
+      const issues = (r.issues || []).join("; ") || "(none)";
+      return `
+        <div class="judge-step-row">
+          <div class="judge-step-marker ${cls}">[T${r.turn}]</div>
+          <div>
+            scope: ${esc(r.scope_discipline || "?")} &bull;
+            evidence: ${esc(r.evidence_grounded || "?")} &bull;
+            honest: ${r.honest_about_gaps ? "yes" : "no"}
+            <div style="color:var(--text-muted);font-size:10px;margin-top:2px;">issues: ${esc(issues)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+  const qjHTML = `
+    <div class="examiner-judge-section">
+      <div class="examiner-judge-header">
+        Quality Judgment
+        <span class="eval-score-chip ${qjCls}">${qjPct}%</span>
+      </div>
+      <div class="examiner-judge-body">
+        ${perRespHtml || '<span style="color:var(--text-muted)">(no chat turns to judge)</span>'}
+      </div>
+    </div>
+  `;
+
+  // Build carousel frames from transcript
+  const frames = buildExaminerFrames(sess);
+  carousel.frames = frames;
+  carousel.currentFrame = 0;
+  carousel.isPlaying = false;
+  if (carousel.autoplayTimer) {
+    clearInterval(carousel.autoplayTimer);
+    carousel.autoplayTimer = null;
+  }
+
+  let carouselHTML = "";
+  if (frames.length > 0) {
+    carouselHTML = `
+      <div id="carousel-section">
+        <div id="carousel-nav">
+          <button class="carousel-nav-btn" id="carousel-prev" title="Previous frame (left arrow)">&#8592;</button>
+          <span id="carousel-indicator">Frame 1 of ${frames.length}</span>
+          <button class="carousel-nav-btn" id="carousel-next" title="Next frame (right arrow)">&#8594;</button>
+          <button id="carousel-play-btn" title="Autoplay (spacebar)">Play</button>
+        </div>
+        <div id="carousel-img-wrap" title="Click to enlarge / advance">
+          <div id="carousel-img-placeholder">Loading...</div>
+        </div>
+        <div id="frame-context">
+          <div id="frame-context-header">Turn context</div>
+          <div id="frame-context-body"></div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Findings section
+  const findingsHTML = buildExaminerFindingsHTML(sess.findings || []);
+
+  // Coverage panel (features exercised)
+  const featMap = sess.features_exercised || {};
+  let featRows = Object.entries(featMap).sort((a, b) => b[1] - a[1]).map(([f, n]) =>
+    `<div class="coverage-row"><span style="color:var(--accent);min-width:160px;">${esc(f)}</span><span style="color:var(--text-muted);">x${n}</span></div>`
+  ).join("");
+  const coverageHTML = `
+    <div class="coverage-section">
+      <div class="coverage-header">Features Exercised This Session</div>
+      <div class="coverage-body">${featRows || '<span style="color:var(--text-muted)">(none)</span>'}</div>
+    </div>
+  `;
+
+  main.innerHTML = headerHTML + wjHTML + qjHTML + (carouselHTML || "") + findingsHTML + coverageHTML;
+
+  if (frames.length > 0) {
+    document.getElementById("carousel-prev").addEventListener("click", () => carousel.prev());
+    document.getElementById("carousel-next").addEventListener("click", () => carousel.next());
+    document.getElementById("carousel-play-btn").addEventListener("click", () => carousel.toggleAutoplay());
+    carousel._render();
+    carousel._prefetch(0);
+  }
+}
+
+function buildExaminerFrames(sess) {
+  const frames = [];
+  const sid = sess.session_id;
+  for (const t of (sess.transcript || [])) {
+    const beforeSrc = t.before_screenshot
+      ? `examiner_sessions/${sid}/${t.before_screenshot}`
+      : "";
+    const afterSrc = t.after_screenshot
+      ? `examiner_sessions/${sid}/${t.after_screenshot}`
+      : "";
+
+    // Before frame
+    frames.push({
+      src: beforeSrc,
+      contextHtml: buildExaminerTurnContext(t, "before"),
+    });
+    // After frame (only if action was executed — not for "done")
+    if (t.action !== "done" && (afterSrc || t.action_success !== undefined)) {
+      frames.push({
+        src: afterSrc,
+        contextHtml: buildExaminerTurnContext(t, "after"),
+      });
+    }
+  }
+  return frames;
+}
+
+function buildExaminerTurnContext(t, phase) {
+  const action = t.action || "?";
+  const progress = t.workflow_progress || "";
+  const reason = t.reason || "";
+  const success = t.action_success;
+  const successStr = success === true
+    ? '<span class="turn-success-ok">[OK]</span>'
+    : success === false
+      ? '<span class="turn-success-fail">[FAIL]</span>'
+      : "";
+  const findingsInTurn = (t.findings || []);
+  let findingsBadge = "";
+  if (findingsInTurn.length > 0) {
+    findingsBadge = `<span style="color:var(--red);font-size:9px;margin-left:8px;">${findingsInTurn.length} finding${findingsInTurn.length > 1 ? "s" : ""}</span>`;
+  }
+
+  return `
+    <div class="examiner-turn-context">
+      <div class="frame-label">Turn ${t.turn} &mdash; ${esc(phase)}</div>
+      <div style="margin-top:6px;">
+        <span class="turn-action-badge">${esc(action)}</span>
+        <span class="turn-progress-badge">${esc(progress)}</span>
+        ${phase === "after" ? successStr : ""}
+        ${findingsBadge}
+      </div>
+      ${reason ? `<div class="examiner-turn-reason">${esc(reason)}</div>` : ""}
+      ${findingsInTurn.map(f =>
+        `<div style="margin-top:6px;padding:5px 8px;background:var(--bg-code);border:1px solid var(--border);border-radius:3px;font-size:10px;">
+          <span class="severity-badge ${esc(f.severity)}">${esc(f.severity)}</span>
+          <span style="margin-left:6px;color:var(--text-primary);">${esc(f.summary)}</span>
+        </div>`
+      ).join("")}
+    </div>
+  `;
+}
+
+function buildExaminerFindingsHTML(findings) {
+  if (!findings || findings.length === 0) {
+    return `
+      <div class="examiner-findings-section">
+        <div class="examiner-findings-header">Findings (0)</div>
+        <div class="examiner-findings-body" style="color:var(--text-muted);font-size:11px;padding:12px 14px;">(none reported)</div>
+      </div>
+    `;
+  }
+
+  const rows = findings.map(f => `
+    <div class="finding-row">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+        <span class="severity-badge ${esc(f.severity)}">${esc(f.severity)}</span>
+        <span style="font-size:8px;color:var(--text-dim);">${esc(f.id || "")}</span>
+      </div>
+      <div class="finding-body">
+        <div class="finding-summary">${esc(f.summary)}</div>
+        <div class="finding-evidence">${esc(f.evidence || "")}</div>
+        <div style="font-size:9px;color:var(--text-dim);margin-top:3px;">kind: ${esc(f.kind || "")} &bull; turn ${f.turn ?? "?"}</div>
+      </div>
+    </div>
+  `).join("");
+
+  return `
+    <div class="examiner-findings-section">
+      <div class="examiner-findings-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'">
+        Findings (${findings.length})
+        <span style="font-size:9px;color:var(--text-dim);">(click to collapse)</span>
+      </div>
+      <div class="examiner-findings-body">${rows}</div>
+    </div>
+  `;
+}
+
+// -------------------------------------------------------------------------
 // Boot
 // -------------------------------------------------------------------------
 
-loadRuns();
+async function boot() {
+  await Promise.all([loadRuns(), loadExaminerSessions()]);
+  renderSidebar();
+  if (allRuns.length > 0) {
+    selectRun(allRuns[0].run_id);
+  }
+}
+
+boot();
 </script>
 
 <!-- Studio Persona Run Viewer — part of the Studio Lab OS toolchain -->

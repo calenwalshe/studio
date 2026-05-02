@@ -85,6 +85,25 @@ Shell-based tests for the `cgl-orient` and `cgl-claw` CLI tools.
 - Studio Cockpit visual layout — SVG snapshot regression
 - Persona navigation — LLM-driven cockpit interaction
 
+## Live cockpit tests (slow, requires real claude subscription)
+
+`tests/test_cockpit_live.sh` launches the actual `bin/cgl-cockpit` binary
+in a detached tmux session and drives it with real keystrokes. This validates
+the launcher, layout rendering, focus management, and agent chat path
+end-to-end against a real `claude -p` subprocess.
+
+Run: `bash tests/test_cockpit_live.sh`
+
+Wall clock: ~3-5 minutes (each chat test waits up to 90s for agent reply).
+Cost: ~6 claude -p invocations per full run.
+
+Requires:
+- tmux installed
+- `claude` CLI on PATH
+- Active claude subscription auth (run `claude --help` once interactively if needed)
+
+---
+
 ## What is NOT covered
 
 - Real claude execution in loaders — no `claude -p` or `claude` process is invoked

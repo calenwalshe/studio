@@ -1,0 +1,4 @@
+[sources.github-uv-pip-pipx]
+type = "github_repo"
+url = "https://github.com/astral-sh/uv"
+source_pack = "github-repo-research"

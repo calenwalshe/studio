@@ -1,0 +1,13 @@
+{
+  "id": "20260429-141500-researcher-agent-infra",
+  "orientation_id": "orient-agent-infra-survey",
+  "lab_slug": "investigation/agent-infra",
+  "role": "researcher",
+  "runtime": "claude_print",
+  "capability_profile": "research_readonly",
+  "source_scope": ["github-awesome-cli-coding-agents", "github-aider", "github-crystal"],
+  "status": "finished",
+  "started_at": "2026-04-29T14:15:00Z",
+  "ended_at": "2026-04-29T15:42:00Z",
+  "promotion_recommendation": "merge"
+}

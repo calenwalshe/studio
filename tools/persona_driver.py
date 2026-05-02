@@ -51,43 +51,63 @@ def serialize_screen(app) -> str:
         for widget in app.screen.walk_children():
             cls_name = type(widget).__name__
 
-            if cls_name == "DataTable":
+            if cls_name == "LabList":
                 wid = f"#{widget.id}" if widget.id else ""
-                lines.append(f"DataTable{wid}:")
-                # Column headers
+                lines.append(f"LabList{wid}:")
                 try:
-                    col_labels = [str(col.label) for col in widget.columns.values()]
-                    lines.append(f"  Columns: {' | '.join(col_labels)}")
-                except Exception:
-                    pass
-                # Rows
-                try:
-                    row_count = widget.row_count
-                    lines.append(f"  Rows ({row_count} total):")
-                    for i in range(row_count):
+                    rows = list(widget.query("LabRow"))
+                    lines.append(f"  Labs ({len(rows)} total):")
+                    for i, row in enumerate(rows):
                         try:
-                            row = widget.get_row_at(i)
-                            row_str = " | ".join(str(cell) for cell in row)
-                            cursor_mark = " <-- cursor" if widget.cursor_row == i else ""
-                            lines.append(f"    [{i}] {row_str}{cursor_mark}")
+                            summary = row._summary
+                            from lab_tui.cockpit import _symbol, _orientation_summary
+                            sym = _symbol(summary.status)
+                            short_obj = _orientation_summary(summary)
+                            expanded_mark = " [expanded]" if row.expanded else ""
+                            focus_mark = " <-- focused" if row.has_focus else ""
+                            lines.append(
+                                f"    [{i}] {sym} {summary.lab_id} | {summary.kind} | "
+                                f"{short_obj} | claws={len(summary.bundles)} "
+                                f"promo={summary.promotion_candidates}"
+                                f"{expanded_mark}{focus_mark}"
+                            )
+                            if row.expanded:
+                                # Show first few lines of expansion body
+                                body_static = row.query_one(".lab-row-body")
+                                body_text = _strip_rich_markup(str(body_static.renderable))
+                                for bline in body_text.splitlines()[:10]:
+                                    if bline.strip():
+                                        lines.append(f"      {bline}")
                         except Exception:
                             lines.append(f"    [{i}] (unreadable)")
                 except Exception:
                     lines.append("  (rows unavailable)")
                 lines.append("")
 
-            elif cls_name == "DirectorQueuePane":
+            elif cls_name == "LabHeaderStrip":
                 wid = f"#{widget.id}" if widget.id else ""
-                lines.append(f"DirectorQueue{wid}:")
                 try:
-                    content = _strip_rich_markup(widget.renderable)
+                    content = _strip_rich_markup(str(widget.renderable))
                     if content:
-                        for line in content.splitlines()[:20]:
-                            lines.append(f"  {line}")
-                    else:
-                        lines.append("  (empty)")
+                        lines.append(f"LabHeader{wid}: {content[:120]}")
                 except Exception:
-                    lines.append("  (unreadable)")
+                    pass
+
+            elif cls_name == "DirectorChat":
+                wid = f"#{widget.id}" if widget.id else ""
+                lines.append(f"DirectorChat{wid}:")
+                try:
+                    transcript = widget.get_transcript_text()
+                    for line in transcript.splitlines()[:30]:
+                        lines.append(f"  {line}")
+                    # Note state
+                    thinking = getattr(widget, "_thinking", False)
+                    if thinking:
+                        lines.append("  [status: thinking...]")
+                    else:
+                        lines.append("  [status: ready — input field active]")
+                except Exception as exc:
+                    lines.append(f"  (unreadable: {exc})")
                 lines.append("")
 
             elif cls_name == "Static":

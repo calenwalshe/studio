@@ -1,0 +1,15 @@
+[[orientation]]
+id = "orient-agent-infra-survey"
+lab = "investigation/agent-infra"
+objective = "Survey existing CLI coding-agent harnesses and identify what Studio should adopt."
+status = "active"
+stop_rule = "director_review_after_first_spec"
+roles = ["scout", "researcher"]
+sources = ["github-awesome-cli-coding-agents", "github-aider", "github-crystal"]
+outputs = ["evidence.jsonl", "result.md"]
+
+[orientation.constraints]
+run_untrusted_code = false
+install_dependencies = false
+require_provenance = true
+implementation_allowed = false

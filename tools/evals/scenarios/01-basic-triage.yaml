@@ -1,0 +1,23 @@
+name: basic-triage
+description: Director asks the chat what needs attention; agent should produce a structured response with concrete next action.
+persona: director
+lab_root: examples/federation-demo
+timeout: 120
+budget_blocks: 2
+
+steps:
+  - chat: "What needs my attention right now?"
+
+rubric:
+  - id: response_under_30_lines
+    description: "Response should be <=30 lines (default budget)"
+    check: { type: response_line_count, step: 0, max: 30 }
+  - id: ends_with_next
+    description: "Response ends with '**Next:**' action"
+    check: { type: response_contains, step: 0, text: "**Next:**" }
+  - id: cites_at_least_one_lab
+    description: "Response names at least one lab id from the federation"
+    check: { type: response_mentions_any, step: 0, options: ["agent-infra", "cgl-publish", "hello-lab", "surface-snake", "distribution-engine"] }
+  - id: no_preamble
+    description: "Response should NOT open with filler like 'Great question'"
+    check: { type: response_not_contains, step: 0, text: "Great question" }

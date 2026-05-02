@@ -14,6 +14,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 # ---------------------------------------------------------------------------
 # Bootstrap: add bin/ to sys.path so _studio_orient is importable
@@ -40,6 +41,22 @@ class ClawBundle:
     result_text: str          # contents of result.md, "" if missing
     claim_count: int          # count of lines in evidence.jsonl, 0 if missing
     trace_count: int          # count of lines in trace.jsonl, 0 if missing
+    decision: Optional[dict] = None  # parsed decision.json, None if not present
+
+    @property
+    def promotion_recommendation(self) -> str:
+        return self.meta.get("promotion_recommendation", "")
+
+    @property
+    def is_decided(self) -> bool:
+        return self.decision is not None
+
+    @property
+    def effective_outcome(self) -> str:
+        """The outcome to display — director's decision overrides agent's recommendation."""
+        if self.decision:
+            return self.decision.get("outcome", self.promotion_recommendation)
+        return self.promotion_recommendation
 
 
 def _count_jsonl_lines(path: Path) -> int:
@@ -64,6 +81,8 @@ def load_claw_bundles(lab_root: Path) -> list[ClawBundle]:
     for bundle_path in sorted(claws_dir.iterdir()):
         if not bundle_path.is_dir():
             continue
+        if bundle_path.name.startswith("."):
+            continue
         meta_file = bundle_path / "meta.json"
         if not meta_file.exists():
             continue
@@ -78,6 +97,14 @@ def load_claw_bundles(lab_root: Path) -> list[ClawBundle]:
         claim_count = _count_jsonl_lines(bundle_path / "evidence.jsonl")
         trace_count = _count_jsonl_lines(bundle_path / "trace.jsonl")
 
+        decision: Optional[dict] = None
+        decision_file = bundle_path / "decision.json"
+        if decision_file.exists():
+            try:
+                decision = json.loads(decision_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                decision = None
+
         bundles.append(
             ClawBundle(
                 bundle_id=bundle_path.name,
@@ -85,6 +112,7 @@ def load_claw_bundles(lab_root: Path) -> list[ClawBundle]:
                 result_text=result_text,
                 claim_count=claim_count,
                 trace_count=trace_count,
+                decision=decision,
             )
         )
     return bundles
@@ -104,33 +132,28 @@ def _derive_status(
     bundles: list[ClawBundle],
     orientations: list[Orientation],
     cfg_error: str | None,
+    awaiting_count: int = 0,
 ) -> tuple[str, str]:
     """Return (status, status_reason) given loaded data.
 
     Priority order (highest wins):
       error        — .studio/lab.toml missing or malformed
-      needs_review — at least one bundle with promotion_recommendation
-                     not in {abandon, dry_run}
+      needs_review — at least one bundle awaiting director review
+                     (rec not in {abandon, dry_run} AND no decision recorded)
       active       — bundles with status == "running" exist
                      (reserved; won't fire in v0 — no running claws)
-      idle         — has bundles, none need review, none running
+      idle         — has bundles, none awaiting review, none running
       stale        — has orientations but no bundles
       blocked      — reserved (won't fire in v0; documented here)
     """
     if cfg_error:
         return ("error", cfg_error)
 
-    # needs_review: any bundle whose recommendation is not abandon/dry_run
-    review_bundles = [
-        b for b in bundles
-        if b.meta.get("promotion_recommendation", "abandon") not in _NO_REVIEW_RECS
-    ]
-    if review_bundles:
-        sample = review_bundles[0].meta.get("promotion_recommendation", "?")
+    # needs_review: undecided bundles whose recommendation requires review
+    if awaiting_count > 0:
         return (
             "needs_review",
-            f"{len(review_bundles)} bundle(s) require director review "
-            f"(e.g. '{sample}')",
+            f"{awaiting_count} bundle(s) awaiting director review",
         )
 
     # active — running bundles (v0: won't fire)
@@ -140,7 +163,7 @@ def _derive_status(
 
     # idle — has completed bundles but nothing needing review
     if bundles:
-        return ("idle", f"{len(bundles)} bundle(s), none require review")
+        return ("idle", f"{len(bundles)} bundle(s), all resolved")
 
     # stale — orientations defined but no bundles
     if orientations:
@@ -163,7 +186,9 @@ class LabSummary:
     kind: str                        # from .studio/lab.toml kind
     orientations: list[Orientation]  # from _studio_orient
     bundles: list[ClawBundle]
-    promotion_candidates: int        # bundles where recommendation requires review
+    promotion_candidates: int        # legacy: total count of review-worthy recs (back-compat)
+    decided_count: int               # bundles with a decision recorded
+    awaiting_count: int              # bundles needing director review (rec != abandon/dry_run AND no decision)
     status: str                      # active | idle | blocked | stale | needs_review | error
     status_reason: str               # one-line explanation
 
@@ -197,7 +222,15 @@ def load_lab_summary(lab_root: Path) -> LabSummary:
         if b.meta.get("promotion_recommendation", "abandon") not in _NO_REVIEW_RECS
     )
 
-    status, status_reason = _derive_status(bundles, orientations, cfg_error)
+    decided_count = sum(1 for b in bundles if b.is_decided)
+    awaiting_count = sum(
+        1 for b in bundles
+        if not b.is_decided
+        and b.promotion_recommendation not in _NO_REVIEW_RECS
+        and b.promotion_recommendation != ""
+    )
+
+    status, status_reason = _derive_status(bundles, orientations, cfg_error, awaiting_count)
 
     return LabSummary(
         lab_root=lab_root,
@@ -207,6 +240,8 @@ def load_lab_summary(lab_root: Path) -> LabSummary:
         orientations=orientations,
         bundles=bundles,
         promotion_candidates=promotion_candidates,
+        decided_count=decided_count,
+        awaiting_count=awaiting_count,
         status=status,
         status_reason=status_reason,
     )
@@ -239,8 +274,15 @@ def discover_labs(federation_root: Path) -> list[LabSummary]:
     summaries: list[LabSummary] = []
     try:
         for child in sorted(federation_root.iterdir()):
-            if child.is_dir() and (child / ".studio" / "lab.toml").exists():
-                summaries.append(load_lab_summary(child))
+            if not child.is_dir():
+                continue
+            if child.name.startswith("."):
+                continue
+            if child.name == ".archive":
+                continue
+            if not (child / ".studio" / "lab.toml").exists():
+                continue
+            summaries.append(load_lab_summary(child))
     except PermissionError:
         pass
 

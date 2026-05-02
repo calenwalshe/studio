@@ -1,0 +1,15 @@
+[[orientation]]
+id = "orient-distribution-engine-design"
+lab = "systems/distribution-engine"
+objective = "Design the package distribution mechanism for spine skills across labs."
+status = "draft"
+stop_rule = "director_review_after_first_spec"
+roles = ["researcher", "builder"]
+sources = ["github-uv-pip-pipx"]
+outputs = ["result.md", "evidence.jsonl"]
+
+[orientation.constraints]
+run_untrusted_code = false
+install_dependencies = false
+require_provenance = true
+implementation_allowed = false

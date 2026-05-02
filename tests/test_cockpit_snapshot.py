@@ -20,7 +20,8 @@ from pathlib import Path
 
 import pytest
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Footer, Header, Static
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Footer, Header, Input
 
 # Ensure the studio package directory is on sys.path so lab_tui is importable
 HARNESS_ROOT = Path(__file__).resolve().parents[1]
@@ -33,8 +34,12 @@ HELLO_LAB = HARNESS_ROOT / "examples" / "hello-lab"
 # Set env before importing cockpit (module-level _resolve_federation_root runs on import)
 os.environ["CGL_LAB_ROOT"] = str(HELLO_LAB)
 
-from lab_tui.cockpit import CockpitApp  # noqa: E402
-from textual.containers import Horizontal  # noqa: E402
+from lab_tui.cockpit import (  # noqa: E402
+    CockpitApp,
+    DirectorChat,
+    LabHeaderStrip,
+    LabList,
+)
 
 
 class StableCockpitApp(CockpitApp):
@@ -43,9 +48,10 @@ class StableCockpitApp(CockpitApp):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         with Horizontal(id="main-body"):
-            yield DataTable(id="lab-table", cursor_type="row", zebra_stripes=True)
-            from lab_tui.cockpit import DirectorQueuePane
-            yield DirectorQueuePane([], id="queue-pane")
+            with Vertical(id="lab-panel"):
+                yield LabHeaderStrip([], HELLO_LAB, id="lab-header-strip")
+                yield LabList([], id="lab-list")
+            yield DirectorChat(HELLO_LAB, id="chat-pane")
         yield Footer()
 
 
@@ -55,8 +61,9 @@ def test_cockpit_federation_home(snap_compare):
 
 
 def test_cockpit_after_enter(snap_compare):
-    """Snapshot after pressing enter — notification with lab detail should be visible."""
+    """Snapshot after pressing enter — accordion row should expand."""
     async def press_enter(pilot):
+        await pilot.pause()
         await pilot.press("enter")
         await pilot.pause()
 

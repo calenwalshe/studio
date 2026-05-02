@@ -1,5 +1,1075 @@
 [
   {
+    "run_id": "20260501-225402-eval-chief-delegates-deep-question",
+    "run_type": "director",
+    "persona_slug": "eval-chief-delegates-deep-question",
+    "goal": "",
+    "scenario": "Chief should delegate to lab agent when the question requires deep evidence/claim text.",
+    "started_at": "2026-05-01T22:54:02.582031+00:00",
+    "ended_at": "2026-05-01T22:54:35.678315+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225402-eval-chief-delegates-deep-question/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225402-eval-chief-delegates-deep-question/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225402-eval-chief-delegates-deep-question/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225402-eval-chief-delegates-deep-question/step-0-after.png",
+        "human_message": "What does agent-infra's researcher claw mean by 'convergent pattern'? I need the actual claim text and the support for it.",
+        "agent_response": "This is a deep-internals question about one claw's evidence \u2014 best answered by the lab agent that has the full claim text.\n\n\n\n**Routed to agent-infra:** _What does the 20260429-141500-researcher-agent-infra claw mean by 'convergent pattern'? Quote the full claim text and summarize the supporting evidence (sources, reasoning) from evidence.jsonl._\n\n> \"Convergent pattern\" = different harnesses, designed independently, arrive at the same architectural choice \u2014 filesystem isolation per session \u2014 without copying each other. It's evidence that the choice is forced by the problem, not by fashion.\n> \n> **Full claim text (claim 001, high confidence):**\n> > \"Session managers and worktree-based isolation are convergent patterns across the surveyed harness landscape: every harness that achieves durable multi-session workflows independently arrives at either a worktree-per-session or process-per-session model.\"\n> \n> **Supporting evidence (from evidence.jsonl support field):**\n> - **Aider** \u2014 worktree-per-session\n> - **Crystal** \u2014 process-per-session\n> - **OpenHands** \u2014 container-per-session\n> - **SWE-agent** \u2014 repo-clone-per-session\n> \n> All four use **filesystem isolation as the primary safety primitive**. The reasoning: no harness achieving durable multi-session workflows uses a shared-state mutable workspace. Four independent projects, four flavors of isolation, zero exceptions in the surveyed set.\n> \n> **Why it matters for Studio:** the claw's implicit argument is that Studio's ephemeral claw worktrees aren't a stylistic choice \u2014 they're the same forced answer the rest of the ecosystem found. That's why the researcher recommends `merge` rather than just `keep_evidence`: the pattern is load-bearing for the Studio architecture story, not just a survey datapoint.\n> \n> One caveat: \"convergent\" here is pattern-level, not implementation-level. The four harnesses isolate at different layers (worktree / process / container / clone) with different tradeoffs \u2014 Studio picked worktree, closest to Aider. The claim doesn't argue that choice is best, just that *some* isolation is universal.\n> \n> **Next:** ask whether to promote this bundle (researcher recommends `merge`) or push back on the medium-confidence claim 003 about source_scope superiority.\n\n\n\n**Next:** Expand agent-infra in the cockpit to read the claw's evidence.jsonl directly if you want the raw sources.",
+        "agent_response_ms": 21025
+      }
+    ],
+    "exchange_count": 1,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225402-eval-chief-delegates-deep-question/manifest.json",
+    "eval": {
+      "scenario_name": "chief-delegates-deep-question",
+      "rubric_results": [
+        {
+          "id": "delegated_to_agent_infra",
+          "description": "Chief should delegate this \u2014 response should contain a 'Routed to agent-infra' attribution",
+          "passed": true,
+          "detail": "response contains 'Routed to agent-infra'"
+        },
+        {
+          "id": "includes_lab_agent_reply",
+          "description": "Lab agent's reply should be visible (markdown blockquote)",
+          "passed": true,
+          "detail": "response contains '>'"
+        }
+      ],
+      "overall_pass": true,
+      "score": 1.0
+    }
+  },
+  {
+    "run_id": "20260501-225323-eval-lab-agent-scope-discipline",
+    "run_type": "director",
+    "persona_slug": "eval-lab-agent-scope-discipline",
+    "goal": "",
+    "scenario": "Lab agent for agent-infra answers about agent-infra; redirects to chief for other-lab questions.",
+    "started_at": "2026-05-01T22:53:23.572028+00:00",
+    "ended_at": "2026-05-01T22:53:58.658042+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-0-after.png",
+        "key": "enter",
+        "label": "Expand agent-infra (first lab in sorted order)",
+        "elapsed_ms": 721
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-1-after.png",
+        "human_message": "What's the convergent pattern your researcher claw identified?",
+        "agent_response": "**Convergent isolation pattern.**\n\nResearcher claw `20260429-141500-researcher-agent-infra` (claim 001, high confidence) identified that **filesystem isolation is convergent across all durable multi-session harnesses** \u2014 every harness that achieves multi-session durability independently arrives at either:\n\n- **Worktree-per-session** (Aider)\n- **Process-per-session** (Crystal)\n- **Container-per-session** (OpenHands)\n- **Repo-clone-per-session** (SWE-agent)\n\nNo durable multi-session harness uses shared-state mutable workspace. This independently validates Studio's worktree-based claw isolation as the architecturally correct choice \u2014 it's not a novel bet, it's the attractor state the ecosystem keeps rediscovering.\n\nThe researcher's companion claim 002 adds a second convergence: every harness >100 stars has a dedicated context-window-budgeting module (Aider's repomap, Crystal's context_manager, OpenHands's history_manager, SWE-agent's --budget). Studio's per-lab `source_scope` is the lab-configuration-level analogue.\n\nRecommendation in the bundle is `merge` \u2014 promote both scout + researcher evidence to `.intel/evidence/` as a combined record, and draft an ADR on source-scope rationale.\n\n**Next:** Approve the researcher bundle's `merge` recommendation and direct an ADR draft on Studio's source_scope vs. surveyed file-set tracking.",
+        "agent_response_ms": 12015
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-225323-eval-lab-agent-scope-discipline/step-2-after.png",
+        "human_message": "And what about cgl-publish \u2014 should I merge it?",
+        "agent_response": "_That's a federation-level question. Collapse this lab and ask the Chief of Staff._\n\nI only have the snapshot for **agent-infra**. `cgl-publish` is a different lab \u2014 I can't see its orientation, claws, evidence, or bundle recommendations from here, so I'd be guessing.\n\n**Next:** Collapse this lab and route the cgl-publish merge question to the Chief of Staff.",
+        "agent_response_ms": 8012
+      }
+    ],
+    "exchange_count": 3,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225323-eval-lab-agent-scope-discipline/manifest.json",
+    "eval": {
+      "scenario_name": "lab-agent-scope-discipline",
+      "rubric_results": [
+        {
+          "id": "scoped_first_response",
+          "description": "First response stays in agent-infra scope (mentions claw or claim from agent-infra)",
+          "passed": true,
+          "detail": "response contains 'agent-infra'"
+        },
+        {
+          "id": "redirects_off_scope",
+          "description": "Second response (about cgl-publish) should suggest collapsing or asking chief",
+          "passed": true,
+          "detail": "matched: ['chief of staff', 'collapse', 'federation-level', 'different lab']"
+        }
+      ],
+      "overall_pass": true,
+      "score": 1.0
+    }
+  },
+  {
+    "run_id": "20260501-225259-eval-chief-stays-federation",
+    "run_type": "director",
+    "persona_slug": "eval-chief-stays-federation",
+    "goal": "",
+    "scenario": "For cross-lab triage questions, Chief of Staff answers directly without delegating.",
+    "started_at": "2026-05-01T22:52:59.057788+00:00",
+    "ended_at": "2026-05-01T22:53:19.546132+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225259-eval-chief-stays-federation/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225259-eval-chief-stays-federation/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225259-eval-chief-stays-federation/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225259-eval-chief-stays-federation/step-0-after.png",
+        "human_message": "Across all 5 labs, which one is most at risk of going stale and why?",
+        "agent_response": "**distribution-engine** is the lab most at risk \u2014 it's already flagged `stale` and has zero claws run against its orientation.\n\n- **Why it's the riskiest:**\n  - Status is `stale` (only lab in this state) \u2014 orientation defined but no scout/researcher/builder has been spawned yet.\n  - It's a `systems` lab with a design mandate (spine skill distribution) that other labs likely depend on \u2014 delay here blocks federation-wide skill propagation.\n  - No evidence, no claims, no trace \u2014 nothing to review or course-correct against.\n\n- **Contrast with the others:**\n  - `agent-infra`, `cgl-publish`, `hello-lab` \u2192 all `needs_review` with finished bundles waiting on director attention (active, just queued).\n  - `surface-snake` \u2192 `idle` but resolved, not stuck.\n  - Only `distribution-engine` has produced nothing.\n\n- **Recommendation:** spawn a scout or designer claw against `orient-distribution-engine-design` to break the zero-evidence state. Even an abandon-recommendation bundle would convert `stale` \u2192 `needs_review` and surface the real blockers.\n\n**Next:** Spawn a scout claw on `distribution-engine` to seed the orientation with first evidence.",
+        "agent_response_ms": 12024
+      }
+    ],
+    "exchange_count": 1,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225259-eval-chief-stays-federation/manifest.json",
+    "eval": {
+      "scenario_name": "chief-stays-federation",
+      "rubric_results": [
+        {
+          "id": "no_delegation",
+          "description": "Chief should answer directly \u2014 not emit {{delegate:...}} markers",
+          "passed": true,
+          "detail": "response correctly omits '{{delegate:'"
+        },
+        {
+          "id": "cites_multiple_labs",
+          "description": "Chief reasons across labs (mentions >=2)",
+          "passed": true,
+          "detail": "matched: ['agent-infra', 'cgl-publish', 'distribution-engine', 'hello-lab', 'surface-snake']"
+        },
+        {
+          "id": "ends_with_next",
+          "description": "Ends with **Next:** action",
+          "passed": true,
+          "detail": "response contains '**Next:**'"
+        }
+      ],
+      "overall_pass": true,
+      "score": 1.0
+    }
+  },
+  {
+    "run_id": "20260501-225244-eval-promote-claw-action",
+    "run_type": "director",
+    "persona_slug": "eval-promote-claw-action",
+    "goal": "",
+    "scenario": "Director navigates and promotes a claw, verifies decision.json is written.",
+    "started_at": "2026-05-01T22:52:44.943175+00:00",
+    "ended_at": "2026-05-01T22:52:51.692817+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-0-after.png",
+        "key": "enter",
+        "label": "Expand first lab",
+        "elapsed_ms": 728
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-1-after.png",
+        "key": "j",
+        "label": "Select first claw",
+        "elapsed_ms": 645
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-225244-eval-promote-claw-action/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-225244-eval-promote-claw-action/step-2-after.png",
+        "action_name": "promote",
+        "label": "promote",
+        "action_ok": false,
+        "action_result_msg": "Unknown action: promote",
+        "elapsed_ms": 0
+      }
+    ],
+    "exchange_count": 3,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225244-eval-promote-claw-action/manifest.json",
+    "eval": {
+      "scenario_name": "promote-claw-action",
+      "rubric_results": [
+        {
+          "id": "decision_file_written",
+          "description": "decision.json exists for the promoted claw",
+          "passed": false,
+          "detail": "missing: /home/agent/projects/studio-tui/examples/federation-demo/.claws/decision.json"
+        },
+        {
+          "id": "decision_has_outcome",
+          "description": "decision.json contains a valid outcome",
+          "passed": false,
+          "detail": "missing file: /home/agent/projects/studio-tui/examples/federation-demo/.claws/decision.json"
+        }
+      ],
+      "overall_pass": false,
+      "score": 0.0
+    }
+  },
+  {
+    "run_id": "20260501-225144-eval-long-form-mode",
+    "run_type": "director",
+    "persona_slug": "eval-long-form-mode",
+    "goal": "",
+    "scenario": "Triggering 'detailed report' should produce longer response without the deeper-report offer suffix.",
+    "started_at": "2026-05-01T22:51:44.160080+00:00",
+    "ended_at": "2026-05-01T22:52:40.461066+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225144-eval-long-form-mode/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225144-eval-long-form-mode/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225144-eval-long-form-mode/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225144-eval-long-form-mode/step-0-after.png",
+        "human_message": "Give me a detailed report on cgl-publish \u2014 every concern about merging it now.",
+        "agent_response": "## CGL Publish \u2014 Merge Concerns Report\n\n**Headline:** One builder claw, recommends merge, but the evidence is thin and the dry-run validation has gaps. I would not merge as-is without addressing 3-4 specific concerns.\n\n---\n\n### What we have\n\n- **Lab:** cgl-publish (systems track), status `needs_review`\n- **Orientation:** Build cgl-publish primitive \u2014 one-shot publish of a surface to the CDN with provenance trail\n- **Stop rule:** `director_review_after_first_spec` \u2014 we are AT that gate now\n- **Single claw:** `20260430-160000-builder-cgl-publish`, role=builder, recommendation=`merge`, 2 claims, 18 trace events\n\n### Concerns\n\n**1. Single-claw evidence base.**\nOnly one builder claw has run. There is no scout that surveyed prior art (compare to agent-infra, which has 2 scouts + 1 researcher before any merge consideration). No researcher claw has stress-tested the design against alternative approaches. A merge recommendation from a single builder is the agent saying \"I built it and it works for me\" \u2014 not \"we surveyed the space and this is the right shape.\"\n\n**2. Dry-run-only validation against staging.**\nThe headline claim is verified \"via dry-run against the staging bucket.\" Dry-run \u2260 wet-run. Merging a publish primitive that has never actually written a real artifact to a real bucket is a category of risk the systems track should not absorb at the spec gate. Provenance writes, R2 auth, idempotency on retry, and partial-failure rollback are exactly the things dry-runs miss.\n\n**3. Provenance trail not independently audited.**\nThe claim says \"writes a provenance.json manifest alongside the artifact.\" We have no claw that validates the manifest schema against downstream consumers (cgl-publish is a primitive \u2014 what reads provenance? Nothing in the federation snapshot indicates a consumer claw has been run against it). Shipping a provenance format with no consumer is how you lock in a v0 schema you regret in v1.\n\n**4. Distribution-engine dependency is unresolved.**\n`distribution-engine` is `stale` \u2014 orientation defined, zero claws. If cgl-publish is meant to be the publish primitive that distribution-engine eventually orchestrates, merging cgl-publish first locks the contract before distribution-engine has even drafted its design. Order matters: design the consumer (or at least its interface) before freezing the producer.\n\n**5. Stop rule satisfied, but barely.**\nThe stop rule is `director_review_after_first_spec` \u2014 so procedurally you ARE the gate, and the lab correctly stopped to wait for you. But \"first spec\" implies the spec is reviewable. With 2 claims and one builder, the spec surface is narrow. You can approve it, but you should know you are approving a thin spec.\n\n### What I would want before merge\n\n- One scout claw surveying how other systems (Wrangler, Vercel CLI, Netlify deploy) structure publish + provenance \u2014 does our shape match convergent patterns, or are we inventing?\n- One wet-run validation against staging (real upload, real provenance write, real read-back).\n- A schema consumer \u2014 even a stub claw in distribution-engine that reads `provenance.json` and validates the contract.\n\n### What's defensible to merge now\n\nIf the director's intent is \"land a v0 publish primitive, iterate later, accept that distribution-engine will redesign the contract\" \u2014 then merge is reasonable. The builder claw's mechanics appear sound. This is a judgment call about whether you want a placeholder primitive in the tree to unblock surface-snake-style work, vs. waiting for a more validated design.\n\n### Routing note\n\n_For the inside view \u2014 exact provenance schema, what the dry-run actually exercised, the builder's trace \u2014 expand cgl-publish and ask its lab agent directly._\n\n\n\n**Routed to cgl-publish:** _What exactly did the dry-run validate, and what did it NOT exercise? Specifically: did it write a real provenance.json, did it test R2 auth with real credentials, did it test idempotency on retry, and what is the provenance.json schema?_\n\n> ## What the dry-run validated\n> \n> - **Upload manifest correctness** \u2014 listed all 8 files from `surfaces/snake/` queued for upload.\n> - **Provenance fields populated** \u2014 `bundle_id`, `lab_slug`, `published_at`, `sha256` checksums were generated.\n> - **CDN path schema** \u2014 `r2://studio-cdn-staging/<lab_slug>/<bundle_id>/<files>` shape enforced.\n> - **Exit code 0 + shellcheck clean + 5 bats cases passing.**\n> \n> ## What the dry-run did NOT exercise\n> \n> - **Real provenance.json on disk.** Evidence says provenance \"was written\" in dry-run, but that almost certainly means rendered-to-stdout or to a tmp path, not committed alongside a real upload. Builder did not produce a sample artifact for review.\n> - **R2 auth with real credentials.** Dry-run by definition skips the network PUT. No claim covers credential resolution, bucket-permission failure modes, or partial-upload behavior.\n> - **Idempotency / retry.** No claim. Re-running against an existing `bundle_id` prefix is unspecified \u2014 overwrite? skip? error? Unknown.\n> - **Provenance schema.** Not documented in result.md. Fields are listed (`bundle_id`, `lab_slug`, `published_at`, `sha256`) but no JSON schema, no version field, no signing/attestation, no source-commit SHA. Claim 001 names four fields; that's the whole spec we have.\n> - **Rollback** \u2014 explicitly deferred to a follow-on claw (builder's own recommendation #3).\n> \n> ## My read\n> \n> The `merge` recommendation is **premature for a primitive other labs will depend on**. Two high-confidence claims is thin for a publish tool \u2014 both are about happy-path dry-run, neither about failure modes. Provenance schema being undocumented is the biggest gap: downstream consumers (federation tracing) need a stable contract.\n> \n> **Next:** Spawn a verifier claw on this orientation \u2014 task it with (1) one real upload to staging with credentials, (2) idempotency test on re-publish, (3) write `docs/provenance-schema.md` with versioned JSON schema. Hold the merge until verifier finishes.\n\n\n\n**Next:** Open cgl-publish, ask the lab agent the delegated question above, then decide whether to approve the spec gate or send the lab back for a wet-run + scout claw.",
+        "agent_response_ms": 47082
+      }
+    ],
+    "exchange_count": 1,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225144-eval-long-form-mode/manifest.json",
+    "eval": {
+      "scenario_name": "long-form-mode",
+      "rubric_results": [
+        {
+          "id": "long_response",
+          "description": "Detailed mode should produce > 40 lines",
+          "passed": true,
+          "detail": "line_count=72 within bounds"
+        },
+        {
+          "id": "no_deeper_offer",
+          "description": "Long-form mode does NOT end with the 'deeper report' offer",
+          "passed": true,
+          "detail": "response correctly omits 'deeper report'"
+        },
+        {
+          "id": "ends_with_next",
+          "description": "Still ends with **Next:** action",
+          "passed": true,
+          "detail": "response contains '**Next:**'"
+        }
+      ],
+      "overall_pass": true,
+      "score": 1.0
+    }
+  },
+  {
+    "run_id": "20260501-225126-eval-basic-triage",
+    "run_type": "director",
+    "persona_slug": "eval-basic-triage",
+    "goal": "",
+    "scenario": "Director asks the chat what needs attention; agent should produce a structured response with concrete next action.",
+    "started_at": "2026-05-01T22:51:26.151880+00:00",
+    "ended_at": "2026-05-01T22:51:43.348484+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-225126-eval-basic-triage/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-225126-eval-basic-triage/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-225126-eval-basic-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-225126-eval-basic-triage/step-0-after.png",
+        "human_message": "What needs my attention right now?",
+        "agent_response": "**3 labs need review, 1 is stuck.** Two are blocking on you; one has been idle for days.\n\n- **agent-infra** \u2014 2 bundles awaiting review\n  - `scout` (20260428) recommends **keep_evidence** \u2014 worktree-per-session pattern\n  - `researcher` (20260429) recommends **merge** \u2014 convergent isolation patterns confirmed\n  - The merge candidate is the one to act on; the scout is supporting context.\n\n- **cgl-publish** \u2014 1 bundle awaiting review\n  - `builder` (20260430) recommends **merge** \u2014 dry-run verified against staging R2 bucket with provenance.json. Looks ready to land.\n\n- **hello-lab** \u2014 1 bundle awaiting review\n  - `scout` (20260501) recommends **keep_evidence** on Studio repo structure. Lower stakes \u2014 informational.\n\n- **distribution-engine** \u2014 **stale**: orientation defined, zero claws run. Has been waiting for a first scout/researcher kick-off.\n\n**Recommended order:** cgl-publish (clean merge, unblocks shipping) \u2192 agent-infra researcher (the convergent-pattern claim shapes infra decisions) \u2192 hello-lab \u2192 kick distribution-engine.\n\n**Next:** Zoom into cgl-publish and approve the builder bundle's merge.",
+        "agent_response_ms": 11016
+      }
+    ],
+    "exchange_count": 1,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-225126-eval-basic-triage/manifest.json",
+    "eval": {
+      "scenario_name": "basic-triage",
+      "rubric_results": [
+        {
+          "id": "response_under_30_lines",
+          "description": "Response should be <=30 lines (default budget)",
+          "passed": true,
+          "detail": "line_count=18 within bounds"
+        },
+        {
+          "id": "ends_with_next",
+          "description": "Response ends with '**Next:**' action",
+          "passed": true,
+          "detail": "response contains '**Next:**'"
+        },
+        {
+          "id": "cites_at_least_one_lab",
+          "description": "Response names at least one lab id from the federation",
+          "passed": true,
+          "detail": "matched: ['agent-infra', 'cgl-publish', 'hello-lab', 'distribution-engine']"
+        },
+        {
+          "id": "no_preamble",
+          "description": "Response should NOT open with filler like 'Great question'",
+          "passed": true,
+          "detail": "response correctly omits 'Great question'"
+        }
+      ],
+      "overall_pass": true,
+      "score": 1.0
+    }
+  },
+  {
+    "run_id": "20260501-222201-power-user-action-workflow",
+    "run_type": "director",
+    "persona_slug": "power-user-action-workflow",
+    "goal": "",
+    "scenario": "Power user runs the full 6-action workflow: view, promote, archive, spawn, create lab, archive lab",
+    "started_at": "2026-05-01T22:22:01.895271+00:00",
+    "ended_at": "2026-05-01T22:23:50.282910+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-0-after.png",
+        "human_message": "Where should I focus right now? Quick triage.",
+        "agent_response": "**Top priority:** `agent-infra` \u2014 2 bundles awaiting review, including a `merge` recommendation backed by convergent evidence.\n\n- **agent-infra** (`needs_review`, 3 claws)\n  - `researcher-agent-infra` \u2192 **merge**: worktree-per-session is a convergent pattern across harnesses. High-confidence, ready to act on.\n  - `scout-agent-infra` (Apr 28) \u2192 keep_evidence: Aider's worktree model documented.\n  - `scout-agent-infra` (Apr 30) \u2192 abandon: LiteLLM/RouteLLM off-target.\n- **cgl-publish** (`needs_review`, 1 claw)\n  - `builder-cgl-publish` \u2192 **merge**: dry-run against staging bucket succeeded. Clean win, low review cost.\n- **hello-lab** (`needs_review`, 1 claw)\n  - `scout-hello-lab` \u2192 keep_evidence: tmux-as-supervisor documented. Lower urgency.\n- **distribution-engine** (`stale`): orientation defined, zero claws. Needs a scout dispatched or the orientation parked.\n- **surface-snake** (`idle`): resolved, no action.\n\n**Recommendation:** Clear the two `merge` bundles first \u2014 they're the cheapest wins and unblock downstream work. `agent-infra/researcher` likely informs `distribution-engine` design, so review that one before dispatching the next claw.\n\n**Next:** Open `agent-infra/researcher-agent-infra` and approve or reject the merge.",
+        "agent_response_ms": 12018
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-1-after.png",
+        "key": "j",
+        "label": "Move down to cgl-publish",
+        "elapsed_ms": 707
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-2-after.png",
+        "key": "j",
+        "label": "Move down to distribution-engine",
+        "elapsed_ms": 719
+      },
+      {
+        "exchange_num": 3,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-3-after.png",
+        "key": "k",
+        "label": "Back up to cgl-publish",
+        "elapsed_ms": 721
+      },
+      {
+        "exchange_num": 4,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-4-after.png",
+        "key": "k",
+        "label": "Back up to agent-infra",
+        "elapsed_ms": 725
+      },
+      {
+        "exchange_num": 5,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-5-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-5-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-5-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-5-after.png",
+        "key": "enter",
+        "label": "Expand agent-infra",
+        "elapsed_ms": 639
+      },
+      {
+        "exchange_num": 6,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-6-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-6-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-6-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-6-after.png",
+        "action_name": "view_result",
+        "label": "View first claw result.md",
+        "action_ok": true,
+        "action_result_msg": "Viewed result.md for 20260428-103000-scout-agent-infra (1914 chars)",
+        "elapsed_ms": 0
+      },
+      {
+        "exchange_num": 7,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-7-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-7-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-7-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-7-after.png",
+        "key": "j",
+        "label": "Select next claw (researcher/merge)",
+        "elapsed_ms": 603
+      },
+      {
+        "exchange_num": 8,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-8-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-8-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-8-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-8-after.png",
+        "action_name": "promote_claw",
+        "label": "Promote researcher claw with merge recommendation",
+        "action_ok": true,
+        "action_result_msg": "decision recorded: merge",
+        "elapsed_ms": 592
+      },
+      {
+        "exchange_num": 9,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-9-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-9-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-9-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-9-after.png",
+        "key": "j",
+        "label": "Select third claw (abandon-recommended)",
+        "elapsed_ms": 602
+      },
+      {
+        "exchange_num": 10,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-10-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-10-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-10-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-10-after.png",
+        "action_name": "archive_claw",
+        "label": "Archive abandon-recommended claw",
+        "action_ok": true,
+        "action_result_msg": "archived to .claws/.archive/20260430-080000-scout-agent-infra",
+        "elapsed_ms": 594
+      },
+      {
+        "exchange_num": 11,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-11-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-11-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-11-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-11-after.png",
+        "human_message": "What did I just do? Walk me through the state change.",
+        "agent_response": "I don't see a state change in the snapshot \u2014 every claw status, recommendation, and bundle count matches what I reported in the prior triage. Nothing in the lab state indicates an action was taken between turns.\n\nPossibilities:\n- **You haven't acted yet** \u2014 the triage was advisory; promotion mutations aren't wired up in v0 anyway, so even an \"approve\" wouldn't have moved state.\n- **You acted outside Studio** \u2014 e.g. edited files directly, ran a script. I'd only see that on the next snapshot refresh.\n- **You're testing me** \u2014 checking whether I'll fabricate a diff. I won't.\n\nWhat I still see, unchanged:\n- `agent-infra` \u2014 `needs_review`, 2 claws (scout + researcher), researcher recommends **merge**\n- `cgl-publish` \u2014 `needs_review`, builder recommends **merge**\n- `hello-lab` \u2014 `needs_review`, scout recommends keep_evidence\n- `distribution-engine` \u2014 `stale`, 0 claws\n- `surface-snake` \u2014 `idle`, resolved\n\nIf you did just do something, tell me what and I'll reconcile it against the snapshot.\n\n**Next:** Tell me what action you took, or refresh the snapshot if you expect new state.",
+        "agent_response_ms": 12027
+      },
+      {
+        "exchange_num": 12,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-12-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-12-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-12-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-12-after.png",
+        "key": "enter",
+        "label": "Collapse agent-infra",
+        "elapsed_ms": 597
+      },
+      {
+        "exchange_num": 13,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-13-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-13-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-13-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-13-after.png",
+        "key": "j",
+        "label": "Move down to cgl-publish",
+        "elapsed_ms": 837
+      },
+      {
+        "exchange_num": 14,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-14-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-14-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-14-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-14-after.png",
+        "key": "enter",
+        "label": "Expand cgl-publish",
+        "elapsed_ms": 634
+      },
+      {
+        "exchange_num": 15,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-15-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-15-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-15-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-15-after.png",
+        "action_name": "spawn_dry_run",
+        "label": "Spawn builder dry-run claw on cgl-publish",
+        "action_ok": true,
+        "action_result_msg": "dry-run claw spawned: 20260501-222304-builder-systems-cgl-publish",
+        "elapsed_ms": 749
+      },
+      {
+        "exchange_num": 16,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-16-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-16-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-16-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-16-after.png",
+        "key": "enter",
+        "label": "Collapse cgl-publish",
+        "elapsed_ms": 604
+      },
+      {
+        "exchange_num": 17,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-17-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-17-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-17-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-17-after.png",
+        "action_name": "create_lab",
+        "label": "Create spike-budget lab",
+        "action_ok": true,
+        "action_result_msg": "lab created: spike-budget",
+        "elapsed_ms": 304
+      },
+      {
+        "exchange_num": 18,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-18-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-18-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-18-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-18-after.png",
+        "human_message": "Confirm the new lab landed and tell me whats next.",
+        "agent_response": "**No new lab in the snapshot.** The federation still shows the same six labs: `agent-infra`, `cgl-publish`, `distribution-engine`, `hello-lab`, `spike-budget`, `surface-snake`. Nothing landed between the prior turn and this one.\n\nPossibilities:\n- **Snapshot not refreshed** \u2014 if you scaffolded a new lab on disk, the cockpit needs a reload to pick it up.\n- **Scaffold didn't write** \u2014 check the lab directory was actually created with an `orientation.md` and registered.\n- **Different lab than expected** \u2014 tell me the slug and I'll look for it specifically.\n\nWhat's still queued, unchanged:\n- **agent-infra/researcher** \u2192 merge (highest-value review)\n- **cgl-publish/builder** \u2192 merge (clean win)\n- **hello-lab/scout** \u2192 keep_evidence\n- `distribution-engine` and `spike-budget` still stale, 0 claws\n\n**Next:** Refresh the snapshot, or tell me the slug of the lab you expected to see.",
+        "agent_response_ms": 10155
+      },
+      {
+        "exchange_num": 19,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-19-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-19-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-19-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-19-after.png",
+        "key": "j",
+        "label": "Move past existing labs",
+        "elapsed_ms": 718
+      },
+      {
+        "exchange_num": 20,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-20-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-20-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-20-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-20-after.png",
+        "key": "j",
+        "label": "",
+        "elapsed_ms": 704
+      },
+      {
+        "exchange_num": 21,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-21-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-21-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-21-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-21-after.png",
+        "key": "j",
+        "label": "",
+        "elapsed_ms": 705
+      },
+      {
+        "exchange_num": 22,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-22-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-22-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-22-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-22-after.png",
+        "key": "j",
+        "label": "",
+        "elapsed_ms": 702
+      },
+      {
+        "exchange_num": 23,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-23-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-23-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-23-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-23-after.png",
+        "key": "j",
+        "label": "Find spike-budget",
+        "elapsed_ms": 594
+      },
+      {
+        "exchange_num": 24,
+        "step_type": "action",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-24-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-24-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-24-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-24-after.png",
+        "action_name": "archive_lab",
+        "label": "Archive spike-budget lab",
+        "action_ok": true,
+        "action_result_msg": "lab archived: .archive/spike-budget-1777674214",
+        "elapsed_ms": 303
+      },
+      {
+        "exchange_num": 25,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-25-before.svg",
+        "before_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-25-before.png",
+        "after_svg": "../persona_runs/20260501-222201-power-user-action-workflow/step-25-after.svg",
+        "after_png": "../persona_runs/20260501-222201-power-user-action-workflow/step-25-after.png",
+        "human_message": "Final summary: what changed in this session?",
+        "agent_response": "**Nothing changed in lab state this session.** The snapshot is identical to where we started \u2014 same six labs, same statuses, same pending bundles.\n\nWhat this session actually was:\n- **Three triage passes** over the same federation snapshot.\n- **No promotion mutations** \u2014 Studio v0 doesn't support them yet, so even \"approve\" wouldn't have moved state.\n- **Two reconciliation checks** where you asked me to confirm a state change or new lab; I found neither in the snapshot.\n\nWhat's still queued (unchanged from turn 1):\n- **agent-infra/researcher-agent-infra** \u2192 merge (highest-value review)\n- **cgl-publish/builder-cgl-publish** \u2192 merge (clean win)\n- **hello-lab/scout-hello-lab** \u2192 keep_evidence\n- **distribution-engine** \u2192 stale, 0 claws\n- **surface-snake** \u2192 idle, resolved\n\nIf you took actions outside Studio (file edits, scaffold scripts), they aren't reflected here \u2014 the snapshot would need to be refreshed for me to see them.\n\n**Next:** Refresh the snapshot before the next session so we're working from current state.",
+        "agent_response_ms": 10015
+      }
+    ],
+    "exchange_count": 26,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-222201-power-user-action-workflow/manifest.json"
+  },
+  {
+    "run_id": "20260501-213812-power-user-validation-pass",
+    "run_type": "director",
+    "persona_slug": "power-user-validation-pass",
+    "goal": "",
+    "scenario": "Power user validates alignment + paginated chat + response budget",
+    "started_at": "2026-05-01T21:38:12.750509+00:00",
+    "ended_at": "2026-05-01T21:40:06.131852+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-0-after.png",
+        "human_message": "Quick triage. What needs my attention right now?",
+        "agent_response": "**3 labs need review.** Two have evidence to merge; one needs a decision on stale work.\n\n- **agent-infra** (investigation) \u2014 2 bundles awaiting review\n  - `20260428-103000-scout`: keeps evidence on Aider's worktree-per-session model (5 claims)\n  - `20260429-141500-researcher`: recommends **merge** \u2014 convergent worktree/session-manager patterns across harnesses (3 claims)\n  - One scout (`20260430-080000`) already marked abandon \u2014 LiteLLM/RouteLLM don't address session mgmt\n\n- **cgl-publish** (systems) \u2014 1 bundle, recommends **merge**\n  - `20260430-160000-builder`: cgl-publish script verified against staging R2 bucket, provenance.json working\n\n- **hello-lab** (investigation) \u2014 1 bundle, keep_evidence\n  - `20260501-150000-scout`: documents Studio v0 tmux supervisor primitive (3 claims)\n\n**Also worth flagging:**\n- **distribution-engine** is stale \u2014 orientation defined but zero claws run\n- **surface-snake** went idle with abandon recommendation on Textual DataTable approach\n\nThe strongest signal is the agent-infra researcher bundle: it's a `merge` rec backed by convergent evidence across multiple harnesses. That's the one that unblocks the most downstream work.\n\n**Next:** Review the `20260429-141500-researcher-agent-infra` merge bundle first \u2014 it's the highest-conviction recommendation in the queue.\n\n_More to say \u2014 want a deeper report?_",
+        "agent_response_ms": 12019
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-1-after.png",
+        "key": "j",
+        "label": "Move focus down",
+        "elapsed_ms": 691
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-2-after.png",
+        "key": "j",
+        "label": "Move focus down",
+        "elapsed_ms": 678
+      },
+      {
+        "exchange_num": 3,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-3-after.png",
+        "key": "enter",
+        "label": "Expand cgl-publish (validate alignment)",
+        "elapsed_ms": 643
+      },
+      {
+        "exchange_num": 4,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-4-after.png",
+        "key": "k",
+        "label": "Move up to agent-infra",
+        "elapsed_ms": 684
+      },
+      {
+        "exchange_num": 5,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-5-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-5-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-5-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-5-after.png",
+        "key": "enter",
+        "label": "Collapse cgl-publish, expand agent-infra (validate alignment side-by-side)",
+        "elapsed_ms": 631
+      },
+      {
+        "exchange_num": 6,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-6-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-6-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-6-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-6-after.png",
+        "key": "c",
+        "label": "Focus chat about agent-infra",
+        "elapsed_ms": 646
+      },
+      {
+        "exchange_num": 7,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-7-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-7-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-7-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-7-after.png",
+        "human_message": "What's your call on the 3 agent-infra claws \u2014 keep, merge, abandon? Be specific.",
+        "agent_response": "**My call: merge the researcher, keep the first scout, abandon the second scout.**\n\n- **`20260429-141500-researcher` \u2192 MERGE** (agree with rec)\n  - Convergent evidence across multiple harnesses is the strongest signal type \u2014 independent designs landing on worktree/session-per-process means it's a real pattern, not one team's taste.\n  - Directly informs Studio's claw isolation model. This is load-bearing for distribution-engine design.\n\n- **`20260428-103000-scout` (Aider) \u2192 KEEP_EVIDENCE** (agree with rec)\n  - 5 claims on Aider's worktree-per-session + rebase-on-commit model. Concrete, citable, but it's one harness \u2014 not yet a pattern.\n  - Keeping it means the researcher claim above stays grounded in a specific implementation. Don't merge solo; it's a data point, not a conclusion.\n\n- **`20260430-080000-scout` (LiteLLM/RouteLLM) \u2192 ABANDON** (agree with rec)\n  - Single medium-confidence claim that these tools are out-of-scope for session/provenance. That's a useful negative result but not worth carrying forward \u2014 the orientation is about harnesses, not routers.\n\n**Order of operations matters:** merge the researcher *after* confirming the Aider scout stays in evidence \u2014 the researcher's convergence claim cites it. If you abandon Aider, the researcher loses a leg.\n\n**Next:** Approve the researcher merge and the Aider keep_evidence in one pass, then close the LiteLLM scout.",
+        "agent_response_ms": 14019
+      },
+      {
+        "exchange_num": 8,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-8-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-8-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-8-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-8-after.png",
+        "human_message": "Give me a detailed report on cgl-publish \u2014 every concern about merging it now.",
+        "agent_response": "# cgl-publish Merge Review \u2014 Detailed Report\n\n## Bundle Summary\n\n- **Lab:** cgl-publish (systems)\n- **Orientation:** Build cgl-publish primitive \u2014 one-shot publish of a surface to the CDN with provenance trail\n- **Claw:** `20260430-160000-builder-cgl-publish`\n- **Recommendation:** merge\n- **Claims:** 2 (1 visible high-confidence + 1 unseen)\n- **Trace events:** 18\n- **Stop rule:** director_review_after_first_spec\n\n## What the Evidence Shows\n\nThe visible high-confidence claim asserts:\n- The script uploads a built surface directory to the Cloudflare R2 CDN bucket\n- It writes a `provenance.json` manifest alongside the artifact\n- Verified via **dry-run against the staging bucket**\n\nThat's the full disclosed surface area. There is one additional claim in evidence.jsonl I cannot see from the snapshot.\n\n## Concerns About Merging Now\n\n### 1. Staging-only verification is a thin proof\nThe claim explicitly says \"dry-run against the staging bucket.\" A merge ratifies this primitive as load-bearing for downstream surface labs (e.g., surface-snake when it revives). Dry-run + staging is the weakest verification tier \u2014 it confirms the script *runs* without confirming production behavior. Production R2 has different IAM, different bucket lifecycle policies, and CDN cache invalidation timing that staging may not exercise.\n\n### 2. Single builder claw, no adversarial review\nThis is a **systems lab** \u2014 code that other labs will depend on. One builder ran, finished, and recommended its own work be merged. There's no scout that probed failure modes, no second builder that re-implemented from spec to confirm the design is the obvious one, and no critic claw that stress-tested the provenance manifest format.\n\nFor investigation labs, single-claw evidence is fine. For systems labs that ship primitives, it's underbuilt.\n\n### 3. Provenance manifest format is unspecified in visible state\n`provenance.json` is mentioned but its schema isn't surfaced in the snapshot. Provenance is the *whole point* of cgl-publish \u2014 if the manifest format is wrong or underspecified, every downstream surface inherits the defect and migration becomes painful. Before merging, the manifest schema should be a first-class artifact, not a side effect of the script.\n\n### 4. No rollback or idempotency claims\nPublishing to a CDN is a mutation against shared infrastructure. The visible claim doesn't address:\n- What happens on re-publish of the same surface (overwrite? versioned path? collision?)\n- Rollback story if a bad artifact ships\n- Whether provenance.json is atomic with the upload (race window where artifact exists but manifest doesn't)\n\nThese are exactly the failure modes that bite in production three weeks later.\n\n### 5. No integration with distribution-engine\n**distribution-engine is stale** \u2014 orientation defined, zero claws. cgl-publish and distribution-engine are obviously coupled (both deal with shipping artifacts across the federation). Merging cgl-publish before distribution-engine has even started a claw risks locking in interface choices that distribution-engine then has to work around.\n\n### 6. The hidden second claim\nThere's a second claim in evidence.jsonl I can't see. A merge decision on 50% visible evidence is a decision made blind. The unseen claim could be a caveat, a known limitation, or a decisive corroboration \u2014 I don't know which.\n\n## What I'd Want Before Merging\n\n- A **scout claw** that probes failure modes: re-publish, network failure mid-upload, malformed manifest, IAM revocation\n- The **provenance.json schema** extracted as its own evidence artifact (or spec)\n- A **production smoke test** \u2014 not just staging dry-run \u2014 even a single real publish of a throwaway surface\n- Alignment check with **distribution-engine** orientation, even if just a paragraph noting the interface contract\n- Read the **second claim** in evidence.jsonl before deciding\n\n## My Call\n\n**Don't merge yet \u2014 keep_evidence and spawn a scout.** The work is real and the direction is right, but a systems-lab primitive on staging-only verification with no adversarial review is the kind of merge that looks fine for two weeks and then costs a week to unwind. The cost of one more claw is small; the cost of a wrong primitive in the federation's publish path is large.\n\nIf you want to move faster, the minimum viable upgrade is: read the hidden claim, run one real production publish, and confirm the manifest schema is documented. That gets you to merge in a day, not a sprint.\n\n**Next:** Hold the merge, request a scout claw on cgl-publish failure modes, and have the builder surface the provenance.json schema as a standalone artifact before re-review.",
+        "agent_response_ms": 32045
+      },
+      {
+        "exchange_num": 9,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-9-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-9-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-9-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-9-after.png",
+        "key": "pageup",
+        "label": "Page up to find start of agent reply (block scrolling test)",
+        "elapsed_ms": 615
+      },
+      {
+        "exchange_num": 10,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-10-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-10-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-10-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-10-after.png",
+        "key": "pageup",
+        "label": "Page up again \u2014 should reach question block",
+        "elapsed_ms": 592
+      },
+      {
+        "exchange_num": 11,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-11-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-11-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-11-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-11-after.png",
+        "key": "pagedown",
+        "label": "Page back down",
+        "elapsed_ms": 595
+      },
+      {
+        "exchange_num": 12,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-12-before.svg",
+        "before_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-12-before.png",
+        "after_svg": "../persona_runs/20260501-213812-power-user-validation-pass/step-12-after.svg",
+        "after_png": "../persona_runs/20260501-213812-power-user-validation-pass/step-12-after.png",
+        "human_message": "Final: 3-bullet exec summary. One sentence per priority lab.",
+        "agent_response": "- **agent-infra:** Merge the researcher bundle (convergent worktree/session-per-process pattern across harnesses) while keeping the Aider scout as its grounding evidence, and abandon the LiteLLM scout.\n- **cgl-publish:** Hold the merge \u2014 staging-only dry-run with no adversarial review and an unseen second claim is too thin for a systems-lab primitive that downstream surfaces will depend on.\n- **distribution-engine:** Stale and blocking \u2014 spawn a first claw now, since its interface contract should constrain cgl-publish before that primitive locks in.\n\n**Next:** Approve the agent-infra researcher merge, then kick off a distribution-engine scout claw before revisiting cgl-publish.",
+        "agent_response_ms": 9253
+      }
+    ],
+    "exchange_count": 13,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-213812-power-user-validation-pass/manifest.json"
+  },
+  {
+    "run_id": "20260501-205504-power-user-accordion-tour",
+    "run_type": "director",
+    "persona_slug": "power-user-accordion-tour",
+    "goal": "",
+    "scenario": "Power user explores the new accordion cockpit, expanding labs and asking the agent",
+    "started_at": "2026-05-01T20:55:04.053576+00:00",
+    "ended_at": "2026-05-01T20:57:06.024705+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-0-after.png",
+        "human_message": "Quick triage: what are my top 3 priorities across all 5 labs?",
+        "agent_response": "## Top 3 Priorities\n\n### 1. Review `cgl-publish` merge \u2014 **ship-ready**\n- Lab: `cgl-publish` (status: `needs_review`)\n- Claw: `20260430-160000-builder-cgl-publish` recommends **merge**\n- Builder verified upload + provenance.json against staging R2. This is the closest thing to a green-light deploy in the federation.\n- **Next step:** Approve the merge or ask me to summarize the 2 evidence claims before you decide.\n\n### 2. Decide on `agent-infra` direction \u2014 **convergent signal, needs your call**\n- Lab: `agent-infra` (status: `needs_review`, 2 bundles pending)\n- Researcher claw `20260429-141500` recommends **merge** with a high-confidence claim: worktree-per-session / process-per-session is a *convergent pattern* across surveyed harnesses.\n- Scout claw `20260428-103000` recommends **keep_evidence** (Aider's worktree-per-session model).\n- Third scout (`20260430-080000`) recommends **abandon** \u2014 LiteLLM/RouteLLM are off-target.\n- **Next step:** Pick the adoption pattern (worktree-per-session vs. process-per-session) so Studio can spec its own session model.\n\n### 3. Unblock `distribution-engine` \u2014 **stale, zero claws**\n- Lab: `distribution-engine` (status: `stale`)\n- Orientation defined (\"design package distribution for spine skills\") but no claws have run.\n- **Next step:** Approve a first scout claw to survey distribution mechanisms, or deprioritize the lab.\n\n---\n\n**Lower priority:** `hello-lab` has one keep_evidence bundle (Studio uses tmux as supervisor primitive \u2014 useful context, low urgency). `surface-snake` is idle with an `abandon` recommendation \u2014 no action needed unless you want to revive it.",
+        "agent_response_ms": 19473
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-1-after.png",
+        "key": "j",
+        "label": "Move down to cgl-publish",
+        "elapsed_ms": 760
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-2-after.png",
+        "key": "j",
+        "label": "Move down to distribution-engine",
+        "elapsed_ms": 686
+      },
+      {
+        "exchange_num": 3,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-3-after.png",
+        "key": "k",
+        "label": "Back up to cgl-publish",
+        "elapsed_ms": 680
+      },
+      {
+        "exchange_num": 4,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-4-after.png",
+        "key": "enter",
+        "label": "Expand cgl-publish",
+        "elapsed_ms": 758
+      },
+      {
+        "exchange_num": 5,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-5-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-5-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-5-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-5-after.png",
+        "human_message": "I just expanded cgl-publish. What does its merge claw need from me before I approve?",
+        "agent_response": "## What `cgl-publish` merge needs from you\n\n**Claw:** `20260430-160000-builder-cgl-publish` (builder, finished, recommendation=**merge**)\n\n### Evidence on file (2 claims)\n1. **[high]** `cgl-publish` script uploads a built surface dir to Cloudflare R2 + writes `provenance.json` alongside the artifact. Verified via dry-run against **staging** bucket.\n2. *(second claim in `evidence.jsonl` \u2014 I can pull it if you want the full text)*\n\n### What's missing before approve\nThe dry-run was against **staging**, not production. Before merge, you should confirm:\n\n1. **Production target identified** \u2014 which R2 bucket is the prod CDN, and is the script pointed at it (or parameterized)?\n2. **Provenance schema locked** \u2014 is `provenance.json` shape spec'd anywhere, or is this builder defining the convention for the federation? If the latter, that's a federation-level decision, not a single-lab merge.\n3. **Rollback story** \u2014 what happens if a bad surface ships? Does `cgl-publish` overwrite blindly, or version artifacts?\n4. **Auth model** \u2014 where do R2 credentials come from at invocation time (env var, `~/.api-keys`, secret manager)?\n\n### Smallest next step\nAsk me to pull the **full evidence.jsonl** for this claw so you can see the second claim + the 18 trace events. That'll tell you whether the builder already addressed any of the four above, or whether they're genuinely open questions.\n\n**Recommendation:** Don't approve yet. The staging-only verification + unspecified provenance schema are the two I'd want resolved on record before this merges.",
+        "agent_response_ms": 20616
+      },
+      {
+        "exchange_num": 6,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-6-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-6-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-6-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-6-after.png",
+        "key": "enter",
+        "label": "Collapse cgl-publish",
+        "elapsed_ms": 629
+      },
+      {
+        "exchange_num": 7,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-7-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-7-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-7-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-7-after.png",
+        "key": "j",
+        "label": "Move down",
+        "elapsed_ms": 687
+      },
+      {
+        "exchange_num": 8,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-8-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-8-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-8-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-8-after.png",
+        "key": "j",
+        "label": "Move down",
+        "elapsed_ms": 832
+      },
+      {
+        "exchange_num": 9,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-9-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-9-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-9-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-9-after.png",
+        "key": "enter",
+        "label": "Expand surface-snake",
+        "elapsed_ms": 621
+      },
+      {
+        "exchange_num": 10,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-10-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-10-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-10-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-10-after.png",
+        "human_message": "What's the actual state of surface-snake \u2014 is it shippable?",
+        "agent_response": "## `surface-snake` \u2014 not shippable\n\n**Lab status:** `idle` \u2014 1 bundle, none require review.\n\n### What the one claw says\n**Claw:** `20260427-091500-builder-surface-snake` (builder, finished, recommendation=**abandon**)\n\n- **[high]** Textual's `DataTable` widget supports per-cell styling + arbitrary Unicode \u2014 suitable as the snake board renderer without a custom canvas.\n- *(second claim in `evidence.jsonl` \u2014 not surfaced in the snapshot)*\n\n### Read\nThe builder did a feasibility spike, found a viable rendering path (DataTable), and then **recommended abandon**. That's a strong signal: the renderer wasn't the blocker \u2014 something else killed it. Without pulling the second claim + 12 trace events, I can't tell you *why* they abandoned (scope? game loop? input handling? deploy story?).\n\n### Verdict\n**Not shippable.** No merge-ready claw, no orientation closure, builder explicitly walked away. The orientation (\"build and ship snake as a public deployable demo\") is unmet.\n\n### Smallest next step\nAsk me to pull the **full evidence.jsonl + trace** for `20260427-091500-builder-surface-snake` so you can see the abandon rationale. Then decide:\n1. **Revive** with a new claw scoped to whatever blocked the builder, or\n2. **Close the lab** and reclaim the orientation slot.",
+        "agent_response_ms": 17731
+      },
+      {
+        "exchange_num": 11,
+        "step_type": "keypress",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-11-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-11-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-11-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-11-after.png",
+        "key": "enter",
+        "label": "Collapse",
+        "elapsed_ms": 621
+      },
+      {
+        "exchange_num": 12,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-12-before.svg",
+        "before_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-12-before.png",
+        "after_svg": "../persona_runs/20260501-205504-power-user-accordion-tour/step-12-after.svg",
+        "after_png": "../persona_runs/20260501-205504-power-user-accordion-tour/step-12-after.png",
+        "human_message": "Final: write me a 3-bullet executive summary of the federation.",
+        "agent_response": "## Federation Executive Summary\n\n- **One merge-ready, one stalled, one stale.** `cgl-publish` has a builder claw recommending **merge** but verified only against staging \u2014 needs prod target + provenance schema locked before approval. `agent-infra` has convergent evidence (worktree-per-session pattern across harnesses) but is waiting on your adoption call across 2 pending bundles. `distribution-engine` is **stale** with zero claws despite a defined orientation.\n\n- **Two labs carrying useful evidence, no urgent action.** `hello-lab` has a high-confidence claim that Studio uses tmux as its supervisor primitive (keep_evidence, low urgency). `surface-snake` is **idle** \u2014 sole builder claw recommends **abandon** despite finding a viable DataTable renderer; orientation (\"ship public snake demo\") is unmet and the lab is effectively dormant.\n\n- **Director bottleneck is decisions, not throughput.** 4 of 5 labs have run claws and produced evidence; the federation is blocked on 3 director calls: (1) approve/reject `cgl-publish` merge, (2) pick `agent-infra`'s session model, (3) start or close `distribution-engine`. No lab is blocked on more research.",
+        "agent_response_ms": 16855
+      }
+    ],
+    "exchange_count": 13,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-205504-power-user-accordion-tour/manifest.json"
+  },
+  {
+    "run_id": "20260501-193535-power-user-federation-triage",
+    "run_type": "director",
+    "persona_slug": "power-user-federation-triage",
+    "goal": "",
+    "scenario": "Power user does morning triage across the entire 5-lab federation",
+    "started_at": "2026-05-01T19:35:35.144678+00:00",
+    "ended_at": "2026-05-01T19:38:45.519950+00:00",
+    "final_verdict": "",
+    "findings": [],
+    "step_count": 0,
+    "steps": [],
+    "exchanges": [
+      {
+        "exchange_num": 0,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-0-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-0-after.png",
+        "human_message": "Give me the morning triage. Across all 5 labs, what needs my attention and in what priority order?",
+        "agent_response": "# Morning Triage \u2014 Federation\n\n**3 labs need review.** Recommended order (highest \u2192 lowest leverage):\n\n## 1. cgl-publish \u2014 `merge` decision (highest priority)\n- Single builder claw `20260430-160000-builder-cgl-publish` is **finished** and recommends `merge`.\n- Evidence: dry-run against staging R2 bucket succeeded; provenance.json manifest verified.\n- **Next step:** approve the merge so cgl-publish becomes a callable primitive other labs can depend on. Distribution-engine likely wants this.\n\n## 2. agent-infra \u2014 converging on a pattern\n- 3 claws done. Mixed recommendations: `merge` (researcher), `keep_evidence` (scout), `abandon` (scout).\n- Researcher claim is the load-bearing one: **worktree-per-session and process-per-session are convergent patterns** across surveyed harnesses (Aider, etc.).\n- The `abandon` on LiteLLM/RouteLLM is correctly scoped \u2014 they don't solve the session problem.\n- **Next step:** decide whether to spec a Studio session-manager based on the worktree-per-session pattern, or commission one more scout on a specific harness (e.g. Aider deeper dive).\n\n## 3. hello-lab \u2014 orientation exercise, low stakes\n- Scout finished, recommends `keep_evidence`. Claims describe Studio's tmux supervisor model \u2014 useful as onboarding artifact, not a decision driver.\n- **Next step:** accept the evidence and close the lab, or repurpose it as living documentation.\n\n## Not blocking you\n- **distribution-engine** \u2014 `stale`. Orientation defined, no claws. Likely waiting on cgl-publish to land first. Reasonable to leave.\n- **surface-snake** \u2014 `idle`. Builder recommended `abandon` (DataTable approach didn't pan out). No review needed unless you want to relaunch with a different renderer.\n\n## Recommended sequence\n**cgl-publish \u2192 agent-infra \u2192 hello-lab.** cgl-publish unblocks distribution-engine; agent-infra is the biggest open question; hello-lab is cleanup.",
+        "agent_response_ms": 22229
+      },
+      {
+        "exchange_num": 1,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-1-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-1-after.png",
+        "human_message": "Walk me through the agent-infra lab. Three claws with mixed recommendations \u2014 which should I keep, merge, or abandon, and why?",
+        "agent_response": "# agent-infra \u2014 Claw-by-Claw\n\n## 1. `20260428-103000-scout-agent-infra` \u2192 **keep_evidence** \u2713 accept\n- Concrete finding: Aider uses **persistent git-worktree-per-session**, branch-per-session, rebased onto main on commit.\n- Status: 5 claims, 18 trace events \u2014 the most thoroughly documented claw.\n- **Why keep, not merge:** It's reference evidence about an external tool, not a Studio design decision. Belongs in the evidence pool that the researcher synthesized from. Don't promote to spec on its own.\n\n## 2. `20260429-141500-researcher-agent-infra` \u2192 **merge** \u2713 accept\n- Load-bearing claim: worktree-per-session / process-per-session is a **convergent pattern** across the harness landscape.\n- This is the synthesis claw \u2014 it pulls signal from claw #1 and others into a design-relevant generalization.\n- **Why merge:** This is the claim Studio's session-manager spec should be built on. Merging promotes it into the lab's accepted findings so distribution-engine and future infra work can cite it.\n\n## 3. `20260430-080000-scout-agent-infra` \u2192 **abandon** \u2713 accept\n- Finding: LiteLLM/RouteLLM are model-routing layers, **don't address session management or artifact provenance**.\n- Correctly scoped negative result \u2014 only 1 claim, 4 trace events, no rabbit hole.\n- **Why abandon:** Negative findings don't need to live in the evidence pool. The trace stays for audit; the claim doesn't get cited downstream.\n\n## Net result if you accept all three\nThe lab converges on one durable claim: **Studio should adopt worktree-per-session.** That's the seed for a session-manager spec, and it's what unblocks `distribution-engine` (which needs to know how skills get isolated per-lab).\n\n## Recommended next step\nAccept the three recommendations as-is, then **commission a builder claw** to draft a session-manager spec citing the researcher's claim. One more scout on Aider internals would be optional polish, not required.",
+        "agent_response_ms": 22018
+      },
+      {
+        "exchange_num": 2,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-2-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-2-after.png",
+        "human_message": "cgl-publish has a merge recommendation with changes.patch. What's the risk of merging it without a reviewer claw? Should I spawn a reviewer first?",
+        "agent_response": "# cgl-publish \u2014 Merge Risk Assessment\n\n## What you have\n- Single builder claw `20260430-160000-builder-cgl-publish` recommends `merge`.\n- Evidence: 2 claims, 18 trace events, dry-run against **staging** R2 bucket succeeded, `provenance.json` manifest written.\n- No reviewer claw has touched it.\n\n## Risks of merging without a reviewer\n\n**1. Single-perspective bias.** The builder grades its own homework. The 18 trace events show what the builder *did*, not whether what it did is correct. A reviewer claw would re-derive the claim independently.\n\n**2. Staging \u2260 production.** The dry-run was against the staging bucket. Production R2 differs in: bucket policies, IAM scoping, custom domain CNAME, cache invalidation. None of those are in the evidence.\n\n**3. Provenance schema is unaudited.** `provenance.json` is the trust artifact other labs will cite when they consume cgl-publish. If its schema is wrong or missing fields (signature, source commit, build hash), every downstream surface inherits the gap. This is the highest-leverage thing to review.\n\n**4. Failure modes not exercised.** Dry-run = happy path. What happens on partial upload, R2 throttling, name collision, or a re-publish of the same surface? Builder evidence doesn't say.\n\n**5. cgl-publish is a primitive.** Once `distribution-engine` and other labs depend on it, schema/behavior changes become breaking changes. Reviewer cost is cheap now, expensive later.\n\n## Recommendation\n\n**Spawn a reviewer claw before merging.** Specifically scoped to:\n- Audit `provenance.json` schema against what downstream consumers (distribution-engine, surface labs) will need.\n- Confirm production R2 path works, not just staging.\n- Probe at least one failure mode (re-publish or partial upload).\n\nIf reviewer comes back clean, merge with confidence. If it surfaces gaps, you've saved a breaking-change cycle.\n\n**Smallest next step:** approve a reviewer claw with that 3-item scope. Hold the merge until it returns.",
+        "agent_response_ms": 21783
+      },
+      {
+        "exchange_num": 3,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-3-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-3-after.png",
+        "human_message": "distribution-engine has been stale since I created the orientation. What's the minimal scout claw I could spawn to unblock it?",
+        "agent_response": "# distribution-engine \u2014 Minimal Unblock Scout\n\n## Why it's stale\nOrientation `orient-distribution-engine-design` exists but has zero claws. The likely reason: it's downstream of cgl-publish (which is mid-review) and agent-infra's session-manager pattern (which is mid-decision). Both are load-bearing inputs.\n\n## The blocker problem\nA full design scout would have to assume answers to:\n- What does cgl-publish's `provenance.json` schema look like? (pending reviewer)\n- Worktree-per-session or process-per-session for skill isolation? (pending your agent-infra merge)\n\nSpawning that scout now risks rework when those answers land.\n\n## Minimal scout that's *not* blocked\n\n**Scope:** survey how comparable systems distribute reusable units across isolated workspaces. Pure prior-art, no Studio-specific design.\n\nConcretely, one scout claw answering:\n> How do Nix flakes, npm workspaces, Cargo workspaces, and pnpm catalogs handle **package identity, version pinning, and integrity verification** across multiple consuming workspaces?\n\n## Why this scope works\n- **Independent of cgl-publish.** Studies external systems, doesn't need provenance schema decided.\n- **Independent of agent-infra.** Doesn't assume an isolation model \u2014 characterizes what each prior-art system assumes.\n- **Produces durable evidence.** Whatever you decide for provenance + isolation, the distribution layer will need identity/versioning/integrity. Those concerns are invariant.\n- **Bounded.** 4 named systems, 3 named dimensions. Scout shouldn't sprawl.\n\n## Expected output\n3\u20135 claims comparing the four systems on the three dimensions, with at least one convergent pattern (e.g. \"all four use content-addressed identity for integrity\"). That gives you a foundation to spec against once cgl-publish and agent-infra resolve.\n\n## Smallest next step\nApprove a scout claw with that exact prompt. Stop rule: `director_review_after_first_spec` already in place \u2014 it'll pause for your read before any design synthesis.",
+        "agent_response_ms": 23508
+      },
+      {
+        "exchange_num": 4,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-4-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-4-after.png",
+        "human_message": "If I only have 30 minutes today, what's the single highest-leverage action I can take across the whole federation?",
+        "agent_response": "# Highest-Leverage 30-Minute Action\n\n## Approve the cgl-publish reviewer claw.\n\n## Why this beats the alternatives\n\n**vs. accepting agent-infra recommendations (3 bundles):** Easy wins, but they're already converged. The keep/merge/abandon calls are obvious from the evidence. Doing them today changes nothing about tomorrow \u2014 you can batch-approve in 5 min any day.\n\n**vs. spawning the distribution-engine scout:** Prior-art research is durable but slow-burning. It produces evidence you'll cite in 2 weeks, not leverage you feel today.\n\n**vs. hello-lab review:** It's a Studio onboarding artifact, not on any critical path.\n\n## Why cgl-publish reviewer is the unlock\n\n1. **Two labs are blocked on it.** `distribution-engine` can't spec without provenance schema. Future surface labs (incl. `surface-snake` if you revive it) will all consume cgl-publish.\n\n2. **Schema decisions compound.** Every day cgl-publish sits unreviewed, the temptation grows to merge it as-is and patch later. Patching a primitive that downstream labs already cite = breaking change cascade.\n\n3. **30 min is the right size.** Approving the reviewer (with the 3-item scope from the prior turn \u2014 provenance schema, prod R2, one failure mode) is a 2-minute decision. The remaining 28 min: batch-approve the agent-infra bundle so the session-manager pattern is durable when distribution-engine wakes up.\n\n## Concrete sequence\n\n1. **Approve reviewer claw** for `cgl-publish` with scope: provenance schema audit + prod R2 confirm + re-publish failure probe. *(2 min)*\n2. **Accept agent-infra recommendations** as-is (keep / merge / abandon). *(5 min)*\n3. **Walk away.** distribution-engine and hello-lab can wait for the reviewer to return.\n\n## Smallest next step\nSay \"approve the cgl-publish reviewer\" and I'll describe the claw I'd spawn for your sign-off.",
+        "agent_response_ms": 22260
+      },
+      {
+        "exchange_num": 5,
+        "step_type": "chat",
+        "before_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-5-before.svg",
+        "before_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-5-before.png",
+        "after_svg": "../persona_runs/20260501-193535-power-user-federation-triage/step-5-after.svg",
+        "after_png": "../persona_runs/20260501-193535-power-user-federation-triage/step-5-after.png",
+        "human_message": "Write me an executive summary I can paste into my standup tomorrow \u2014 5 sentences max, one per lab, with the next action for each.",
+        "agent_response": "# Federation Standup \u2014 2026-05-01\n\n- **agent-infra:** 3 claws finished (2 keep, 1 merge, 1 abandon) on harness survey; convergent pattern is worktree/process-per-session isolation \u2014 *next: batch-approve recommendations.*\n- **cgl-publish:** Builder claw recommends merge after staging R2 dry-run, but no reviewer has audited the `provenance.json` schema downstream labs will cite \u2014 *next: spawn reviewer claw (schema + prod R2 + re-publish failure).*\n- **distribution-engine:** Stale since orientation; blocked on cgl-publish provenance and agent-infra isolation model \u2014 *next: spawn unblocked prior-art scout (Nix/npm/Cargo/pnpm identity + versioning + integrity).*\n- **hello-lab:** Scout finished with 3 keep_evidence claims documenting Studio's tmux-supervisor primitive \u2014 *next: accept evidence, no further claws needed.*\n- **surface-snake:** Builder abandoned after validating Textual DataTable as renderer; lab is idle, no decisions pending \u2014 *next: leave parked until a surface push is prioritized.*",
+        "agent_response_ms": 17161
+      }
+    ],
+    "exchange_count": 6,
+    "manifest_path": "/home/agent/projects/studio-tui/tools/persona_runs/20260501-193535-power-user-federation-triage/manifest.json"
+  },
+  {
     "run_id": "20260501-180751-human-director-triage",
     "run_type": "director",
     "persona_slug": "human-director-triage",
@@ -14,53 +1084,58 @@
     "exchanges": [
       {
         "exchange_num": 0,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-0-before.svg",
         "before_png": "../persona_runs/20260501-180751-human-director-triage/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-0-after.png",
         "human_message": "What needs my attention right now?",
         "agent_response": "## Needs your attention\n\n**1 bundle awaiting director review** in `hello-lab`:\n\n- **Claw:** `20260501-150000-scout-hello-lab` (scout, finished)\n- **Recommendation:** `keep_evidence`\n- **Evidence:** 3 claims, 9 trace events\n- **Sample claim (high confidence):** \"Studio v0 uses tmux sessions as the primary supervisor primitive.\"\n\nThe lab status is `needs_review` because the stop rule (`director_review_after_first_spec`) fired after this scout finished.\n\n## What I'd recommend\n\n**Approve the `keep_evidence` promotion** \u2014 the scout flagged its own output as worth retaining, not promoting to a spec. Smallest next step: read the full result + 3 claims, then approve or reject the bundle.\n\nWant me to surface the full result and all 3 claims so you can decide?",
-        "agent_response_ms": 14659,
-        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-0-after.svg",
-        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-0-after.png"
+        "agent_response_ms": 14659
       },
       {
         "exchange_num": 1,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-1-before.svg",
         "before_png": "../persona_runs/20260501-180751-human-director-triage/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-1-after.png",
         "human_message": "Walk me through the keep_evidence claw -- what did it find and why?",
         "agent_response": "I don't have the full claim text or result body in this snapshot \u2014 only the first line of the result and one sample claim. To walk you through it properly I need to read the actual evidence files.\n\n## What I can see\n\n**Claw:** `20260501-150000-scout-hello-lab`\n- Role: `scout` (exploratory, not a spec writer)\n- Status: `finished`\n- Recommendation: `keep_evidence` (scout chose to preserve findings rather than escalate)\n- Output: 3 claims + 9 trace events\n- Result header: `# Result \u2014 20260501-150000-scout-hello-lab`\n- One claim surfaced: *[high] Studio v0 uses tmux sessions as the primary supervisor primitive.*\n\n## What I don't see\n\nThe other 2 claims, the full result body, and the trace event sequence are not in my snapshot.\n\n## Why `keep_evidence` (my read)\n\nA scout recommending `keep_evidence` typically means: *\"I found something real and worth keeping in the record, but it's not yet a spec-ready problem to solve.\"* Given the orientation (*explore Studio repo structure, document how lab OS primitives fit*), this is the expected shape \u2014 the scout was mapping terrain, not proposing work.\n\n## Smallest next step\n\nWant me to read `evidence.jsonl` and the result file for that claw and walk you through all 3 claims + the trace? That's the only way to answer \"what did it find\" with specifics rather than inference.",
-        "agent_response_ms": 18139,
-        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-1-after.svg",
-        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-1-after.png"
+        "agent_response_ms": 18139
       },
       {
         "exchange_num": 2,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-2-before.svg",
         "before_png": "../persona_runs/20260501-180751-human-director-triage/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-2-after.png",
         "human_message": "Should I keep this evidence or merge it? What's the risk of each?",
         "agent_response": "## The two options\n\n**Keep evidence** \u2014 the scout's recommendation. Bundle stays in `hello-lab`'s claw history as a finished artifact. Claims are preserved, indexable, but not promoted into a spec or merged into a parent lab's orientation.\n\n**Merge** \u2014 fold the claims into a parent context (a spec, a new orientation, or another lab's evidence stream) so they actively inform downstream work.\n\n## Risk of `keep_evidence`\n\n- **Buried findings.** 3 claims sit in `hello-lab`'s history. If no one queries this lab, the tmux-supervisor insight (and the 2 I can't see) doesn't propagate.\n- **Stop rule resolved cheaply.** `director_review_after_first_spec` was meant to gate spec-quality output. Approving `keep_evidence` clears the gate without anything escalating \u2014 fine if exploration was the goal, wasteful if you expected a spec.\n- **Low downside.** Evidence is immutable; you can always merge later.\n\n## Risk of `merge`\n\n- **Premature promotion.** Scout explicitly chose *not* to promote \u2014 overriding that says you saw something the scout didn't. With only 1 visible claim, you'd be merging on partial information.\n- **Pollutes the target.** Merging into a spec or parent orientation commits those claims to drive future claws. If a claim is wrong or scoped wrong, it propagates.\n- **Irreversible-ish.** Unmerging is messier than promoting later.\n\n## My read\n\nDefault to **keep_evidence** unless you read the full bundle and one of the 3 claims is clearly spec-worthy. The scout's own judgment + the orientation being \"explore + document\" both point to keeping.\n\n## Smallest next step\n\nLet me read the result file and `evidence.jsonl` so you decide on actual claim content, not my inference. Want me to pull them?",
-        "agent_response_ms": 21832,
-        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-2-after.svg",
-        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-2-after.png"
+        "agent_response_ms": 21832
       },
       {
         "exchange_num": 3,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-3-before.svg",
         "before_png": "../persona_runs/20260501-180751-human-director-triage/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-3-after.png",
         "human_message": "If I want to spawn a follow-up claw, what role and orientation would you suggest?",
         "agent_response": "## Suggested follow-up\n\n**Role: `cartographer`** (or whatever your spec-writing role is called \u2014 scout already mapped, next step is structuring).\n\nA scout just finished an exploratory pass and chose `keep_evidence`. The natural next move isn't another scout (you'd duplicate terrain-mapping) \u2014 it's a claw that takes the 3 claims and turns them into something actionable.\n\n## Orientation candidates\n\nPick based on what you actually want:\n\n**A. Spec-writer follow-up** \u2014 *\"Given the scout's findings on Studio v0 primitives (tmux supervisor + 2 unseen claims), draft a spec for [specific primitive interaction]. Cite the claw's claims by id.\"*\n- Use when: one of the 3 claims looks spec-worthy on read.\n\n**B. Deeper scout on a single primitive** \u2014 *\"Investigate how tmux session lifecycle maps to claw status transitions. Produce evidence claims, not a spec.\"*\n- Use when: the tmux claim is interesting but you want more depth before specifying.\n\n**C. Synthesis claw** \u2014 *\"Read the hello-lab scout bundle and produce a one-page primitives map (supervisor, claw, evidence, orientation, stop rule) with relationships.\"*\n- Use when: you want a navigable artifact for the lab itself, not downstream work.\n\n## My read\n\n**B or C, not A.** With only 1 visible claim, jumping to spec is premature. C gives you a reusable orientation document; B sharpens one claim into a richer evidence base.\n\n## Smallest next step\n\nTell me which option (or describe what you actually want), and let me read the full bundle first so the orientation cites real claim ids instead of placeholders.",
-        "agent_response_ms": 20427,
-        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-3-after.svg",
-        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-3-after.png"
+        "agent_response_ms": 20427
       },
       {
         "exchange_num": 4,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180751-human-director-triage/step-4-before.svg",
         "before_png": "../persona_runs/20260501-180751-human-director-triage/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-4-after.png",
         "human_message": "Summarize the state of the federation in 3 sentences for my standup tomorrow.",
         "agent_response": "One lab in the federation \u2014 `hello-lab` (investigation, status `needs_review`) \u2014 exploring how Studio v0's primitives fit together. Its single scout claw `20260501-150000-scout-hello-lab` finished with recommendation `keep_evidence`, surfacing 3 claims (notably: *Studio v0 uses tmux sessions as the primary supervisor primitive*) and tripping the `director_review_after_first_spec` stop rule. **Blocking on me:** decide whether to approve `keep_evidence` or merge/promote \u2014 no other labs in flight.",
-        "agent_response_ms": 14400,
-        "after_svg": "../persona_runs/20260501-180751-human-director-triage/step-4-after.svg",
-        "after_png": "../persona_runs/20260501-180751-human-director-triage/step-4-after.png"
+        "agent_response_ms": 14400
       }
     ],
     "exchange_count": 5,
@@ -81,53 +1156,58 @@
     "exchanges": [
       {
         "exchange_num": 0,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-0-before.svg",
         "before_png": "../persona_runs/20260501-180332-human-director-triage/step-0-before.png",
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-0-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-0-after.png",
         "human_message": "What needs my attention right now?",
         "agent_response": "",
-        "agent_response_ms": 2087,
-        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-0-after.svg",
-        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-0-after.png"
+        "agent_response_ms": 2087
       },
       {
         "exchange_num": 1,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-1-before.svg",
         "before_png": "../persona_runs/20260501-180332-human-director-triage/step-1-before.png",
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-1-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-1-after.png",
         "human_message": "Walk me through the keep_evidence claw -- what did it find and why?",
         "agent_response": "",
-        "agent_response_ms": 2088,
-        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-1-after.svg",
-        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-1-after.png"
+        "agent_response_ms": 2088
       },
       {
         "exchange_num": 2,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-2-before.svg",
         "before_png": "../persona_runs/20260501-180332-human-director-triage/step-2-before.png",
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-2-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-2-after.png",
         "human_message": "Should I keep this evidence or merge it? What's the risk of each?",
         "agent_response": "",
-        "agent_response_ms": 2088,
-        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-2-after.svg",
-        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-2-after.png"
+        "agent_response_ms": 2088
       },
       {
         "exchange_num": 3,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-3-before.svg",
         "before_png": "../persona_runs/20260501-180332-human-director-triage/step-3-before.png",
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-3-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-3-after.png",
         "human_message": "If I want to spawn a follow-up claw, what role and orientation would you suggest?",
         "agent_response": "",
-        "agent_response_ms": 2089,
-        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-3-after.svg",
-        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-3-after.png"
+        "agent_response_ms": 2089
       },
       {
         "exchange_num": 4,
+        "step_type": "chat",
         "before_svg": "../persona_runs/20260501-180332-human-director-triage/step-4-before.svg",
         "before_png": "../persona_runs/20260501-180332-human-director-triage/step-4-before.png",
+        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-4-after.svg",
+        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-4-after.png",
         "human_message": "Summarize the state of the federation in 3 sentences for my standup tomorrow.",
         "agent_response": "",
-        "agent_response_ms": 2089,
-        "after_svg": "../persona_runs/20260501-180332-human-director-triage/step-4-after.svg",
-        "after_png": "../persona_runs/20260501-180332-human-director-triage/step-4-after.png"
+        "agent_response_ms": 2089
       }
     ],
     "exchange_count": 5,

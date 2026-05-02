@@ -1,0 +1,14 @@
+[sources.github-awesome-cli-coding-agents]
+type = "github_repo"
+url = "https://github.com/mnldk/awesome-ai-agents"
+source_pack = "github-repo-research"
+
+[sources.github-aider]
+type = "github_repo"
+url = "https://github.com/paul-gauthier/aider"
+source_pack = "github-repo-research"
+
+[sources.github-crystal]
+type = "github_repo"
+url = "https://github.com/jedwards1211/crystal"
+source_pack = "github-repo-research"

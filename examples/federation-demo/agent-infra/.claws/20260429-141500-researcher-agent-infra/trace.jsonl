@@ -1,0 +1,14 @@
+{"ts":"2026-04-29T14:15:30Z","event":"source_opened","source":"github-aider","path":"aider/repo.py"}
+{"ts":"2026-04-29T14:19:00Z","event":"source_opened","source":"github-crystal","path":"crystal/daemon.py"}
+{"ts":"2026-04-29T14:25:10Z","event":"tool_called","tool":"github.fetch","input":{"repo":"OpenDevin/OpenHands","path":"opendevin/runtime/base.py"},"outcome":"ok"}
+{"ts":"2026-04-29T14:31:40Z","event":"tool_called","tool":"github.fetch","input":{"repo":"SWE-agent/SWE-agent","path":"sweagent/agent/agents.py"},"outcome":"ok"}
+{"ts":"2026-04-29T14:40:00Z","event":"claim_extracted","claim_id":"claim-001","source":"github-aider"}
+{"ts":"2026-04-29T14:52:20Z","event":"source_opened","source":"github-aider","path":"aider/repomap.py"}
+{"ts":"2026-04-29T14:58:10Z","event":"tool_called","tool":"github.fetch","input":{"repo":"jedwards1211/crystal","path":"crystal/context_manager.py"},"outcome":"ok"}
+{"ts":"2026-04-29T15:05:00Z","event":"claim_extracted","claim_id":"claim-002","source":"github-aider"}
+{"ts":"2026-04-29T15:18:30Z","event":"source_opened","source":"github-aider","path":"aider/sendchat.py"}
+{"ts":"2026-04-29T15:28:00Z","event":"tool_called","tool":"github.fetch","input":{"repo":"paul-gauthier/aider","path":"docs/faq.md"},"outcome":"ok"}
+{"ts":"2026-04-29T15:35:40Z","event":"claim_extracted","claim_id":"claim-003","source":"github-aider"}
+{"ts":"2026-04-29T15:40:00Z","event":"source_opened","source":"github-awesome-cli-coding-agents","path":"README.md"}
+{"ts":"2026-04-29T15:41:10Z","event":"tool_called","tool":"github.fetch","input":{"repo":"mnldk/awesome-ai-agents","path":"README.md"},"outcome":"ok"}
+{"ts":"2026-04-29T15:42:00Z","event":"finished","status":"finished","claims_count":3,"promotion_recommendation":"merge"}

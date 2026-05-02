@@ -1,0 +1,13 @@
+{
+  "id": "20260430-160000-builder-cgl-publish",
+  "orientation_id": "orient-cgl-publish-build",
+  "lab_slug": "systems/cgl-publish",
+  "role": "builder",
+  "runtime": "claude",
+  "capability_profile": "build_worktree",
+  "source_scope": ["github-textual-snake-examples", "local-cgl-pp-deploy"],
+  "status": "finished",
+  "started_at": "2026-04-30T16:00:00Z",
+  "ended_at": "2026-04-30T18:05:00Z",
+  "promotion_recommendation": "merge"
+}

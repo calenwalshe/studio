@@ -1,0 +1,23 @@
+id: triage-and-promote
+name: "Triage federation, promote one claw, verify decision"
+intent: "The most common director loop — see what needs review, decide, confirm the decision landed."
+exercises:
+  - chief_chat
+  - lab_expansion
+  - lab_chat
+  - promote_action
+  - decision_verification
+canonical_steps:
+  - "Open chat with chief; ask what needs attention"
+  - "Identify highest-priority lab from chief's response"
+  - "Expand that lab in the table"
+  - "Read the lab agent's view (auto-switched chat) on the awaiting claw"
+  - "Promote the claw with the recommended outcome"
+  - "Verify decision.json was written with correct outcome"
+expected_artifact:
+  - "<lab>/.claws/<claw_id>/decision.json with outcome matching recommendation"
+notes_to_persona: |
+  This is the canonical happy-path workflow. Run it cleanly and note ANY friction.
+  If the chief doesn't recommend a specific lab clearly, that's a finding.
+  If the lab agent contradicts the chief, that's a finding.
+  If promote silently fails, that's a CRITICAL finding.

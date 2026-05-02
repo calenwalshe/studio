@@ -1,0 +1,20 @@
+id: resolve-stale-lab
+name: "Notice stale lab, ask agent why, spawn a starter scout"
+intent: "Stale labs shouldn't sit forever. Spawn a scout to unblock or decide to archive the lab."
+exercises:
+  - chief_chat
+  - lab_expansion
+  - lab_chat
+  - spawn_dry_run_action
+  - new_bundle_verification
+canonical_steps:
+  - "Ask chief which lab is stale"
+  - "Expand that lab"
+  - "Ask the lab agent: what's blocking us, what scout should we spawn"
+  - "Spawn a dry-run scout claw with the agent's suggested orientation"
+  - "Verify a new bundle dir appeared in .claws/"
+expected_artifact:
+  - "<lab>/.claws/<new-bundle-id>/meta.json with status=dry_run"
+notes_to_persona: |
+  distribution-engine is the canonical stale lab in the fixture. If it's not stale anymore,
+  pick whatever has 0 claws.

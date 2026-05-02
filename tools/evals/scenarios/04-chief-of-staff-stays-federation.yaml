@@ -1,0 +1,19 @@
+name: chief-stays-federation
+description: For cross-lab triage questions, Chief of Staff answers directly without delegating.
+persona: director
+lab_root: examples/federation-demo
+timeout: 120
+
+steps:
+  - chat: "Across all 5 labs, which one is most at risk of going stale and why?"
+
+rubric:
+  - id: no_delegation
+    description: "Chief should answer directly — not emit {{delegate:...}} markers"
+    check: { type: response_not_contains, step: 0, text: "{{delegate:" }
+  - id: cites_multiple_labs
+    description: "Chief reasons across labs (mentions >=2)"
+    check: { type: response_mentions_any, step: 0, options: ["agent-infra", "cgl-publish", "distribution-engine", "hello-lab", "surface-snake"] }
+  - id: ends_with_next
+    description: "Ends with **Next:** action"
+    check: { type: response_contains, step: 0, text: "**Next:**" }

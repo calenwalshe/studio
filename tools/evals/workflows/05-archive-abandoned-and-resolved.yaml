@@ -1,0 +1,17 @@
+id: archive-abandoned-and-resolved
+name: "Sweep: archive every claw with abandon recommendation"
+intent: "Cleanup workflow — keep the federation tidy."
+exercises:
+  - chief_chat
+  - lab_expansion
+  - archive_claw_action
+  - state_consistency_check
+canonical_steps:
+  - "Ask chief to list every claw with abandon recommendation"
+  - "For each, expand the lab, navigate to the claw, archive it"
+  - "After all archives: ask chief to confirm none remain"
+  - "Verify the .claws/.archive/ directory contains the archived bundles"
+expected_artifact:
+  - "agent-infra/.claws/.archive/20260430-080000-scout-agent-infra"
+notes_to_persona: |
+  In federation-demo, only one claw has abandon recommendation by default. Don't invent more.

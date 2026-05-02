@@ -1,0 +1,17 @@
+id: daily-standup
+name: "Director standup: get summary, make 3 decisions, walk away"
+intent: "Tight time-budget workflow. Validates default response budget and Next: discipline."
+exercises:
+  - chief_chat
+  - chief_executive_summary
+  - default_budget_compliance
+canonical_steps:
+  - "Ask chief: write me an executive summary, 3 sentences max"
+  - "From the summary, identify 3 immediate decisions"
+  - "Make each decision (promote/archive/etc) one at a time"
+  - "Confirm each landed before moving to the next"
+expected_artifact:
+  - "<lab>/.claws/<claw_id>/decision.json exists (at least one)"
+notes_to_persona: |
+  Time-pressed. Don't drill in. Take chief's word unless something obviously wrong.
+  This workflow specifically tests whether the chief's executive-summary response stays under budget.

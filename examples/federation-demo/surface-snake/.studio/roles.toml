@@ -1,0 +1,35 @@
+[roles.scout]
+description = "Gather sources and raw observations."
+default_runtime = "claude_print"
+default_capability = "research_readonly"
+outputs = ["evidence.jsonl", "result.md"]
+
+[roles.researcher]
+description = "Synthesize evidence into patterns, gaps, and recommendations."
+default_runtime = "claude_print"
+default_capability = "research_readonly"
+outputs = ["result.md", "evidence.jsonl"]
+
+[roles.builder]
+description = "Build tools, systems, surfaces, or connectors."
+default_runtime = "claude"
+default_capability = "build_worktree"
+outputs = ["changes.patch", "result.md", "trace.jsonl"]
+
+[roles.reviewer]
+description = "Verify claims, test changes, and critique outputs."
+default_runtime = "claude_print"
+default_capability = "review_readonly"
+outputs = ["review.md", "trace.jsonl"]
+
+[roles.operator]
+description = "Run approved workflows against external systems."
+default_runtime = "claude_print"
+default_capability = "operator_scoped"
+outputs = ["trace.jsonl", "result.md"]
+
+[roles.curator]
+description = "Graduate reusable knowledge into spine."
+default_runtime = "claude_print"
+default_capability = "spine_write"
+outputs = ["runbook_candidate.md", "skill_candidate.md", "decision_candidate.md"]

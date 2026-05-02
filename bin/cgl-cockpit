@@ -2,4 +2,5 @@
 set -euo pipefail
 HARNESS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$HARNESS/bin/_studio_env.sh"
+export PYTHONPATH="$HARNESS/studio${PYTHONPATH:+:$PYTHONPATH}"
 exec "$HARNESS/studio/.venv/bin/python" "$HARNESS/studio/lab_tui/cockpit.py" "$@"
