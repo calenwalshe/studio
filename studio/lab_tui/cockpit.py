@@ -1183,13 +1183,15 @@ class CockpitApp(App):
     # Input handler — routes Enter from the chat input
     # ------------------------------------------------------------------
 
-    async def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Handle Enter in the chat input field."""
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle Enter in the chat input field. Fire-and-forget to keep UI responsive."""
         chat: DirectorChat = self.query_one("#chat-pane", DirectorChat)
         text = event.value.strip()
         event.input.clear()
         if text:
-            await chat.send_message(text)
+            # Spawn as worker so the agent call doesn't block the event loop's
+            # rendering or other key handlers (PageUp/PageDown, Tab, etc).
+            chat.run_worker(chat.send_message(text), exclusive=True)
 
     # ------------------------------------------------------------------
     # Key routing — nav keys drive LabList when chat is not focused
@@ -1209,7 +1211,15 @@ class CockpitApp(App):
 
         chat_input: Input = self.query_one("#chat-input", Input)
         if chat_input.has_focus:
-            return  # let chat input handle everything
+            # Route PageUp/PageDown to the transcript even while typing,
+            # so the director can scroll while reading the agent's reply.
+            if event.key in ("pageup", "page_up"):
+                self.query_one("#chat-log", PaginatedTranscript).key_pageup()
+                event.stop()
+            elif event.key in ("pagedown", "page_down"):
+                self.query_one("#chat-log", PaginatedTranscript).key_pagedown()
+                event.stop()
+            return  # other keys: let chat input handle them
 
         lab_list: LabList = self.query_one("#lab-list", LabList)
 
