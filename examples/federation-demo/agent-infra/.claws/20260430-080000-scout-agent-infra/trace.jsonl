@@ -1,0 +1,4 @@
+{"ts":"2026-04-30T08:00:30Z","event":"source_opened","source":"github-awesome-cli-coding-agents","path":"README.md"}
+{"ts":"2026-04-30T08:12:00Z","event":"tool_called","tool":"web.fetch","input":{"url":"https://docs.litellm.ai/docs/routing"},"outcome":"ok"}
+{"ts":"2026-04-30T08:22:40Z","event":"claim_extracted","claim_id":"claim-001","source":"github-awesome-cli-coding-agents"}
+{"ts":"2026-04-30T08:31:00Z","event":"finished","status":"finished","claims_count":1,"promotion_recommendation":"abandon"}

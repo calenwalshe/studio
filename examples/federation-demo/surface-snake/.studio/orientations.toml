@@ -1,0 +1,15 @@
+[[orientation]]
+id = "orient-surface-snake-build-and-ship"
+lab = "surface/surface-snake"
+objective = "Build and ship the snake game surface as a public deployable demo."
+status = "active"
+stop_rule = "director_review_after_first_spec"
+roles = ["builder", "reviewer"]
+sources = ["github-textual-snake-examples"]
+outputs = ["changes.patch", "result.md", "evidence.jsonl"]
+
+[orientation.constraints]
+run_untrusted_code = false
+install_dependencies = true
+require_provenance = true
+implementation_allowed = true

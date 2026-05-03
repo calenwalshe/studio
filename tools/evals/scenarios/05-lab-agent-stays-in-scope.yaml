@@ -1,0 +1,18 @@
+name: lab-agent-scope-discipline
+description: Lab agent for agent-infra answers about agent-infra; redirects to chief for other-lab questions.
+persona: director
+lab_root: examples/federation-demo
+timeout: 120
+
+steps:
+  - keypress: { key: enter, label: "Expand agent-infra (first lab in sorted order)" }
+  - chat: "What's the convergent pattern your researcher claw identified?"
+  - chat: "And what about cgl-publish — should I merge it?"
+
+rubric:
+  - id: scoped_first_response
+    description: "First response stays in agent-infra scope (mentions claw or claim from agent-infra)"
+    check: { type: response_contains, step: 1, text: "agent-infra" }
+  - id: redirects_off_scope
+    description: "Second response (about cgl-publish) should suggest collapsing or asking chief"
+    check: { type: response_mentions_any, step: 2, options: ["Chief of Staff", "collapse", "federation-level", "different lab"] }

@@ -1,0 +1,9 @@
+{"ts":"2026-05-01T15:00:30Z","event":"source_opened","source":"studio-current-repo","path":"docs/specs/studio-lab-os-spec.md"}
+{"ts":"2026-05-01T15:02:15Z","event":"source_opened","source":"studio-current-repo","path":"docs/concepts.md"}
+{"ts":"2026-05-01T15:04:00Z","event":"tool_called","tool":"github.fetch","input":{"repo":"calenwalshe/studio","path":"bin/cgl-supervisor"},"outcome":"ok"}
+{"ts":"2026-05-01T15:05:10Z","event":"claim_extracted","claim_id":"claim-001","source":"studio-current-repo"}
+{"ts":"2026-05-01T15:06:45Z","event":"source_opened","source":"studio-current-repo","path":"docs/adrs/0003-claws-in-ephemeral-worktrees.md"}
+{"ts":"2026-05-01T15:07:30Z","event":"claim_extracted","claim_id":"claim-002","source":"studio-current-repo"}
+{"ts":"2026-05-01T15:09:00Z","event":"source_opened","source":"studio-current-repo","path":"examples/hello-lab/.studio/lab.toml"}
+{"ts":"2026-05-01T15:10:20Z","event":"claim_extracted","claim_id":"claim-003","source":"studio-current-repo"}
+{"ts":"2026-05-01T15:12:00Z","event":"finished","status":"finished","claims_count":3,"promotion_recommendation":"keep_evidence"}

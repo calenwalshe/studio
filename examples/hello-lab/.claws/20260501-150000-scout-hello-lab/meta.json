@@ -1,0 +1,13 @@
+{
+  "id": "20260501-150000-scout-hello-lab",
+  "orientation_id": "orient-hello-lab-studio-exploration",
+  "lab_slug": "hello-lab",
+  "role": "scout",
+  "runtime": "claude_print",
+  "capability_profile": "research_readonly",
+  "source_scope": ["studio-current-repo"],
+  "status": "finished",
+  "started_at": "2026-05-01T15:00:00Z",
+  "ended_at": "2026-05-01T15:12:00Z",
+  "promotion_recommendation": "keep_evidence"
+}

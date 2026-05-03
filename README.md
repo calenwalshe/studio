@@ -81,6 +81,23 @@ CGL_LAB_ROOT=~/personal-labs       cgl-tmux  # another, parallel
 See [`docs/concepts.md`](docs/concepts.md) for the full taxonomy and
 [`docs/lab-os.md`](docs/lab-os.md) for the target direction.
 
+## Target architecture (lab OS)
+
+Studio is moving toward a director-oriented lab OS — see
+[`docs/specs/studio-lab-os-spec.md`](docs/specs/studio-lab-os-spec.md) for
+the full architecture.
+
+The `examples/hello-lab/` example now demonstrates the target shape: it includes
+a `.studio/` control-plane (lab identity, orientations, roles, capabilities,
+runtimes, promotion rules, sources) and a `.claws/` artifact bundle showing the
+output contract a claw run should produce.
+
+The v0 harness behavior (`cgl-tmux`, `cgl-labs`, `cgl-supervisor`, `cgl-claw`)
+is unchanged — the new files are additive and do not affect running labs.
+
+For a guided tour of hello-lab that explains how each file maps to the spec, see
+[`docs/specs/walkthrough-hello-lab.md`](docs/specs/walkthrough-hello-lab.md).
+
 ## What this is NOT
 
 - A general-purpose AI agent framework — it assumes Claude Code as the runtime.

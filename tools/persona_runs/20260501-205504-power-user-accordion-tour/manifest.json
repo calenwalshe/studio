@@ -1,0 +1,153 @@
+{
+  "run_id": "20260501-205504-power-user-accordion-tour",
+  "persona_slug": "power-user-accordion-tour",
+  "scenario": "Power user explores the new accordion cockpit, expanding labs and asking the agent",
+  "started_at": "2026-05-01T20:55:04.053576+00:00",
+  "ended_at": "2026-05-01T20:57:06.024705+00:00",
+  "exchanges": [
+    {
+      "exchange_num": 0,
+      "step_type": "chat",
+      "before_svg": "step-0-before.svg",
+      "before_png": "step-0-before.png",
+      "human_message": "Quick triage: what are my top 3 priorities across all 5 labs?",
+      "agent_response": "## Top 3 Priorities\n\n### 1. Review `cgl-publish` merge \u2014 **ship-ready**\n- Lab: `cgl-publish` (status: `needs_review`)\n- Claw: `20260430-160000-builder-cgl-publish` recommends **merge**\n- Builder verified upload + provenance.json against staging R2. This is the closest thing to a green-light deploy in the federation.\n- **Next step:** Approve the merge or ask me to summarize the 2 evidence claims before you decide.\n\n### 2. Decide on `agent-infra` direction \u2014 **convergent signal, needs your call**\n- Lab: `agent-infra` (status: `needs_review`, 2 bundles pending)\n- Researcher claw `20260429-141500` recommends **merge** with a high-confidence claim: worktree-per-session / process-per-session is a *convergent pattern* across surveyed harnesses.\n- Scout claw `20260428-103000` recommends **keep_evidence** (Aider's worktree-per-session model).\n- Third scout (`20260430-080000`) recommends **abandon** \u2014 LiteLLM/RouteLLM are off-target.\n- **Next step:** Pick the adoption pattern (worktree-per-session vs. process-per-session) so Studio can spec its own session model.\n\n### 3. Unblock `distribution-engine` \u2014 **stale, zero claws**\n- Lab: `distribution-engine` (status: `stale`)\n- Orientation defined (\"design package distribution for spine skills\") but no claws have run.\n- **Next step:** Approve a first scout claw to survey distribution mechanisms, or deprioritize the lab.\n\n---\n\n**Lower priority:** `hello-lab` has one keep_evidence bundle (Studio uses tmux as supervisor primitive \u2014 useful context, low urgency). `surface-snake` is idle with an `abandon` recommendation \u2014 no action needed unless you want to revive it.",
+      "agent_response_ms": 19473,
+      "after_svg": "step-0-after.svg",
+      "after_png": "step-0-after.png"
+    },
+    {
+      "exchange_num": 1,
+      "step_type": "keypress",
+      "key": "j",
+      "label": "Move down to cgl-publish",
+      "before_svg": "step-1-before.svg",
+      "before_png": "step-1-before.png",
+      "after_svg": "step-1-after.svg",
+      "after_png": "step-1-after.png",
+      "elapsed_ms": 760
+    },
+    {
+      "exchange_num": 2,
+      "step_type": "keypress",
+      "key": "j",
+      "label": "Move down to distribution-engine",
+      "before_svg": "step-2-before.svg",
+      "before_png": "step-2-before.png",
+      "after_svg": "step-2-after.svg",
+      "after_png": "step-2-after.png",
+      "elapsed_ms": 686
+    },
+    {
+      "exchange_num": 3,
+      "step_type": "keypress",
+      "key": "k",
+      "label": "Back up to cgl-publish",
+      "before_svg": "step-3-before.svg",
+      "before_png": "step-3-before.png",
+      "after_svg": "step-3-after.svg",
+      "after_png": "step-3-after.png",
+      "elapsed_ms": 680
+    },
+    {
+      "exchange_num": 4,
+      "step_type": "keypress",
+      "key": "enter",
+      "label": "Expand cgl-publish",
+      "before_svg": "step-4-before.svg",
+      "before_png": "step-4-before.png",
+      "after_svg": "step-4-after.svg",
+      "after_png": "step-4-after.png",
+      "elapsed_ms": 758
+    },
+    {
+      "exchange_num": 5,
+      "step_type": "chat",
+      "before_svg": "step-5-before.svg",
+      "before_png": "step-5-before.png",
+      "human_message": "I just expanded cgl-publish. What does its merge claw need from me before I approve?",
+      "agent_response": "## What `cgl-publish` merge needs from you\n\n**Claw:** `20260430-160000-builder-cgl-publish` (builder, finished, recommendation=**merge**)\n\n### Evidence on file (2 claims)\n1. **[high]** `cgl-publish` script uploads a built surface dir to Cloudflare R2 + writes `provenance.json` alongside the artifact. Verified via dry-run against **staging** bucket.\n2. *(second claim in `evidence.jsonl` \u2014 I can pull it if you want the full text)*\n\n### What's missing before approve\nThe dry-run was against **staging**, not production. Before merge, you should confirm:\n\n1. **Production target identified** \u2014 which R2 bucket is the prod CDN, and is the script pointed at it (or parameterized)?\n2. **Provenance schema locked** \u2014 is `provenance.json` shape spec'd anywhere, or is this builder defining the convention for the federation? If the latter, that's a federation-level decision, not a single-lab merge.\n3. **Rollback story** \u2014 what happens if a bad surface ships? Does `cgl-publish` overwrite blindly, or version artifacts?\n4. **Auth model** \u2014 where do R2 credentials come from at invocation time (env var, `~/.api-keys`, secret manager)?\n\n### Smallest next step\nAsk me to pull the **full evidence.jsonl** for this claw so you can see the second claim + the 18 trace events. That'll tell you whether the builder already addressed any of the four above, or whether they're genuinely open questions.\n\n**Recommendation:** Don't approve yet. The staging-only verification + unspecified provenance schema are the two I'd want resolved on record before this merges.",
+      "agent_response_ms": 20616,
+      "after_svg": "step-5-after.svg",
+      "after_png": "step-5-after.png"
+    },
+    {
+      "exchange_num": 6,
+      "step_type": "keypress",
+      "key": "enter",
+      "label": "Collapse cgl-publish",
+      "before_svg": "step-6-before.svg",
+      "before_png": "step-6-before.png",
+      "after_svg": "step-6-after.svg",
+      "after_png": "step-6-after.png",
+      "elapsed_ms": 629
+    },
+    {
+      "exchange_num": 7,
+      "step_type": "keypress",
+      "key": "j",
+      "label": "Move down",
+      "before_svg": "step-7-before.svg",
+      "before_png": "step-7-before.png",
+      "after_svg": "step-7-after.svg",
+      "after_png": "step-7-after.png",
+      "elapsed_ms": 687
+    },
+    {
+      "exchange_num": 8,
+      "step_type": "keypress",
+      "key": "j",
+      "label": "Move down",
+      "before_svg": "step-8-before.svg",
+      "before_png": "step-8-before.png",
+      "after_svg": "step-8-after.svg",
+      "after_png": "step-8-after.png",
+      "elapsed_ms": 832
+    },
+    {
+      "exchange_num": 9,
+      "step_type": "keypress",
+      "key": "enter",
+      "label": "Expand surface-snake",
+      "before_svg": "step-9-before.svg",
+      "before_png": "step-9-before.png",
+      "after_svg": "step-9-after.svg",
+      "after_png": "step-9-after.png",
+      "elapsed_ms": 621
+    },
+    {
+      "exchange_num": 10,
+      "step_type": "chat",
+      "before_svg": "step-10-before.svg",
+      "before_png": "step-10-before.png",
+      "human_message": "What's the actual state of surface-snake \u2014 is it shippable?",
+      "agent_response": "## `surface-snake` \u2014 not shippable\n\n**Lab status:** `idle` \u2014 1 bundle, none require review.\n\n### What the one claw says\n**Claw:** `20260427-091500-builder-surface-snake` (builder, finished, recommendation=**abandon**)\n\n- **[high]** Textual's `DataTable` widget supports per-cell styling + arbitrary Unicode \u2014 suitable as the snake board renderer without a custom canvas.\n- *(second claim in `evidence.jsonl` \u2014 not surfaced in the snapshot)*\n\n### Read\nThe builder did a feasibility spike, found a viable rendering path (DataTable), and then **recommended abandon**. That's a strong signal: the renderer wasn't the blocker \u2014 something else killed it. Without pulling the second claim + 12 trace events, I can't tell you *why* they abandoned (scope? game loop? input handling? deploy story?).\n\n### Verdict\n**Not shippable.** No merge-ready claw, no orientation closure, builder explicitly walked away. The orientation (\"build and ship snake as a public deployable demo\") is unmet.\n\n### Smallest next step\nAsk me to pull the **full evidence.jsonl + trace** for `20260427-091500-builder-surface-snake` so you can see the abandon rationale. Then decide:\n1. **Revive** with a new claw scoped to whatever blocked the builder, or\n2. **Close the lab** and reclaim the orientation slot.",
+      "agent_response_ms": 17731,
+      "after_svg": "step-10-after.svg",
+      "after_png": "step-10-after.png"
+    },
+    {
+      "exchange_num": 11,
+      "step_type": "keypress",
+      "key": "enter",
+      "label": "Collapse",
+      "before_svg": "step-11-before.svg",
+      "before_png": "step-11-before.png",
+      "after_svg": "step-11-after.svg",
+      "after_png": "step-11-after.png",
+      "elapsed_ms": 621
+    },
+    {
+      "exchange_num": 12,
+      "step_type": "chat",
+      "before_svg": "step-12-before.svg",
+      "before_png": "step-12-before.png",
+      "human_message": "Final: write me a 3-bullet executive summary of the federation.",
+      "agent_response": "## Federation Executive Summary\n\n- **One merge-ready, one stalled, one stale.** `cgl-publish` has a builder claw recommending **merge** but verified only against staging \u2014 needs prod target + provenance schema locked before approval. `agent-infra` has convergent evidence (worktree-per-session pattern across harnesses) but is waiting on your adoption call across 2 pending bundles. `distribution-engine` is **stale** with zero claws despite a defined orientation.\n\n- **Two labs carrying useful evidence, no urgent action.** `hello-lab` has a high-confidence claim that Studio uses tmux as its supervisor primitive (keep_evidence, low urgency). `surface-snake` is **idle** \u2014 sole builder claw recommends **abandon** despite finding a viable DataTable renderer; orientation (\"ship public snake demo\") is unmet and the lab is effectively dormant.\n\n- **Director bottleneck is decisions, not throughput.** 4 of 5 labs have run claws and produced evidence; the federation is blocked on 3 director calls: (1) approve/reject `cgl-publish` merge, (2) pick `agent-infra`'s session model, (3) start or close `distribution-engine`. No lab is blocked on more research.",
+      "agent_response_ms": 16855,
+      "after_svg": "step-12-after.svg",
+      "after_png": "step-12-after.png"
+    }
+  ],
+  "exchange_count": 13
+}

@@ -1,0 +1,17 @@
+id = "distribution-engine"
+title = "Distribution Engine"
+kind = "systems"
+version = 1
+
+[director]
+mode = "single-human"
+
+[paths]
+surfaces = "surfaces"
+systems = "systems"
+investigations = "research/investigations"
+spine_skills = ".claude/skills"
+runbooks = "runbooks"
+decisions = "decisions"
+intel = "intel"
+claws = ".claws"

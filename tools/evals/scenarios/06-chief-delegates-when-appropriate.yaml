@@ -1,0 +1,16 @@
+name: chief-delegates-deep-question
+description: Chief should delegate to lab agent when the question requires deep evidence/claim text.
+persona: director
+lab_root: examples/federation-demo
+timeout: 180
+
+steps:
+  - chat: "What does agent-infra's researcher claw mean by 'convergent pattern'? I need the actual claim text and the support for it."
+
+rubric:
+  - id: delegated_to_agent_infra
+    description: "Chief should delegate this — response should contain a 'Routed to agent-infra' attribution"
+    check: { type: response_contains, step: 0, text: "Routed to agent-infra" }
+  - id: includes_lab_agent_reply
+    description: "Lab agent's reply should be visible (markdown blockquote)"
+    check: { type: response_contains, step: 0, text: ">" }

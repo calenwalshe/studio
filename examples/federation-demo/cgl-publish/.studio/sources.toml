@@ -1,0 +1,9 @@
+[sources.github-textual-snake-examples]
+type = "github_repo"
+url = "https://github.com/Textualize/textual-examples"
+source_pack = "github-repo-research"
+
+[sources.local-cgl-pp-deploy]
+type = "local_path"
+path = "bin/cgl-pp-deploy"
+source_pack = "local-script-research"

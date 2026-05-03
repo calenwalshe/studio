@@ -1,0 +1,70 @@
+{
+  "run_id": "20260501-193535-power-user-federation-triage",
+  "persona_slug": "power-user-federation-triage",
+  "scenario": "Power user does morning triage across the entire 5-lab federation",
+  "started_at": "2026-05-01T19:35:35.144678+00:00",
+  "ended_at": "2026-05-01T19:38:45.519950+00:00",
+  "exchanges": [
+    {
+      "exchange_num": 0,
+      "before_svg": "step-0-before.svg",
+      "before_png": "step-0-before.png",
+      "human_message": "Give me the morning triage. Across all 5 labs, what needs my attention and in what priority order?",
+      "agent_response": "# Morning Triage \u2014 Federation\n\n**3 labs need review.** Recommended order (highest \u2192 lowest leverage):\n\n## 1. cgl-publish \u2014 `merge` decision (highest priority)\n- Single builder claw `20260430-160000-builder-cgl-publish` is **finished** and recommends `merge`.\n- Evidence: dry-run against staging R2 bucket succeeded; provenance.json manifest verified.\n- **Next step:** approve the merge so cgl-publish becomes a callable primitive other labs can depend on. Distribution-engine likely wants this.\n\n## 2. agent-infra \u2014 converging on a pattern\n- 3 claws done. Mixed recommendations: `merge` (researcher), `keep_evidence` (scout), `abandon` (scout).\n- Researcher claim is the load-bearing one: **worktree-per-session and process-per-session are convergent patterns** across surveyed harnesses (Aider, etc.).\n- The `abandon` on LiteLLM/RouteLLM is correctly scoped \u2014 they don't solve the session problem.\n- **Next step:** decide whether to spec a Studio session-manager based on the worktree-per-session pattern, or commission one more scout on a specific harness (e.g. Aider deeper dive).\n\n## 3. hello-lab \u2014 orientation exercise, low stakes\n- Scout finished, recommends `keep_evidence`. Claims describe Studio's tmux supervisor model \u2014 useful as onboarding artifact, not a decision driver.\n- **Next step:** accept the evidence and close the lab, or repurpose it as living documentation.\n\n## Not blocking you\n- **distribution-engine** \u2014 `stale`. Orientation defined, no claws. Likely waiting on cgl-publish to land first. Reasonable to leave.\n- **surface-snake** \u2014 `idle`. Builder recommended `abandon` (DataTable approach didn't pan out). No review needed unless you want to relaunch with a different renderer.\n\n## Recommended sequence\n**cgl-publish \u2192 agent-infra \u2192 hello-lab.** cgl-publish unblocks distribution-engine; agent-infra is the biggest open question; hello-lab is cleanup.",
+      "agent_response_ms": 22229,
+      "after_svg": "step-0-after.svg",
+      "after_png": "step-0-after.png"
+    },
+    {
+      "exchange_num": 1,
+      "before_svg": "step-1-before.svg",
+      "before_png": "step-1-before.png",
+      "human_message": "Walk me through the agent-infra lab. Three claws with mixed recommendations \u2014 which should I keep, merge, or abandon, and why?",
+      "agent_response": "# agent-infra \u2014 Claw-by-Claw\n\n## 1. `20260428-103000-scout-agent-infra` \u2192 **keep_evidence** \u2713 accept\n- Concrete finding: Aider uses **persistent git-worktree-per-session**, branch-per-session, rebased onto main on commit.\n- Status: 5 claims, 18 trace events \u2014 the most thoroughly documented claw.\n- **Why keep, not merge:** It's reference evidence about an external tool, not a Studio design decision. Belongs in the evidence pool that the researcher synthesized from. Don't promote to spec on its own.\n\n## 2. `20260429-141500-researcher-agent-infra` \u2192 **merge** \u2713 accept\n- Load-bearing claim: worktree-per-session / process-per-session is a **convergent pattern** across the harness landscape.\n- This is the synthesis claw \u2014 it pulls signal from claw #1 and others into a design-relevant generalization.\n- **Why merge:** This is the claim Studio's session-manager spec should be built on. Merging promotes it into the lab's accepted findings so distribution-engine and future infra work can cite it.\n\n## 3. `20260430-080000-scout-agent-infra` \u2192 **abandon** \u2713 accept\n- Finding: LiteLLM/RouteLLM are model-routing layers, **don't address session management or artifact provenance**.\n- Correctly scoped negative result \u2014 only 1 claim, 4 trace events, no rabbit hole.\n- **Why abandon:** Negative findings don't need to live in the evidence pool. The trace stays for audit; the claim doesn't get cited downstream.\n\n## Net result if you accept all three\nThe lab converges on one durable claim: **Studio should adopt worktree-per-session.** That's the seed for a session-manager spec, and it's what unblocks `distribution-engine` (which needs to know how skills get isolated per-lab).\n\n## Recommended next step\nAccept the three recommendations as-is, then **commission a builder claw** to draft a session-manager spec citing the researcher's claim. One more scout on Aider internals would be optional polish, not required.",
+      "agent_response_ms": 22018,
+      "after_svg": "step-1-after.svg",
+      "after_png": "step-1-after.png"
+    },
+    {
+      "exchange_num": 2,
+      "before_svg": "step-2-before.svg",
+      "before_png": "step-2-before.png",
+      "human_message": "cgl-publish has a merge recommendation with changes.patch. What's the risk of merging it without a reviewer claw? Should I spawn a reviewer first?",
+      "agent_response": "# cgl-publish \u2014 Merge Risk Assessment\n\n## What you have\n- Single builder claw `20260430-160000-builder-cgl-publish` recommends `merge`.\n- Evidence: 2 claims, 18 trace events, dry-run against **staging** R2 bucket succeeded, `provenance.json` manifest written.\n- No reviewer claw has touched it.\n\n## Risks of merging without a reviewer\n\n**1. Single-perspective bias.** The builder grades its own homework. The 18 trace events show what the builder *did*, not whether what it did is correct. A reviewer claw would re-derive the claim independently.\n\n**2. Staging \u2260 production.** The dry-run was against the staging bucket. Production R2 differs in: bucket policies, IAM scoping, custom domain CNAME, cache invalidation. None of those are in the evidence.\n\n**3. Provenance schema is unaudited.** `provenance.json` is the trust artifact other labs will cite when they consume cgl-publish. If its schema is wrong or missing fields (signature, source commit, build hash), every downstream surface inherits the gap. This is the highest-leverage thing to review.\n\n**4. Failure modes not exercised.** Dry-run = happy path. What happens on partial upload, R2 throttling, name collision, or a re-publish of the same surface? Builder evidence doesn't say.\n\n**5. cgl-publish is a primitive.** Once `distribution-engine` and other labs depend on it, schema/behavior changes become breaking changes. Reviewer cost is cheap now, expensive later.\n\n## Recommendation\n\n**Spawn a reviewer claw before merging.** Specifically scoped to:\n- Audit `provenance.json` schema against what downstream consumers (distribution-engine, surface labs) will need.\n- Confirm production R2 path works, not just staging.\n- Probe at least one failure mode (re-publish or partial upload).\n\nIf reviewer comes back clean, merge with confidence. If it surfaces gaps, you've saved a breaking-change cycle.\n\n**Smallest next step:** approve a reviewer claw with that 3-item scope. Hold the merge until it returns.",
+      "agent_response_ms": 21783,
+      "after_svg": "step-2-after.svg",
+      "after_png": "step-2-after.png"
+    },
+    {
+      "exchange_num": 3,
+      "before_svg": "step-3-before.svg",
+      "before_png": "step-3-before.png",
+      "human_message": "distribution-engine has been stale since I created the orientation. What's the minimal scout claw I could spawn to unblock it?",
+      "agent_response": "# distribution-engine \u2014 Minimal Unblock Scout\n\n## Why it's stale\nOrientation `orient-distribution-engine-design` exists but has zero claws. The likely reason: it's downstream of cgl-publish (which is mid-review) and agent-infra's session-manager pattern (which is mid-decision). Both are load-bearing inputs.\n\n## The blocker problem\nA full design scout would have to assume answers to:\n- What does cgl-publish's `provenance.json` schema look like? (pending reviewer)\n- Worktree-per-session or process-per-session for skill isolation? (pending your agent-infra merge)\n\nSpawning that scout now risks rework when those answers land.\n\n## Minimal scout that's *not* blocked\n\n**Scope:** survey how comparable systems distribute reusable units across isolated workspaces. Pure prior-art, no Studio-specific design.\n\nConcretely, one scout claw answering:\n> How do Nix flakes, npm workspaces, Cargo workspaces, and pnpm catalogs handle **package identity, version pinning, and integrity verification** across multiple consuming workspaces?\n\n## Why this scope works\n- **Independent of cgl-publish.** Studies external systems, doesn't need provenance schema decided.\n- **Independent of agent-infra.** Doesn't assume an isolation model \u2014 characterizes what each prior-art system assumes.\n- **Produces durable evidence.** Whatever you decide for provenance + isolation, the distribution layer will need identity/versioning/integrity. Those concerns are invariant.\n- **Bounded.** 4 named systems, 3 named dimensions. Scout shouldn't sprawl.\n\n## Expected output\n3\u20135 claims comparing the four systems on the three dimensions, with at least one convergent pattern (e.g. \"all four use content-addressed identity for integrity\"). That gives you a foundation to spec against once cgl-publish and agent-infra resolve.\n\n## Smallest next step\nApprove a scout claw with that exact prompt. Stop rule: `director_review_after_first_spec` already in place \u2014 it'll pause for your read before any design synthesis.",
+      "agent_response_ms": 23508,
+      "after_svg": "step-3-after.svg",
+      "after_png": "step-3-after.png"
+    },
+    {
+      "exchange_num": 4,
+      "before_svg": "step-4-before.svg",
+      "before_png": "step-4-before.png",
+      "human_message": "If I only have 30 minutes today, what's the single highest-leverage action I can take across the whole federation?",
+      "agent_response": "# Highest-Leverage 30-Minute Action\n\n## Approve the cgl-publish reviewer claw.\n\n## Why this beats the alternatives\n\n**vs. accepting agent-infra recommendations (3 bundles):** Easy wins, but they're already converged. The keep/merge/abandon calls are obvious from the evidence. Doing them today changes nothing about tomorrow \u2014 you can batch-approve in 5 min any day.\n\n**vs. spawning the distribution-engine scout:** Prior-art research is durable but slow-burning. It produces evidence you'll cite in 2 weeks, not leverage you feel today.\n\n**vs. hello-lab review:** It's a Studio onboarding artifact, not on any critical path.\n\n## Why cgl-publish reviewer is the unlock\n\n1. **Two labs are blocked on it.** `distribution-engine` can't spec without provenance schema. Future surface labs (incl. `surface-snake` if you revive it) will all consume cgl-publish.\n\n2. **Schema decisions compound.** Every day cgl-publish sits unreviewed, the temptation grows to merge it as-is and patch later. Patching a primitive that downstream labs already cite = breaking change cascade.\n\n3. **30 min is the right size.** Approving the reviewer (with the 3-item scope from the prior turn \u2014 provenance schema, prod R2, one failure mode) is a 2-minute decision. The remaining 28 min: batch-approve the agent-infra bundle so the session-manager pattern is durable when distribution-engine wakes up.\n\n## Concrete sequence\n\n1. **Approve reviewer claw** for `cgl-publish` with scope: provenance schema audit + prod R2 confirm + re-publish failure probe. *(2 min)*\n2. **Accept agent-infra recommendations** as-is (keep / merge / abandon). *(5 min)*\n3. **Walk away.** distribution-engine and hello-lab can wait for the reviewer to return.\n\n## Smallest next step\nSay \"approve the cgl-publish reviewer\" and I'll describe the claw I'd spawn for your sign-off.",
+      "agent_response_ms": 22260,
+      "after_svg": "step-4-after.svg",
+      "after_png": "step-4-after.png"
+    },
+    {
+      "exchange_num": 5,
+      "before_svg": "step-5-before.svg",
+      "before_png": "step-5-before.png",
+      "human_message": "Write me an executive summary I can paste into my standup tomorrow \u2014 5 sentences max, one per lab, with the next action for each.",
+      "agent_response": "# Federation Standup \u2014 2026-05-01\n\n- **agent-infra:** 3 claws finished (2 keep, 1 merge, 1 abandon) on harness survey; convergent pattern is worktree/process-per-session isolation \u2014 *next: batch-approve recommendations.*\n- **cgl-publish:** Builder claw recommends merge after staging R2 dry-run, but no reviewer has audited the `provenance.json` schema downstream labs will cite \u2014 *next: spawn reviewer claw (schema + prod R2 + re-publish failure).*\n- **distribution-engine:** Stale since orientation; blocked on cgl-publish provenance and agent-infra isolation model \u2014 *next: spawn unblocked prior-art scout (Nix/npm/Cargo/pnpm identity + versioning + integrity).*\n- **hello-lab:** Scout finished with 3 keep_evidence claims documenting Studio's tmux-supervisor primitive \u2014 *next: accept evidence, no further claws needed.*\n- **surface-snake:** Builder abandoned after validating Textual DataTable as renderer; lab is idle, no decisions pending \u2014 *next: leave parked until a surface push is prioritized.*",
+      "agent_response_ms": 17161,
+      "after_svg": "step-5-after.svg",
+      "after_png": "step-5-after.png"
+    }
+  ],
+  "exchange_count": 6
+}

@@ -1,0 +1,65 @@
+diff --git a/bin/cgl-publish b/bin/cgl-publish
+new file mode 100755
+index 0000000..a3f8c12
+--- /dev/null
++++ b/bin/cgl-publish
+@@ -0,0 +1,58 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# cgl-publish — one-shot publish of a surface directory to the CDN.
++# Usage: cgl-publish [--dry-run] --dest <r2://bucket/> --lab-slug <slug> --bundle-id <id> <surface-dir>
++
++DRY_RUN=false
++DEST=""
++LAB_SLUG=""
++BUNDLE_ID=""
++SURFACE_DIR=""
++
++while [[ $# -gt 0 ]]; do
++  case "$1" in
++    --dry-run)    DRY_RUN=true; shift ;;
++    --dest)       DEST="$2"; shift 2 ;;
++    --lab-slug)   LAB_SLUG="$2"; shift 2 ;;
++    --bundle-id)  BUNDLE_ID="$2"; shift 2 ;;
++    --help)       grep '^#' "$0" | cut -c3-; exit 0 ;;
++    *)            SURFACE_DIR="$1"; shift ;;
++  esac
++done
++
++[[ -z "$SURFACE_DIR" ]] && { echo "error: surface-dir required" >&2; exit 1; }
++[[ -z "$DEST" ]]        && { echo "error: --dest required" >&2; exit 1; }
++[[ -z "$LAB_SLUG" ]]    && { echo "error: --lab-slug required" >&2; exit 1; }
++[[ -z "$BUNDLE_ID" ]]   && { echo "error: --bundle-id required" >&2; exit 1; }
++[[ ! -d "$SURFACE_DIR" ]] && { echo "error: surface-dir not found: $SURFACE_DIR" >&2; exit 1; }
++
++CDN_PREFIX="${DEST%/}/${LAB_SLUG}/${BUNDLE_ID}"
++PROVENANCE_FILE="$(mktemp)"
++PUBLISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
++
++{
++  echo "{"
++  echo "  \"bundle_id\": \"${BUNDLE_ID}\","
++  echo "  \"lab_slug\": \"${LAB_SLUG}\","
++  echo "  \"published_at\": \"${PUBLISHED_AT}\","
++  echo "  \"files\": {"
++  find "${SURFACE_DIR}" -type f | sort | while read -r f; do
++    rel="${f#"${SURFACE_DIR}"/}"
++    sha="$(sha256sum "${f}" | cut -d' ' -f1)"
++    echo "    \"${rel}\": \"${sha}\","
++  done
++  echo "  }"
++  echo "}"
++} > "${PROVENANCE_FILE}"
++
++if "${DRY_RUN}"; then
++  echo "[dry-run] would upload: ${SURFACE_DIR} -> ${CDN_PREFIX}/"
++  echo "[dry-run] provenance.json:"
++  cat "${PROVENANCE_FILE}"
++else
++  rclone copy "${SURFACE_DIR}" "${CDN_PREFIX}/"
++  rclone copyto "${PROVENANCE_FILE}" "${CDN_PREFIX}/provenance.json"
++  echo "published: ${CDN_PREFIX}/"
++fi
++
++rm -f "${PROVENANCE_FILE}"

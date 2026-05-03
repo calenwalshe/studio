@@ -1,0 +1,23 @@
+name: promote-claw-action
+description: Director navigates and promotes a claw, verifies decision.json is written.
+persona: director
+lab_root: tmp_copy_of(examples/federation-demo)
+timeout: 60
+
+steps:
+  - keypress: { key: enter, label: "Expand first lab" }
+  - keypress: { key: j, label: "Select first claw" }
+  - action: { type: promote, claw: "auto", outcome: "auto" }
+
+rubric:
+  - id: decision_file_written
+    description: "decision.json exists for the promoted claw"
+    check: { type: file_exists, path: "{lab_root}/{first_lab}/.claws/{promoted_claw_id}/decision.json" }
+  - id: decision_has_outcome
+    description: "decision.json contains a valid outcome"
+    check: { type: file_json_field, path: "{lab_root}/{first_lab}/.claws/{promoted_claw_id}/decision.json", field: "outcome", in: ["abandon", "keep_evidence", "merge", "publish", "graduate_to_spine"] }
+
+# TODO (Arc 3): resolve template variables {first_lab} and {promoted_claw_id} from
+# the run context captured during scenario execution. The action step should populate
+# run_state["template_vars"] with these values when it detects a promote action result.
+# See eval_harness._resolve_template() and run_scenario() template_vars block.

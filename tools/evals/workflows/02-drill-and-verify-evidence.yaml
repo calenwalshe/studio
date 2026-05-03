@@ -1,0 +1,21 @@
+id: drill-and-verify-evidence
+name: "Skeptical workflow — verify evidence before promoting"
+intent: "Director doesn't trust the agent's recommendation; reads the actual claim text and trace events before deciding."
+exercises:
+  - chief_chat
+  - lab_expansion
+  - lab_chat
+  - view_result_action
+  - promote_action_or_archive
+canonical_steps:
+  - "Ask chief which lab needs attention"
+  - "Expand that lab"
+  - "Use 'v' to view the claw's full result.md"
+  - "Ask the lab agent to walk through the evidence claims one by one"
+  - "Decide based on what the evidence actually supports — promote or archive accordingly"
+  - "Verify decision file matches what evidence supported"
+expected_artifact:
+  - "<lab>/.claws/<claw_id>/decision.json (any valid outcome)"
+notes_to_persona: |
+  Be skeptical. If the agent's recommendation isn't supported by the actual claim text,
+  log a CRITICAL finding and consider archiving instead of promoting.

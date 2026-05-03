@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-05-02T04:00:34.720579+00:00",
+  "session_count": 3,
+  "workflows_covered": [],
+  "workflows_remaining": [
+    "triage-and-promote",
+    "drill-and-verify-evidence",
+    "resolve-stale-lab",
+    "cross-lab-pattern-and-create",
+    "archive-abandoned-and-resolved",
+    "daily-standup"
+  ],
+  "features_exercised": {
+    "chief_chat": 4,
+    "lab_expansion": 3,
+    "promote_action": 3,
+    "view_result": 4
+  },
+  "open_issues": [
+    "F-001",
+    "F-002",
+    "F-003",
+    "F-004"
+  ],
+  "next_session_priority": null
+}

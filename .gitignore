@@ -17,3 +17,18 @@ Thumbs.db
 .venv/
 venv/
 .vscode/
+.pytest_cache/
+snapshot_report.html
+# Persona run artifacts — ephemeral, not committed (except specific published runs below)
+tools/persona_runs/*
+!tools/persona_runs/20260501-172052-power-user/
+!tools/persona_runs/20260501-180751-human-director-triage/
+!tools/persona_runs/20260501-193535-power-user-federation-triage/
+!tools/persona_runs/*-power-user-accordion-tour/
+!tools/persona_runs/*-power-user-validation-pass/
+!tools/persona_runs/*-power-user-action-workflow/
+# Examiner session artifacts — preserve across sessions
+!tools/evals/examiner/sessions/
+!tools/evals/examiner/state.json
+!tools/evals/examiner/findings.jsonl
+!tools/evals/examiner/coverage.md

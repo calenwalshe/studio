@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://studio.cgl/schemas/trace-event.schema.json",
+  "title": "Claw Artifact Bundle — trace.jsonl line",
+  "description": "Schema for one line (JSON object) in a claw's trace.jsonl. Each line records a single meaningful action in chronological order.",
+  "type": "object",
+  "required": ["ts", "event"],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "description": "RFC3339 UTC timestamp of the event.",
+      "format": "date-time",
+      "examples": ["2026-05-01T15:01:00Z"]
+    },
+    "event": {
+      "type": "string",
+      "description": "Event type discriminator.",
+      "enum": [
+        "source_opened",
+        "claim_extracted",
+        "tool_called",
+        "file_modified",
+        "error",
+        "finished"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "title": "source_opened",
+      "description": "Emitted when the claw opens or fetches a source for reading.",
+      "properties": {
+        "event": { "const": "source_opened" },
+        "source": {
+          "type": "string",
+          "description": "Source key (from sources.toml) or URL."
+        },
+        "path": {
+          "type": "string",
+          "description": "File path or URL path within the source."
+        }
+      },
+      "required": ["ts", "event", "source", "path"]
+    },
+    {
+      "title": "claim_extracted",
+      "description": "Emitted when the claw extracts a claim for evidence.jsonl.",
+      "properties": {
+        "event": { "const": "claim_extracted" },
+        "claim_id": {
+          "type": "string",
+          "description": "The id value of the claim in evidence.jsonl."
+        },
+        "source": {
+          "type": "string",
+          "description": "Source key or URL the claim was drawn from."
+        }
+      },
+      "required": ["ts", "event", "claim_id", "source"]
+    },
+    {
+      "title": "tool_called",
+      "description": "Emitted when the claw invokes a tool.",
+      "properties": {
+        "event": { "const": "tool_called" },
+        "tool": {
+          "type": "string",
+          "description": "Tool name (e.g. web.fetch, shell, github.fetch)."
+        },
+        "input": {
+          "type": "object",
+          "description": "Key inputs passed to the tool. May be omitted or redacted for sensitive tools."
+        },
+        "outcome": {
+          "type": "string",
+          "description": "Result of the tool call.",
+          "enum": ["ok", "error", "skipped"]
+        }
+      },
+      "required": ["ts", "event", "tool", "outcome"]
+    },
+    {
+      "title": "file_modified",
+      "description": "Emitted when the claw writes or modifies a file (builder/reviewer claws).",
+      "properties": {
+        "event": { "const": "file_modified" },
+        "path": {
+          "type": "string",
+          "description": "File path relative to the worktree root."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Nature of the file change.",
+          "enum": ["created", "modified", "deleted"]
+        }
+      },
+      "required": ["ts", "event", "path", "operation"]
+    },
+    {
+      "title": "error",
+      "description": "Emitted when a recoverable or non-recoverable error occurs.",
+      "properties": {
+        "event": { "const": "error" },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error description."
+        },
+        "recoverable": {
+          "type": "boolean",
+          "description": "Whether the claw continued after the error."
+        },
+        "tool": {
+          "type": "string",
+          "description": "Tool that caused the error, if applicable."
+        }
+      },
+      "required": ["ts", "event", "message", "recoverable"]
+    },
+    {
+      "title": "finished",
+      "description": "Always the last event. Summarises the run outcome.",
+      "properties": {
+        "event": { "const": "finished" },
+        "status": {
+          "type": "string",
+          "description": "Final run status.",
+          "enum": ["finished", "error", "abandoned"]
+        },
+        "claims_count": {
+          "type": "integer",
+          "description": "Number of claims written to evidence.jsonl.",
+          "minimum": 0
+        },
+        "promotion_recommendation": {
+          "type": "string",
+          "description": "Same value as meta.json promotion_recommendation.",
+          "enum": ["abandon", "keep_evidence", "continue", "merge", "publish", "graduate_to_spine"]
+        }
+      },
+      "required": ["ts", "event", "status", "claims_count", "promotion_recommendation"]
+    }
+  ]
+}

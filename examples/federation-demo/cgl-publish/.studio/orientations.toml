@@ -1,0 +1,15 @@
+[[orientation]]
+id = "orient-cgl-publish-build"
+lab = "systems/cgl-publish"
+objective = "Build cgl-publish primitive: one-shot publish of a surface to the CDN with provenance trail."
+status = "active"
+stop_rule = "director_review_after_first_spec"
+roles = ["builder", "reviewer"]
+sources = ["github-textual-snake-examples", "local-cgl-pp-deploy"]
+outputs = ["changes.patch", "result.md", "trace.jsonl"]
+
+[orientation.constraints]
+run_untrusted_code = false
+install_dependencies = true
+require_provenance = true
+implementation_allowed = true

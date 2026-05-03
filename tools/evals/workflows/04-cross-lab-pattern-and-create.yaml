@@ -1,0 +1,19 @@
+id: cross-lab-pattern-and-create
+name: "Notice a pattern across labs, create a new lab to investigate"
+intent: "Director sees a converging signal across multiple labs and creates a focused lab to dig in."
+exercises:
+  - chief_chat
+  - chief_delegation
+  - create_lab_action
+  - new_lab_verification
+canonical_steps:
+  - "Ask chief: what patterns are emerging across our investigations"
+  - "(Chief may delegate to a lab agent — that's OK and tested by judge)"
+  - "Based on the response, propose a new lab id + objective"
+  - "Create the new lab via 'n' (or actions.create_lab directly under modal-bypass)"
+  - "Verify the new lab dir appeared with .studio/lab.toml + at least one orientation"
+expected_artifact:
+  - "<federation>/<new-slug>/.studio/lab.toml exists"
+  - "<federation>/<new-slug>/.studio/orientations.toml has at least 1 orientation"
+notes_to_persona: |
+  Don't pick a generic name. The lab should reflect the actual pattern the chief identified.

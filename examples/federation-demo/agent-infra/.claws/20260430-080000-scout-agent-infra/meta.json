@@ -1,0 +1,13 @@
+{
+  "id": "20260430-080000-scout-agent-infra",
+  "orientation_id": "orient-agent-infra-survey",
+  "lab_slug": "investigation/agent-infra",
+  "role": "scout",
+  "runtime": "claude_print",
+  "capability_profile": "research_readonly",
+  "source_scope": ["github-awesome-cli-coding-agents"],
+  "status": "finished",
+  "started_at": "2026-04-30T08:00:00Z",
+  "ended_at": "2026-04-30T08:31:00Z",
+  "promotion_recommendation": "abandon"
+}

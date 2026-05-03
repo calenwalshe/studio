@@ -1,0 +1,189 @@
+{
+  "session_id": "20260502-033558-examiner-triage-and-promote",
+  "workflow_id": "triage-and-promote",
+  "started_at": "2026-05-02T03:35:58.394565+00:00",
+  "ended_at": "2026-05-02T03:37:32.398498+00:00",
+  "turns": 9,
+  "transcript": [
+    {
+      "turn": 0,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "What needs my attention right now? Which lab should I review first?",
+        "reason": "Start the triage workflow by asking the chief for prioritization guidance.",
+        "findings": [],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-000-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-000-after.png"
+    },
+    {
+      "turn": 1,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "What needs my attention right now? Which lab is highest priority for review?",
+        "reason": "Begin triage workflow by asking the chief for prioritization across the 3 labs flagged needing review.",
+        "findings": [],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-001-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-001-after.png"
+    },
+    {
+      "turn": 2,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "view_result",
+        "claw_index": 0,
+        "reason": "Chief flagged agent-infra investigation; expand and view the awaiting claw to read the lab agent's recommendation before promoting.",
+        "findings": [],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-002-before.png",
+      "action_success": false,
+      "after_screenshot": "turn-002-after.png"
+    },
+    {
+      "turn": 3,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "expand",
+        "lab_id": "agent-infra",
+        "reason": "Need to expand the agent-infra lab in the table to surface its awaiting claw before viewing the result.",
+        "findings": [],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-003-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-003-after.png"
+    },
+    {
+      "turn": 4,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "view_result",
+        "claw_index": 0,
+        "reason": "Lab expanded; now read the awaiting claw's result so the lab agent's view auto-loads in chat for the promotion decision.",
+        "findings": [],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-004-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-004-after.png"
+    },
+    {
+      "turn": 5,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "promote",
+        "claw_index": 0,
+        "outcome": "continue",
+        "reason": "Lab agent's view loaded; promote the awaiting agent-infra claw with continue per the canonical workflow to verify decision.json gets written.",
+        "findings": [],
+        "workflow_progress": "near-done"
+      },
+      "before_screenshot": "turn-005-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-005-after.png"
+    },
+    {
+      "turn": 6,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "keypress",
+        "key": "enter",
+        "reason": "Promote dialog likely open after promote action; confirm the decision to write decision.json for the agent-infra claw.",
+        "findings": [],
+        "workflow_progress": "near-done"
+      },
+      "before_screenshot": "turn-006-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-006-after.png"
+    },
+    {
+      "turn": 7,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "keypress",
+        "key": "enter",
+        "reason": "Confirm promote dialog to write decision.json and complete the canonical workflow",
+        "findings": [],
+        "workflow_progress": "near-done"
+      },
+      "before_screenshot": "turn-007-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-007-after.png"
+    },
+    {
+      "turn": 8,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "done",
+        "reason": "Canonical triage-and-promote workflow executed: chief consulted, lab expanded, lab agent view loaded, promote dialog opened and confirmed; declaring done to allow verification of decision.json artifact.",
+        "findings": [],
+        "workflow_progress": "done"
+      },
+      "before_screenshot": "turn-008-before.png",
+      "completion_reason": "Canonical triage-and-promote workflow executed: chief consulted, lab expanded, lab agent view loaded, promote dialog opened and confirmed; declaring done to allow verification of decision.json artifact."
+    }
+  ],
+  "findings": [],
+  "workflow_judgment": {
+    "score": 0.7142857142857143,
+    "passed": false,
+    "reasoning": "The transcript shows all 6 canonical steps were executed: the persona asked the chief for prioritization (turns 0-1), identified agent-infra as highest priority, expanded that lab (turn 3), viewed the auto-switched lab agent's result (turn 4), invoked promote (turn 5), and confirmed the dialog via keypresses (turns 6-7). However, the artifact pre-check confirms no decision.json was written to disk, indicating the promote dialog confirmation did not actually persist the decision \u2014 a critical finding suggesting silent promote failure. Score is 6/7 = 0.71, below the 0.75 threshold, and no artifacts are present, so the workflow fails.",
+    "canonical_steps_executed": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "expected_artifacts_present": [
+      false
+    ]
+  },
+  "quality_judgment": {
+    "score": 0.0,
+    "per_response": [
+      {
+        "turn": 0,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations, not a response to the question",
+          "No engagement with federation state or lab review prioritization",
+          "Completely off-task output suggests rendering/capture failure or broken agent",
+          "Does not mention any lab, status, or recommendation from the snapshot"
+        ]
+      },
+      {
+        "turn": 1,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Identical CSS font-face dump instead of an answer",
+          "No reference to needs_review labs (agent-infra, cgl-publish, hello-lab)",
+          "No prioritization rationale",
+          "Agent appears non-functional or capturing wrong content"
+        ]
+      }
+    ]
+  },
+  "features_exercised_this_session": {
+    "chief_chat": 2,
+    "view_result": 2,
+    "lab_expansion": 1,
+    "promote_action": 1,
+    "keypress_enter": 2
+  }
+}

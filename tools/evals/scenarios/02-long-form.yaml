@@ -1,0 +1,19 @@
+name: long-form-mode
+description: Triggering 'detailed report' should produce longer response without the deeper-report offer suffix.
+persona: director
+lab_root: examples/federation-demo
+timeout: 180
+
+steps:
+  - chat: "Give me a detailed report on cgl-publish — every concern about merging it now."
+
+rubric:
+  - id: long_response
+    description: "Detailed mode should produce > 40 lines"
+    check: { type: response_line_count, step: 0, min: 40 }
+  - id: no_deeper_offer
+    description: "Long-form mode does NOT end with the 'deeper report' offer"
+    check: { type: response_not_contains, step: 0, text: "deeper report" }
+  - id: ends_with_next
+    description: "Still ends with **Next:** action"
+    check: { type: response_contains, step: 0, text: "**Next:**" }

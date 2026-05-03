@@ -1,0 +1,386 @@
+{
+  "session_id": "20260502-030116-examiner-triage-and-promote",
+  "workflow_id": "triage-and-promote",
+  "started_at": "2026-05-02T03:01:16.904208+00:00",
+  "ended_at": "2026-05-02T03:04:23.972600+00:00",
+  "turns": 10,
+  "transcript": [
+    {
+      "turn": 0,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "What needs my attention right now? Which lab is highest priority for review?",
+        "reason": "Step 1 of triage workflow \u2014 ask Chief of Staff what needs attention",
+        "findings": [],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-000-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-000-after.png"
+    },
+    {
+      "turn": 1,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "What needs attention right now? Which lab should I triage first?",
+        "reason": "Step 1 of triage workflow \u2014 ask Chief of Staff to identify highest-priority lab needing review.",
+        "findings": [],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-001-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-001-after.png"
+    },
+    {
+      "turn": 2,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "Which lab most urgently needs my review right now, and what outcome do you recommend?",
+        "reason": "Step 1: ask Chief of Staff to identify the highest-priority lab and recommended outcome to drive triage workflow.",
+        "findings": [],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-002-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-002-after.png"
+    },
+    {
+      "turn": 3,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "Which lab is highest priority for review right now, and what outcome do you recommend?",
+        "reason": "Chief hasn't yet returned an actionable recommendation; press for a specific lab + outcome to advance to step 2.",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "unexpected_behavior",
+            "summary": "Chief chat appears stuck at intro across 3 turns",
+            "evidence": "Turns 0-2 all logged as progress=intro with no visible chief response advancing the workflow; chat panel shows only the Director Chat header with no reply content rendered."
+          }
+        ],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-003-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-003-after.png"
+    },
+    {
+      "turn": 4,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "chat",
+        "text": "Which lab is highest priority and what outcome do you recommend? Please name one lab and one of: abandon, keep_evidence, continue, merge, publish, graduate_to_spine.",
+        "reason": "Chief still hasn't given an actionable lab+outcome after 3 prompts; one more direct ask before logging a finding and moving on.",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "ux",
+            "summary": "Chief of Staff fails to recommend a specific lab + outcome after repeated direct asks",
+            "evidence": "Turns 1-3 all stuck at progress=intro because Chief never returned an actionable lab recommendation despite explicit prompts; this blocks the canonical triage workflow."
+          }
+        ],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-004-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-004-after.png"
+    },
+    {
+      "turn": 5,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "expand",
+        "lab_id": "fed-alpha",
+        "reason": "Chief chat hasn't produced an actionable lab recommendation after 4 prompts; advance the workflow by directly expanding the first federation lab in the table to inspect awaiting claws.",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "unexpected_behavior",
+            "summary": "Chief of Staff fails to recommend a specific lab + outcome despite repeated direct asks",
+            "evidence": "4 consecutive chat turns to Chief asking for highest-priority lab and recommended outcome; none produced an actionable lab+outcome pair, blocking step 2 of triage-and-promote workflow."
+          }
+        ],
+        "workflow_progress": "intro"
+      },
+      "before_screenshot": "turn-005-before.png",
+      "action_success": false,
+      "after_screenshot": "turn-005-after.png"
+    },
+    {
+      "turn": 6,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "keypress",
+        "key": "escape",
+        "reason": "Need to exit chat focus before I can interact with the lab table to expand a lab and continue the triage workflow.",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "ux",
+            "summary": "Chief of Staff failed to produce an actionable lab+outcome recommendation after 4 direct prompts",
+            "evidence": "Turns 1-4 all logged progress=intro with chief still not naming a specific lab or outcome despite repeated direct asks; this blocks the canonical triage loop at step 2"
+          }
+        ],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-006-before.png",
+      "action_success": true,
+      "after_screenshot": "turn-006-after.png"
+    },
+    {
+      "turn": 7,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "expand",
+        "lab_id": "fed-alpha",
+        "reason": "Escape sent last turn should have unfocused chat; now expand the first lab to advance triage workflow since chief never gave actionable recommendation",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "unexpected_behavior",
+            "summary": "Chief of Staff failed to recommend a specific lab after 4 direct prompts",
+            "evidence": "Turns 1-4 chat prompts to chief produced no actionable lab+outcome recommendation; chief chat appears non-directive for triage workflow"
+          }
+        ],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-007-before.png",
+      "action_success": false,
+      "after_screenshot": "turn-007-after.png"
+    },
+    {
+      "turn": 8,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "expand",
+        "lab_id": "",
+        "reason": "Previous expand attempts didn't progress; try expanding first lab in table to continue triage workflow toward viewing claws",
+        "findings": [
+          {
+            "severity": "medium",
+            "kind": "ux",
+            "summary": "Chief chat fails to surface actionable lab recommendation after multiple prompts",
+            "evidence": "After 4+ chat prompts to Chief of Staff, no clear lab recommendation emerged, forcing workflow to advance via direct table interaction instead of guided triage"
+          }
+        ],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-008-before.png",
+      "action_success": false,
+      "after_screenshot": "turn-008-after.png"
+    },
+    {
+      "turn": 9,
+      "screen": "@font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Regular\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Regular.woff2\") format(\"woff2\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff/FiraCode-Regular.woff\") format(\"woff\"); font-style: normal; font-weight: 400; } @font-face { font-family: \"Fira Code\"; src: local(\"FiraCode-Bold\"), url(\"https://cdnjs.cloudflare.com/ajax/libs/firacode/6.2.0/woff2/FiraCode-Bold.woff2\") format(\"woff2\"), url(\"h",
+      "decision": {
+        "action": "done",
+        "reason": "Three consecutive expand attempts have not progressed the workflow; the table is not responding to expand actions, blocking the canonical triage path. Logging this as a critical blocker and ending the session to avoid burning the remaining turn budget on the same stuck state.",
+        "findings": [
+          {
+            "severity": "critical",
+            "kind": "bug",
+            "summary": "Lab table expand action does not advance triage workflow after chat unfocus",
+            "evidence": "Turns 6-8: sent escape keypress to unfocus chat, then issued two expand actions targeting the first lab. Screen still shows Director Chat panel focused with empty lab table region visible on the right; no lab row expanded, no auto-switch to lab agent chat occurred. Workflow cannot reach step 4 (read lab agent view) or step 5 (promote)."
+          },
+          {
+            "severity": "high",
+            "kind": "ux",
+            "summary": "No visible feedback distinguishing focused vs unfocused chat panel",
+            "evidence": "After escape keypress on turn 6, screen header still reads 'Director Chat \u2014 Chief of Staff' with no clear indication whether focus moved to the lab table. Examiner had to guess whether subsequent expand actions would target the table or be swallowed by chat."
+          },
+          {
+            "severity": "medium",
+            "kind": "unexpected_behavior",
+            "summary": "Expand action with lab_id appears to be a no-op when chat panel retains focus",
+            "evidence": "Two expand actions issued on turns 7 and 8 produced identical screen state \u2014 Director Chat panel still dominant, lab list region on right showing the same '5 labs' summary line with no row expansion visible. Expand should either succeed or surface an error; silent no-op is a discoverability failure."
+          }
+        ],
+        "workflow_progress": "midway"
+      },
+      "before_screenshot": "turn-009-before.png",
+      "completion_reason": "Three consecutive expand attempts have not progressed the workflow; the table is not responding to expand actions, blocking the canonical triage path. Logging this as a critical blocker and ending the session to avoid burning the remaining turn budget on the same stuck state."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "medium",
+      "kind": "unexpected_behavior",
+      "summary": "Chief chat appears stuck at intro across 3 turns",
+      "evidence": "Turns 0-2 all logged as progress=intro with no visible chief response advancing the workflow; chat panel shows only the Director Chat header with no reply content rendered.",
+      "id": "F-001",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 3
+    },
+    {
+      "severity": "medium",
+      "kind": "ux",
+      "summary": "Chief of Staff fails to recommend a specific lab + outcome after repeated direct asks",
+      "evidence": "Turns 1-3 all stuck at progress=intro because Chief never returned an actionable lab recommendation despite explicit prompts; this blocks the canonical triage workflow.",
+      "id": "F-002",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 4
+    },
+    {
+      "severity": "medium",
+      "kind": "unexpected_behavior",
+      "summary": "Chief of Staff fails to recommend a specific lab + outcome despite repeated direct asks",
+      "evidence": "4 consecutive chat turns to Chief asking for highest-priority lab and recommended outcome; none produced an actionable lab+outcome pair, blocking step 2 of triage-and-promote workflow.",
+      "id": "F-003",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 5
+    },
+    {
+      "severity": "medium",
+      "kind": "ux",
+      "summary": "Chief of Staff failed to produce an actionable lab+outcome recommendation after 4 direct prompts",
+      "evidence": "Turns 1-4 all logged progress=intro with chief still not naming a specific lab or outcome despite repeated direct asks; this blocks the canonical triage loop at step 2",
+      "id": "F-004",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 6
+    },
+    {
+      "severity": "medium",
+      "kind": "unexpected_behavior",
+      "summary": "Chief of Staff failed to recommend a specific lab after 4 direct prompts",
+      "evidence": "Turns 1-4 chat prompts to chief produced no actionable lab+outcome recommendation; chief chat appears non-directive for triage workflow",
+      "id": "F-005",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 7
+    },
+    {
+      "severity": "medium",
+      "kind": "ux",
+      "summary": "Chief chat fails to surface actionable lab recommendation after multiple prompts",
+      "evidence": "After 4+ chat prompts to Chief of Staff, no clear lab recommendation emerged, forcing workflow to advance via direct table interaction instead of guided triage",
+      "id": "F-006",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 8
+    },
+    {
+      "severity": "critical",
+      "kind": "bug",
+      "summary": "Lab table expand action does not advance triage workflow after chat unfocus",
+      "evidence": "Turns 6-8: sent escape keypress to unfocus chat, then issued two expand actions targeting the first lab. Screen still shows Director Chat panel focused with empty lab table region visible on the right; no lab row expanded, no auto-switch to lab agent chat occurred. Workflow cannot reach step 4 (read lab agent view) or step 5 (promote).",
+      "id": "F-007",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 9
+    },
+    {
+      "severity": "high",
+      "kind": "ux",
+      "summary": "No visible feedback distinguishing focused vs unfocused chat panel",
+      "evidence": "After escape keypress on turn 6, screen header still reads 'Director Chat \u2014 Chief of Staff' with no clear indication whether focus moved to the lab table. Examiner had to guess whether subsequent expand actions would target the table or be swallowed by chat.",
+      "id": "F-008",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 9
+    },
+    {
+      "severity": "medium",
+      "kind": "unexpected_behavior",
+      "summary": "Expand action with lab_id appears to be a no-op when chat panel retains focus",
+      "evidence": "Two expand actions issued on turns 7 and 8 produced identical screen state \u2014 Director Chat panel still dominant, lab list region on right showing the same '5 labs' summary line with no row expansion visible. Expand should either succeed or surface an error; silent no-op is a discoverability failure.",
+      "id": "F-009",
+      "session": "20260502-030116-examiner-triage-and-promote",
+      "workflow": "triage-and-promote",
+      "turn": 9
+    }
+  ],
+  "workflow_judgment": {
+    "score": 0.14,
+    "passed": false,
+    "reasoning": "The persona attempted step 1 (asking the chief what needs attention) repeatedly across 5 turns but never received an actionable recommendation, so step 2 (identifying the highest-priority lab) was not achieved. Subsequent expand attempts failed \u2014 the table never visibly expanded \u2014 so steps 3-6 (read lab agent view, promote claw, verify decision) were never executed. No decision.json artifact was written. The run terminated after the persona declared the workflow blocked by an unresponsive chief and a non-progressing expand action \u2014 both legitimate findings but a clear workflow failure.",
+    "canonical_steps_executed": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "expected_artifacts_present": [
+      false
+    ]
+  },
+  "quality_judgment": {
+    "score": 0.0,
+    "per_response": [
+      {
+        "turn": 0,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations, not an answer to the question",
+          "Does not address federation state or recommend any lab",
+          "Appears to be leaked frontend asset content rather than agent output"
+        ]
+      },
+      {
+        "turn": 1,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations, not a triage answer",
+          "No lab named, no recommendation given",
+          "Output unrelated to lab snapshot"
+        ]
+      },
+      {
+        "turn": 2,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations",
+          "Fails to identify a lab or recommend an outcome",
+          "Completely off-task"
+        ]
+      },
+      {
+        "turn": 3,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations",
+          "No federation-level analysis provided",
+          "Off-task output"
+        ]
+      },
+      {
+        "turn": 4,
+        "score": 0.0,
+        "scope_discipline": "violated",
+        "evidence_grounded": "hallucinated",
+        "honest_about_gaps": false,
+        "issues": [
+          "Reply is raw CSS @font-face declarations despite explicit constrained-format prompt",
+          "Did not name a lab or pick from the allowed outcome set",
+          "Off-task output"
+        ]
+      }
+    ]
+  },
+  "features_exercised_this_session": {
+    "chief_chat": 5,
+    "lab_expansion": 3,
+    "keypress_escape": 1
+  }
+}

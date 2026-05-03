@@ -1,0 +1,13 @@
+{
+  "id": "20260427-091500-builder-surface-snake",
+  "orientation_id": "orient-surface-snake-build-and-ship",
+  "lab_slug": "surface/surface-snake",
+  "role": "builder",
+  "runtime": "claude",
+  "capability_profile": "build_worktree",
+  "source_scope": ["github-textual-snake-examples"],
+  "status": "finished",
+  "started_at": "2026-04-27T09:15:00Z",
+  "ended_at": "2026-04-27T10:38:00Z",
+  "promotion_recommendation": "abandon"
+}
